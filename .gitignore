@@ -1,0 +1,6 @@
+.env
+output
+static/temp/*
+logs
+INFO.docx
+.~lock.INFO.docx#

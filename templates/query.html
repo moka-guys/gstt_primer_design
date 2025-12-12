@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Query Data</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #d9e6f2);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 40px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #2575fc;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #6a11cb;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            color: #333;
+            font-weight: normal;
+            margin-top: 10px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #6a11cb;
+            box-shadow: 0 0 8px rgba(106,17,203,0.4) inset;
+            outline: none;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-row > div {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        button {
+            padding: 14px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        figure {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        figure img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2575fc;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #6a11cb;
+        }
+
+        .error {
+            color: #ff4d4f;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Query Data</h1>
+
+        <!-- Show error if Flask provides one -->
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            <div>
+                <label>Schema name:</label>
+                <input type="text" name="schema" placeholder="Enter schema name" required>
+            </div>
+            <div>
+                <label>Table name:</label>
+                <input type="text" name="table" placeholder="Enter table name" required>
+            </div>
+
+            <h2>Single Filter</h2>
+            <div class="filter-row">
+                <div>
+                    <label>Column 1:</label>
+                    <input type="text" name="col1" placeholder="col1">
+                </div>
+                <div>
+                    <label>Value 1:</label>
+                    <input type="text" name="value1" placeholder="value1">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div>
+                    <label>Column 2:</label>
+                    <input type="text" name="col2" placeholder="col2">
+                </div>
+                <div>
+                    <label>Value 2:</label>
+                    <input type="text" name="value2" placeholder="value2">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div>
+                    <label>Column 3:</label>
+                    <input type="text" name="col3" placeholder="col3">
+                </div>
+                <div>
+                    <label>Value 3:</label>
+                    <input type="text" name="value3" placeholder="value3">
+                </div>
+            </div>
+
+            <h2>Upload JSON for More Filters</h2>
+            <div>
+                <input type="file" name="file" accept=".json">
+                <h4>File format example:</h4>
+                <figure>
+                    <img src="{{ url_for('static', filename='example_json.png') }}" alt="Example JSON">
+                </figure>
+            </div>
+
+            <button type="submit">Run Query</button>
+        </form>
+
+        
+        <style>
+            .back-link {
+                display: block;     /* makes the link take the full row */
+                margin: 10px 0;     /* spacing between links */
+            }
+            </style>
+            
+            <a href="{{ url_for('index') }}" class="back-link">Back to Home</a>
+            <a href="{{ url_for('logout') }}" class="back-link">Log Out</a>
+    </div>
+</body>
+</html>

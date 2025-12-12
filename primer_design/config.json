@@ -1,0 +1,189 @@
+{
+    "app_name": "gstt_primer_design",
+    "version": "1.0.0",
+    "debug": true,
+    "logging": {
+       "output": "/app/logs/"
+    },
+    "db":{
+      "db_name": "gstt_db",
+      "schema_name": "primer_tool_test",
+      "table_name": "ordered_primers"
+    },
+
+    "design_param": {
+        "min_product_size": 100,
+        "max_product_size": 600,
+        "flank" : 15,
+        "padding": 95,
+        "primer_min_size": 18,
+        "primer_opt_size": 22,
+        "primer_max_size": 28,
+        "primer_num_return": 10,
+        "primer_min_tm": 58.0,
+        "primer_opt_tm": 60.0,
+        "primer_max_tm": 63.0,
+        "primer_min_gc": 40.0,
+        "primer_opt_gc": 50.0,
+        "primer_max_gc": 60.0,
+        "primer_max_poly_x": 3,
+        "primer_gc_clamp": 1,
+        "max_padding": 550,
+        "max_dist": 2000
+    },
+    "ref_b37": {
+        "bowtie_ref": "/app/input/hs37d5.bowtie",
+        "genome_ref": "/app/input/hs37d5.fa", 
+        "snp_ref": "/app/input/00-common_all_b37.vcf.gz",
+        "exon_ref": "/app/input/GCF_000001405.25_GRCh37.p13_genomic.db",
+        "ref_genome_src":"https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.25_GRCh37.p13/",
+        "common_snp_src": "https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b151_GRCh37p13/00-common_all.vcf.gz"
+     },
+     "ref_b38": {
+      "bowtie_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.bowtie",
+      "genome_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.fna", 
+      "snp_ref": "/app/input/00-common_all_b38.vcf.gz",
+      "exon_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.db",
+      "ref_genome_src": "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/",
+      "common_snp_src": "https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b151_GRCh38p7/VCF/00-common_all.vcf.gz"
+   },
+    "M13":{
+      "F": "TGTAAAACGACGGCCAGT",
+      "R": "CAGGAAACAGCTATGACC",
+      "ordername": "M13",
+      "F_name": "M13_Forward",
+      "R_name": "M13_Reverse"
+    },
+    "T1":{
+      "F": "GTCTCAGTTCAGGTGTCCTTCCTG",
+      "R": "AGACGTCTTGTGTCGTGGCTACTG",
+      "ordername": "T1_01",
+      "F_name": "T1_Forward",
+      "R_name": "T1_Reverse"
+    },
+    "sT1":{
+      "F": "GTCTCAGTTCAGGTGTCCTTC",
+      "R": "GTCTTGTGTCGTGGCTACT",
+      "ordername": "sT1_01",
+      "F_name": "sT1_Forward",
+      "R_name": "sT1_Reverse"
+    },
+    "T2":{
+      "F": "ATGGACCTCTCTTCACTGATGAGG",
+      "R": "GTGACCTTCAGACCTACTGAGTCG",
+      "ordername": "T2_01",
+      "F_name": "T2_Forward",
+      "R_name": "T2_Reverse"
+    },
+    "T3":{
+      "F": "CTCCTAACGAACCTGAGTCAGTCG",
+      "R": "GATGCGTAGTCACTCCCATCGTTG",
+      "ordername": "T3_01",
+      "F_name": "T3_Forward",
+      "R_name": "T3_Reverse"
+    },
+    "T4":{
+      "F": "ACGAACTCTGTTCTGAGGTGTGCC",
+      "R": "CTTCCTCAGTCTGAGTCCTCACCA",
+      "ordername": "T4_01",
+      "F_name": "T4_Forward",
+      "R_name": "T4_Reverse"
+    },
+    "FAM":{
+      "F": "FAM_",
+      "R": "FAM_",
+      "ordername": "FAM_01",
+      "F_name": "FAM_Forward",
+      "R_name": "FAM_Reverse"
+    },
+    "VIC":{
+      "F": "VIC_",
+      "R": "FVIC_",
+      "ordername": "VIC_01",
+      "F_name": "VIC_Forward",
+      "R_name": "VIC_Reverse"
+    },
+    "NED":{
+      "F": "NED_",
+      "R": "NED_",
+      "ordername": "NED_01",
+      "F_name": "NED_Forward",
+      "R_name": "NED_Reverse"
+    },
+    "PET":{
+      "F": "PET_",
+      "R": "PET_",
+      "ordername": "PET_01",
+      "F_name": "PET_Forward",
+      "R_name": "PET_Reverse"
+    },
+    "no_tag":{
+      "F": "",
+      "R": "",
+      "ordername": "_01",
+      "F_name": "No_Tag_Forward",
+      "R_name": "No_Tag_Reverse"
+    },
+    "inter_file":{
+      "bed_file_37": "/app/static/temp/primers_19.bed",
+      "vcf_file_37": "/app/static/temp/filtered_19.vcf.gz",
+      "inter_vcf_37": "/app/static/temp/tmp_filtered_19.vcf",
+      "vcf_bed_37": "/app/static/temp/vcf_bed_19.bed",
+      "bed_file_38": "/app/static/temp/primers_38.bed",
+      "vcf_file_38": "/app/static/temp/filtered_38.vcf.gz",
+      "inter_vcf_38": "/app/static/temp/tmp_filtered_38.vcf",
+      "vcf_bed_38": "/app/static/temp/vcf_bed_38.bed"
+    },
+    "primer3_config": "/zippy_moka/phigis/primer3_config/",
+    "nc_data_b38": {"NC_000001.11": 1,
+                    "NC_000002.12": 2,
+                    "NC_000003.12": 3,
+                    "NC_000004.12": 4,
+                    "NC_000005.10": 5,
+                    "NC_000006.12": 6,
+                    "NC_000007.14": 7,
+                    "NC_000008.11": 8,
+                    "NC_000009.12": 9,
+                    "NC_000010.11": 10,
+                    "NC_000011.10": 11,
+                    "NC_000012.12": 12,
+                    "NC_000013.11": 13,
+                    "NC_000014.9": 14,
+                    "NC_000015.10": 15,
+                    "NC_000016.10": 16,
+                    "NC_000017.11": 17,
+                    "NC_000018.10": 18,
+                    "NC_000019.10": 19,
+                    "NC_000020.11": 20,
+                    "NC_000021.9": 21,
+                    "NC_000022.11": 22,
+                    "NC_000023.11": "X",
+                    "NC_000024.10": "Y"
+                    }, 
+    
+    "nc_data_b37":{"NC_000001.10": 1,
+                    "NC_000002.11": 2,
+                    "NC_000003.11": 3,
+                    "NC_000004.11": 4,
+                    "NC_000005.9": 5,
+                    "NC_000006.11": 6,
+                    "NC_000007.13": 7,
+                    "NC_000008.10": 8,
+                    "NC_000009.11": 9,
+                    "NC_000010.10": 10,
+                    "NC_000011.9": 11,
+                    "NC_000012.11": 12,
+                    "NC_000013.10": 13,
+                    "NC_000014.8": 14,
+                    "NC_000015.9": 15,
+                    "NC_000016.9": 16,
+                    "NC_000017.10": 17,
+                    "NC_000018.9": 18,
+                    "NC_000019.9": 19,
+                    "NC_000020.10": 20,
+                    "NC_000021.8": 21,
+                    "NC_000022.10": 22,
+                    "NC_000023.10": "X",
+                    "NC_000024.9": "Y"
+                    }
+ }

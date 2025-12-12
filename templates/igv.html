@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IGV Viewer with Primers</title>
+    <script src="https://cdn.jsdelivr.net/npm/igv/dist/igv.min.js"></script>
+</head>
+<body>
+    <h2>IGV Viewer with Primers</h2>
+    <div id="igv-div" style="width: 100%; height: 500px;"></div>
+
+    <script>
+        // Pass initial query and primer BED URL from Flask
+        const genome = "{{ initial_query.genome }}";
+        const initialQuery = {{ initial_query | tojson | safe }};   
+        const primersBedUrl = "{{ url_for('static', filename='temp/primers_') }}" + genome.slice(2) + ".bed";
+        const snpsbedUrl = "{{ url_for('static', filename='temp/vcf_bed_') }}" + genome.slice(2) + ".bed";
+
+
+    </script>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <style>
+        .back-link {
+            display: block;     /* makes the link take the full row */
+            margin: 10px 0;     /* spacing between links */
+        }
+        </style>
+        
+        <a href="{{ url_for('success_primer_design') }}" class="back-link">Back to primer outputs</a>
+        <a href="{{ url_for('logout') }}" class="back-link">Log Out</a>
+</body>
+</html>

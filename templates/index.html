@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Database Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 30px;
+        }
+
+        /* Tabs container */
+        .tab-container {
+            display: flex;
+            flex-direction: column; /* Stack vertically */
+            align-items: center;
+            margin: 20px 0;
+            gap: 15px; /* Space between tabs */
+        }
+
+        /* Individual tabs */
+        .tab-link {
+            text-decoration: none;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            font-weight: bold;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            width: 200px;
+            text-align: center;
+        }
+
+        /* Hover effect */
+        .tab-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #2575fc, #6a11cb);
+        }
+
+        /* Active tab styling */
+        .tab-link.active {
+            background: linear-gradient(135deg, #ff6a00, #ee0979);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <h2>Welcome, {{ username }}!</h2>
+
+    <div class="tab-container">
+        <a href="{{ url_for('design_primer') }}" class="tab-link {% if active_tab == 'design_primer' %}active{% endif %}">Design Primer</a>
+        <a href="{{ url_for('query_data') }}" class="tab-link {% if active_tab == 'query' %}active{% endif %}">Query Data</a>
+        <a href="{{ url_for('logout') }}" class="tab-link {% if active_tab == 'logout' %}active{% endif %}">Log Out</a>
+
+    </div>
+    <!-- JS scripts for logout -->
+    <script>
+        // Manual logout click
+        document.getElementById("logout-btn").addEventListener("click", function(e) {
+            console.log("Manual logout triggered");
+            // optional: you can do extra JS here before logout
+        });
+
+        // Auto logout when browser/tab closes
+        window.addEventListener("beforeunload", function () {
+            console.log("Auto logout triggered");
+            // Sends request to /logout when tab closes
+            navigator.sendBeacon("/logout");
+        });
+    </script>
+</body>
+</html>
