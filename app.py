@@ -249,7 +249,7 @@ def design_primer():
             app.logger.info("Primer design done")
             session['primer_output'] = output.to_dict(orient='records')
             session["app_datetimestr"] = app_datetimestr
-            session["order_sheet_name"] = f'primer_order_sheet{session["app_datetimestr"]}.csv'
+            session["order_sheet_name"] = f'primer_order_sheet_TEST_VERSION_{session["app_datetimestr"]}.csv'
             del_file(["temp_input.csv"])
             return redirect(url_for('success_primer_design'))
 

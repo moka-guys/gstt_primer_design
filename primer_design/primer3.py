@@ -587,7 +587,7 @@ class GenerateOrder:
         Input: input csv file
         """
         input_param = parse_csv(input_file)
-        order_sheet = f"/app/output/primer_order_sheet{self.datetimestr}.csv"
+        order_sheet = f"/app/output/primer_order_sheet_TEST_VERSION_{self.datetimestr}.csv"
         #output_file = (f"/app/output/designed_primer_{self.datetimestr}.xlsx")
         with open(order_sheet, "a", newline="") as csv_file:
             writer = csv.writer(csv_file)
