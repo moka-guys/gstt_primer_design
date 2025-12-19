@@ -16,7 +16,7 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d
 
   flask:
-    image: seglh/gstt_primer_design:5122480
+    image: seglh/gstt_primer_design:f3f6e7d
     container_name: flask_app
     restart: always
     ports:

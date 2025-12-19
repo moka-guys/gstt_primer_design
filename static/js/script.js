@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 color: "green"
             },
             {
-                name: "SNPs in bed",
+                name: "SNPs",
                 type: "annotation",
                 format: "bed",
                 url: snpsbedUrl,
