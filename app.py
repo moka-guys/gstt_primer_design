@@ -19,7 +19,11 @@ from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(__name__, static_folder='/app/static')
+app = Flask(
+                __name__,
+                static_folder='static',
+                static_url_path='/gstt_primer_design/static'
+            )
 app.config["APPLICATION_ROOT"] = "/gstt_primer_design"
 DB_HOST = os.environ["DB_HOST"]
 DB_NAME = os.environ["DB_NAME"]
@@ -349,7 +353,7 @@ def success_primer_design():
                     </div>
                     <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a> or <a href="/gstt_primer_design/igv_view/hg19">igv_view build37</a> or <a href="/gstt_primer_design/igv_view/hg38">igv_view build38</a></p>
                     <p>
-                        <a href="/gstt_primer_design/download class="btn btn-primary btn-lg">
+                        <a href="/gstt_primer_design/download" class="btn btn-primary btn-lg">
                             Download Order Sheet
                         </a>
                     </p>
@@ -379,7 +383,7 @@ def success_primer_design():
                     </div>
                     <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a> or <a href="/gstt_primer_design/igv_view/hg38">igv_view build38</a></p>
                     <p>
-                        <a href="/gstt_primer_design/download class="btn btn-primary btn-lg">
+                        <a href="/gstt_primer_design/download" class="btn btn-primary btn-lg">
                             Download Order Sheet
                         </a>
                     </p>
