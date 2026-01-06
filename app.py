@@ -15,16 +15,13 @@ import psycopg2
 from database.query_db import search_postgres, filter_multiple_postgres
 from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(
-                __name__,
-                static_folder='static',
-                static_url_path='/gstt_primer_design/static'
-            )
-app.config["APPLICATION_ROOT"] = "/gstt_primer_design"
+app = Flask(__name__, static_folder='static')
+#app.config["APPLICATION_ROOT"] = "/gstt_primer_design"
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_prefix=1)
 DB_HOST = os.environ["DB_HOST"]
 DB_NAME = os.environ["DB_NAME"]
 DB_USER = os.environ["DB_USER"]
@@ -91,7 +88,7 @@ sys.stdout = StreamToLogger(app.logger, logging.INFO)
 sys.stderr = StreamToLogger(app.logger, logging.ERROR)
 
 
-@app.route('/gstt_primer_design', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def gstt_primer_design():
     """
     app log in with user name and password
@@ -115,7 +112,7 @@ def gstt_primer_design():
     return render_template('gstt_primer_design.html')
 
 
-@app.route("/gstt_primer_design/protected")
+@app.route("/protected")
 def protected():
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
@@ -126,7 +123,7 @@ def protected():
     return f"user: {user}, password: {password}"
 
 
-@app.route('/gstt_primer_design/index')
+@app.route('/index')
 def index():
     """
     load index page if log in is successful
@@ -137,7 +134,7 @@ def index():
     return render_template('index.html', username=username)
 
 
-@app.route('/gstt_primer_design/igv_view/<genome>')
+@app.route('/igv_view/<genome>')
 def igv_view(genome):
     """
     Load igv_view to visualize primers and common snp
@@ -178,7 +175,7 @@ def igv_view(genome):
     return render_template('igv_view.html', initial_query=initial_query)
 
 
-@app.route('/gstt_primer_design/design_primer', methods=['GET', 'POST'])
+@app.route('/design_primer', methods=['GET', 'POST'])
 def design_primer():
     """
     Design primers using GenerateOrder from primer_design.primer3.py
@@ -259,15 +256,12 @@ def design_primer():
             return redirect(url_for('success_primer_design'))
 
         else:
-            return '''
-                    Missing valid input(s) to design primers. Try again!!! 
-                    <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a></p>
-                   '''
+            return render_template("missing_input.html")
 
     return render_template('design_primer.html')
 
 
-@app.route('/gstt_primer_design/query', methods=['GET', 'POST'])
+@app.route('/query', methods=['GET', 'POST'])
 def query_data():
     """
     Function to query postgres tables
@@ -304,25 +298,23 @@ def query_data():
                 result_list = filter_multiple_postgres(DB_NAME, DB_USER,
                                                        DB_PASSWORD, schema, table, filters)
 
-            output = ""
-            for row_dict in result_list:
-                output += f"{row_dict}<br>"
-            output += '<p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/query">Query Page</a></p>'
-            return output
+            return render_template(
+                    "query_result.html",
+                    results=result_list
+                )
         except Exception as e:
             print("Error type:", type(e).__name__)
             print("Error message:", str(e))
             traceback.print_exc()
-            return f'''
-                    Error: {e}
-                    <p>Your query is invalid. Try again!!<p>
-                    <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/query">Query Page</a></p>
-                    '''
+            return render_template(
+                                "query_error.html",
+                                error=str(e)
+                                )
 
     return render_template('query.html')
 
 
-@app.route('/gstt_primer_design/success_primer_design')
+@app.route('/success_primer_design')
 def success_primer_design():
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
@@ -343,60 +335,17 @@ def success_primer_design():
                  'FW_primer_snp', 'RV_primer_snp', 'snp_validity', 'gene', 'exon_num',
                  'transcript', 'ref_genome_source', 'common_snp_source']]
         table_html = df.to_html(index=False)
-        if 37 in builds and 38 in builds:
-            return f'''
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-                    <h2>Primer design completed!</h2>
-                    <div class="table-responsive">
-                        {table_html.replace('<table border="1"', '<table class="table table-striped table-bordered table-hover"')}
-                    </div>
-                    <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a> or <a href="/gstt_primer_design/igv_view/hg19">igv_view build37</a> or <a href="/gstt_primer_design/igv_view/hg38">igv_view build38</a></p>
-                    <p>
-                        <a href="/gstt_primer_design/download" class="btn btn-primary btn-lg">
-                            Download Order Sheet
-                        </a>
-                    </p>
-                    '''
-        elif 37 in builds:
-            return f'''
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-                    <h2>Primer design completed!</h2>
-                    <div class="table-responsive">
-                        {table_html.replace('<table border="1"', '<table class="table table-striped table-bordered table-hover"')}
-                    </div>
-                    <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a> or <a href="/gstt_primer_design/igv_view/hg19">igv_view build37</a></p>
-                    <p>
-                        <a href="/gstt_primer_design/download" class="btn btn-primary btn-lg">
-                            Download Order Sheet
-                        </a>
-                    </p>
-                    '''
-        elif 38 in builds:
-            return f'''
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-                    <h2>Primer design completed!</h2>
-                    <div class="table-responsive">
-                        {table_html.replace('<table border="1"', '<table class="table table-striped table-bordered table-hover"')}
-                    </div>
-                    <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a> or <a href="/gstt_primer_design/igv_view/hg38">igv_view build38</a></p>
-                    <p>
-                        <a href="/gstt_primer_design/download" class="btn btn-primary btn-lg">
-                            Download Order Sheet
-                        </a>
-                    </p>
-                    '''
+        return render_template(
+            "success_primer_design.html",
+            table_html=table_html,
+            builds=builds
+        )
 
     else:
-        return '''
-        <h2>No primers generated with max padding. Change config and try again.</h2>
-        <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a> or <a href="/gstt_primer_design/logout">Log Out</a> </p>
-        '''
+        return render_template("no_primers.html")
 
 
-@app.route("/gstt_primer_design/download")
+@app.route("/download")
 def download():
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
@@ -406,10 +355,7 @@ def download():
 
     if not os.path.exists(full_path):
         app.logger.error("download file not found")
-        return '''
-        <h2>File to download is not found. It is either because the file is not generated or you've already downloaded it</h2>
-        <p>Go to <a href="/gstt_primer_design/index">Home Page</a> or <a href="/gstt_primer_design/design_primer">Design Primer</a> or <a href="/gstt_primer_design/logout">Log Out</a> </p>
-        '''
+        return render_template("download_not_found.html")
     else:
         app.logger.info("attempt to download")
 
@@ -432,7 +378,7 @@ def download():
     return response
 
 
-@app.route("/gstt_primer_design/logout")
+@app.route("/logout")
 def logout():
     """
     Function to log out app

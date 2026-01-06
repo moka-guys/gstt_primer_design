@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<h2>Primer design completed!</h2>
+
+<div class="table-responsive">
+    {{ table_html | safe }}
+</div>
+
+<p>
+    Go to
+    <a href="{{ url_for('index') }}">Home Page</a> or
+    <a href="{{ url_for('design_primer') }}">Design Primer</a>
+
+    {% if 37 in builds %}
+        or <a href="{{ url_for('igv_view', genome='hg19') }}">igv_view build37</a>
+    {% endif %}
+
+    {% if 38 in builds %}
+        or <a href="{{ url_for('igv_view', genome='hg38') }}">igv_view build38</a>
+    {% endif %}
+</p>
+
+<p>
+    <a href="{{ url_for('download') }}" class="btn btn-primary btn-lg">
+        Download Order Sheet
+    </a>
+</p>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Download Not Available</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">Download not available</h4>
+        <p>
+            The file you are trying to download is not found.
+            This may be because the file was not generated
+            or it has already been downloaded.
+        </p>
+    </div>
+
+    <p>
+        Go to
+        <a href="{{ url_for('index') }}">Home Page</a> or
+        <a href="{{ url_for('design_primer') }}">Design Primer</a> or
+        <a href="{{ url_for('logout') }}">Log Out</a>
+    </p>
+
+</body>
+</html>
