@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual Insert - Primer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-top: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 10px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        input[type="submit"],
+        .home-btn {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .home-btn {
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            line-height: 24px;
+        }
+
+        .home-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Insert Primer Manually</h1>
+        <h4>Essential fields are marked with *</h4>
+        <form method="POST">
+            <label>chr* (only allow 1-22 or X or Y)</label>
+            <input type="text" name="chr">
+
+            <label>start POS* (must be positive number)</label>
+            <input type="number" name="start_POS">
+
+            <label>end POS* (must be positive number)</label>
+            <input type="number" name="end_POS">
+
+            <label>variant</label>
+            <input type="text" name="variant">
+
+            <label>Left_Sequence*</label>
+            <input type="text" name="Left_Sequence">
+
+            <label>Right_Sequence*</label>
+            <input type="text" name="Right_Sequence">
+
+            <label>Left_Start</label>
+            <input type="number" name="Left_Start">
+
+            <label>Left_End</label>
+            <input type="number" name="Left_End">
+
+            <label>Right_Start</label>
+            <input type="number" name="Right_Start">
+
+            <label>Right_End</label>
+            <input type="number" name="Right_End">
+
+            <label>Pair_Product_Size (must be positive number)</label>
+            <input type="number" name="Pair_Product_Size">
+
+            <label>gene:</label>
+            <input type="text" name="gene">
+
+            <label>GRCh* (msut be 37 or 38)</label>
+            <input type="text" name="GRCh">
+
+            <label>tagged_FW</label>
+            <input type="text" name="tagged_FW">
+
+            <label>tagged_RV</label>
+            <input type="text" name="tagged_RV">
+
+            <label>tag</label>
+            <input type="text" name="tag">
+
+            <label>Notes</label>
+            <input type="text" name="Notes">
+
+            <label>PassedValidation (allow Yes or No only)</label>
+            <input type="text" name="PassedValidation">
+
+            <div class="buttons">
+                <input type="submit" value="Insert">
+                <a href="{{ url_for('index') }}" class="home-btn">Home Page</a>
+                
+            </div>
+        </form>
+    </div>
+</body>
+</html>

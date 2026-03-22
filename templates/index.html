@@ -60,6 +60,7 @@
     <div class="tab-container">
         <a href="{{ url_for('design_primer') }}" class="tab-link {% if active_tab == 'design_primer' %}active{% endif %}">Design Primer</a>
         <a href="{{ url_for('query_data') }}" class="tab-link {% if active_tab == 'query' %}active{% endif %}">Query Data</a>
+        <a href="{{ url_for('manual_insert') }}" class="tab-link {% if active_tab == 'query' %}active{% endif %}">Insert Primer Manually</a>
         <a href="{{ url_for('logout') }}" class="tab-link {% if active_tab == 'logout' %}active{% endif %}">Log Out</a>
 
     </div>

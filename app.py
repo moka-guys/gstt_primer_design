@@ -3,7 +3,7 @@ import csv
 import sys
 import time
 import pandas as pd
-from flask import Flask, request, render_template, redirect, url_for, session, send_from_directory, after_this_request
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, send_from_directory, after_this_request
 from flask_session import Session
 import logging
 import traceback
@@ -26,6 +26,9 @@ DB_HOST = os.environ["DB_HOST"]
 DB_NAME = os.environ["DB_NAME"]
 DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
+default_schema = "primer_tool"
+default_table = "ordered_primers"
+primer_editable_columns = ['notes', 'passedvalidation']
 
 
 def wait_for_db():
@@ -50,7 +53,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = os.environ["SESSION_FILE_DIR"]
 app.config["SESSION_PERMANENT"] = True
 #app.config["SESSION_COOKIE_EXPIRES"] = None
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=5)  # log out after 5 min idle
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)  # log out after 30 min idle
 app.config['DOWNLOAD_FOLDER'] = os.environ["DOWNLOAD_FOLDER"]
 Session(app)
 
@@ -163,13 +166,13 @@ def igv_view(genome):
         temp_df = temp_df.drop(columns=["GRCh"])
         # put primers into bed format
         bed_file = generate_bed(temp_df, genome[2:])
-        #generate_filtered_vcf(bed_file, "primer_design/config.json", genome[2:])
+        #generate_filtered_vcf(bed_file, genome[2:])
         # filter common SNP using primer bed
-        vcf_to_bed(bed_file, "primer_design/config.json", genome[2:])
+        vcf_to_bed(bed_file, genome[2:])
     # define genome and initial focus for igv_view
     initial_query = {
                     "genome": genome,
-                    "locus": "chr" + str(df["chr"][0]) + ":" + str(df["POS"][0])
+                    "locus": "chr" + str(df["chr"][0]) + ":" + str(df["start_POS"][0])
                     }
 
     return render_template('igv_view.html', initial_query=initial_query)
@@ -246,8 +249,8 @@ def design_primer():
 
         if csv_file and csv_file.endswith(".csv") and not empty_chr_rows:
             app_datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
-            order_primer = GenerateOrder(app_datetimestr)
-            output = order_primer.order(csv_file, DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
+            order_primer = GeneratePrimer(app_datetimestr)
+            output = order_primer.parse_input(csv_file)
             app.logger.info("Primer design done")
             session['primer_output'] = output.to_dict(orient='records')
             session["app_datetimestr"] = app_datetimestr
@@ -268,50 +271,69 @@ def query_data():
     """
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
-    col1 = None
-    col2 = None
-    col3 = None
-    value1 = None
-    value2 = None
-    value3 = None
     if request.method == 'POST':
-        print("query submitted")
-        schema = request.form.get('schema')
-        table = request.form.get('table')
-        col1 = request.form.get('col1')
+        schema = request.form.get('schema') or default_schema
+        table = request.form.get('table') or default_table
+        chromosome = request.form.get('chr')
         value1 = request.form.get('value1')
-        col2 = request.form.get('col2')
+        gene = request.form.get('gene')
         value2 = request.form.get('value2')
-        col3 = request.form.get('col3')
+        variant = request.form.get('variant')
         value3 = request.form.get('value3')
+        passedvalidation = request.form.get('passedvalidation')
+        value4 = request.form.get('value4')
+        value5 = request.form.get('value5')
+        value6 = request.form.get('value6')
         file = request.files.get('file')
 
-        if not table:
-            return "File and table name are required!", 400
+        if not table or not schema:
+            return "Schema and Table name are required!", 400
+        if not any([value1, value2, value3, value4, value5, value6, file]):
+            return render_template(
+                "query_result.html",
+                results=None,
+                editable_columns=None,
+                error="Please provide at least one search filter."
+            )
         try:
             if not file:
-                result_list = search_postgres(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
-                                              schema, table, col1, col2, col3,
-                                              value1, value2, value3)
+                result_list = search_postgres(
+                    DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
+                    schema, table, chromosome, gene, variant, passedvalidation,
+                    value1, value2, value3, value4, value5, value6
+                )
             else:
                 filters = json.load(file)
-                result_list = filter_multiple_postgres(DB_NAME, DB_USER,
-                                                       DB_PASSWORD, schema, table, filters)
-
-            return render_template(
-                    "query_result.html",
-                    results=result_list
+                result_list = filter_multiple_postgres(
+                    DB_NAME, DB_USER, DB_PASSWORD,
+                    schema, table, filters
                 )
+            editable_columns = primer_editable_columns
+            # Successful query
+            return render_template(
+                "query_result.html",
+                results=result_list,
+                editable_columns=editable_columns,
+                error=None
+            )
         except Exception as e:
+            # Failed query
             print("Error type:", type(e).__name__)
             print("Error message:", str(e))
             traceback.print_exc()
-            return render_template(
-                                "query_error.html",
-                                error=str(e)
-                                )
 
-    return render_template('query.html')
+            return render_template(
+                "query_result.html",
+                results=None,
+                editable_columns=None,
+                error=str(e)
+            )
+
+    return render_template(
+        'query.html',
+        default_schema=default_schema,
+        default_table=default_table
+    )
 
 
 @app.route('/success_primer_design')
@@ -329,20 +351,82 @@ def success_primer_design():
         df = pd.DataFrame(output_dict)
         builds = list(df["GRCh"].unique())
         # reorder df col to appear on UI
-        df = df[['Primer_Pair', "chr", "GRCh", "variant", "POS",
+        df = df[['Primer_Pair', "chr", "GRCh", "variant", "start_POS", "end_POS",
                  'Left_Sequence', 'Right_Sequence', 'Pair_Product_Size',
                  'Left_Start', 'Left_End', 'Right_Start', 'Right_End', 'Specificity',
                  'FW_primer_snp', 'RV_primer_snp', 'snp_validity', 'gene', 'exon_num',
-                 'transcript', 'ref_genome_source', 'common_snp_source']]
-        table_html = df.to_html(index=False)
+                 'transcript']]
+        df = df.reset_index(drop=True)
+        table_data = df.to_dict(orient="records")
         return render_template(
             "success_primer_design.html",
-            table_html=table_html,
+            table_data=table_data,
             builds=builds
         )
 
     else:
         return render_template("no_primers.html")
+
+
+@app.route('/save_selected', methods=['POST'])
+def save_selected():
+
+    output_dict = session.get('primer_output')
+    if not output_dict:
+        return "No data found in session."
+
+    df = pd.DataFrame(output_dict)
+    columns = ["chr", "start_POS", "end_POS", "variant", "GRCh", "tag_name",
+               "primer", "tagged_primer"]
+    rows = []
+    selected_rows = request.form.getlist('selected_rows')
+
+    if selected_rows:
+        selected_df = df.iloc[[int(i) for i in selected_rows]]
+
+        for index, row in selected_df.iterrows():
+            temp_df = selected_df.loc[[index]]
+            temp_df = temp_df.reset_index()
+            (FW_primer, RV_primer, tagged_FW,
+             tagged_RV, tag_name_FW, tag_name_R) = prepare_order_sheet(temp_df)
+
+            # Append FW
+            rows.append({
+                "chr": row["chr"],
+                "start_POS": row["start_POS"],
+                "end_POS": row["end_POS"],
+                "variant": row["variant"],
+                "GRCh": row["GRCh"],   
+                "tag_name": tag_name_FW,
+                "primer": FW_primer,
+                "tagged_primer": tagged_FW
+            })
+
+            # Append RV
+            rows.append({
+                "chr": row["chr"],
+                "start_POS": row["start_POS"],
+                "end_POS": row["end_POS"],
+                "variant": row["variant"],
+                "GRCh": row["GRCh"],
+                "tag_name": tag_name_R,
+                "primer": RV_primer,
+                "tagged_primer": tagged_RV
+            })
+            insert_DB(temp_df, tagged_FW, tagged_RV,temp_df["order_tag"][0],
+                      DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
+        df_to_order = pd.DataFrame(rows, columns=columns)
+        df_to_order.to_csv(f"/app/output/{session['order_sheet_name']}", index=False)
+        return render_template("save_complete.html")
+
+    return "No rows selected."
+
+
+@app.route("/save_complete")
+def save_complete():
+    if "username" not in session:
+        return redirect(url_for("gstt_primer_design"))
+    return render_template("save_complete.html")
 
 
 @app.route("/download")
@@ -376,6 +460,120 @@ def download():
                 print("Error deleting file:", e)
             return resp
     return response
+
+
+@app.route('/update-row', methods=['POST'])
+def update_row():
+    data = request.get_json()
+    row_id = data['id']
+    updated_fields = data['data']
+
+    # Remove primary key from fields to update
+    updated_fields.pop('primerid', None)
+
+    # Only allow these columns to be updated
+    allowed_columns = primer_editable_columns
+    updated_fields = {k: v for k, v in updated_fields.items() if k in allowed_columns}
+
+    if not updated_fields:
+        return jsonify({"status": "error", "message": "No editable columns selected"})
+
+    schema_name = default_schema
+    table_name = default_table
+
+    # Get user from session for logging
+    user = session.get('username', 'unknown')
+
+    # Log what is being updated
+    app.logger.info(
+        f"User '{user}' updated row with primerid={row_id}. "
+        f"Columns changed: {list(updated_fields.keys())}. "
+        f"New values: {updated_fields}"
+    )
+
+    try:
+        set_clause = ", ".join([f"{col} = %s" for col in updated_fields.keys()])
+        values = list(updated_fields.values())
+        values.append(row_id)  # for WHERE primerid = %s
+
+        query = f"UPDATE {schema_name}.{table_name} SET {set_clause} WHERE primerid = %s"
+
+        conn = psycopg2.connect(
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST
+        )
+        cur = conn.cursor()
+        cur.execute(query, values)
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        app.logger.error(f"Error updating row {row_id} by user '{user}': {str(e)}")
+        return jsonify({"status": "error", "message": str(e)})
+
+
+@app.route("/manual_insert", methods=["GET", "POST"])
+def manual_insert():
+    if request.method == "POST":
+        try:
+            chr = request.form.get("chr")
+            start_pos = request.form.get("start_POS")
+            end_pos = request.form.get("end_POS")
+            variant = request.form.get("variant")
+            left_seq = request.form.get("Left_Sequence")
+            right_seq = request.form.get("Right_Sequence")
+            left_start = request.form.get("Left_Start")
+            left_end = request.form.get("Left_End")
+            right_start = request.form.get("Right_Start")
+            right_end = request.form.get("Right_End")
+            product_size = request.form.get("Pair_Product_Size")
+            gene = request.form.get("gene")
+            grch = request.form.get("GRCh")
+            tagged_FW = request.form.get("tagged_FW")
+            tagged_RV = request.form.get("tagged_RV")
+            tag = request.form.get("tag")
+            notes = request.form.get("Notes")
+            passval = request.form.get("PassedValidation")
+
+            df_insert = pd.DataFrame([{
+                "chr": chr,
+                "start_POS": int(start_pos),
+                "end_POS": int(end_pos),
+                "variant": variant or None,
+                "Left_Sequence": left_seq,
+                "Right_Sequence": right_seq,
+                "Left_Start": int(left_start) if left_start else None,
+                "Left_End": int(left_end) if left_end else None,
+                "Right_Start": int(right_start) if right_start else None,
+                "Right_End": int(right_end) if right_end else None,
+                "Pair_Product_Size": int(product_size) if product_size else None,
+                "gene": gene or None,
+                "GRCh": int(grch) if grch else None,
+                "Notes": notes or None,
+                "PassedValidation": passval or None
+            }])
+
+            insert_DB(
+                df_insert, tagged_FW, tagged_RV, tag,
+                username=DB_USER,
+                password=DB_PASSWORD,
+                db_name=DB_NAME,
+                db_host=DB_HOST
+            )
+
+            # Success
+            return render_template("insert_success.html")
+
+        except Exception as e:
+            # Error
+            return render_template("insert_error.html", error_message=str(e))
+
+    return render_template("manual_insert.html")
 
 
 @app.route("/logout")

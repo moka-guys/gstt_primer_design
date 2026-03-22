@@ -80,38 +80,71 @@ def get_arguments() -> argparse.Namespace:
 
 
 def search_postgres(dbname, user, password, host,
-                    schema, table, col1, col2, col3,
-                    value1, value2, value3):
+                    schema, table, col1, col2, col3, col4,
+                    value1, value2, value3, value4,
+                    pos_start=None, pos_end=None):
     """
-    search query with max three filter values
+    Search query with exact filters + optional overlapping range
     """
-    # Combine input values
-    value = [value1, value2, value3]
-    col = [col1, col2, col3]
+    # Pair columns and values
+    col_value_pairs = [
+        (str(c).strip(), v)
+        for c, v in zip([col1, col2, col3, col4],
+                        [value1, value2, value3, value4])
+        if c not in (None, '') and v not in (None, '')
+    ]
 
-    # Filter out empty or None
-    value_list = [x for x in value if x not in (None, '')]
-    col_list = [x for x in col if x not in (None, '')]
+    col_list = [c for c, v in col_value_pairs]
+    value_list = [v for c, v in col_value_pairs]
 
-    # Build WHERE conditions
-    combined = sql.SQL(" AND ").join(
-        sql.SQL("{} = %s").format(sql.Identifier(c)) for c in col_list
-    )
+    conditions = []
 
-    query = sql.SQL("SELECT * FROM {} WHERE ").format(sql.Identifier(schema, table)) + combined
+    # Exact match conditions
+    for c in col_list:
+        conditions.append(sql.SQL("{} = %s").format(sql.Identifier(c)))
 
-    # Connect to db
+    # Only add range condition if pos_start/pos_end are valid integers
+    try:
+        pos_start_int = int(pos_start) if pos_start not in (None, '') else None
+    except ValueError:
+        pos_start_int = None
+
+    try:
+        pos_end_int = int(pos_end) if pos_end not in (None, '') else None
+    except ValueError:
+        pos_end_int = None
+
+    if pos_start_int is not None and pos_end_int is not None:
+        # overlapping region
+        conditions.append(sql.SQL("start_pos <= %s AND end_pos >= %s"))
+        value_list.extend([pos_end_int, pos_start_int])
+    elif pos_start_int is not None:
+        conditions.append(sql.SQL("end_pos >= %s"))
+        value_list.append(pos_start_int)
+    elif pos_end_int is not None:
+        conditions.append(sql.SQL("start_pos <= %s"))
+        value_list.append(pos_end_int)
+
+    # query
+    base_query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(schema, table))
+
+    if conditions:
+        query = base_query + sql.SQL(" WHERE ") + sql.SQL(" AND ").join(conditions)
+    else:
+        query = base_query
+
+    query += sql.SQL(" LIMIT 100")
     conn = get_postgres_connection(dbname, user, password, host)
     cursor = conn.cursor()
-    cursor.execute(query, value_list)
+    print("QUERY:", query.as_string(conn))
+    print("VALUES:", value_list)
 
-    # Fetch results
+    cursor.execute(query, value_list)
     rows = cursor.fetchall()
     col_names = [desc[0] for desc in cursor.description]
     result = [dict(zip(col_names, row)) for row in rows]
 
     conn.close()
-    print(result)
     return result
 
 

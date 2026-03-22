@@ -2,14 +2,100 @@
 <html>
 <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .red-bold {
+            color: red;
+            font-weight: bold;
+        }
+
+        .red-list li {
+            color: red;
+        }
+
+        .green-bold {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
 <h2>Primer design completed!</h2>
 
-<div class="table-responsive">
-    {{ table_html | safe }}
-</div>
+<form method="POST" action="{{ url_for('save_selected') }}">
+
+    <div class="table-responsive shadow-sm rounded">
+    
+    <table class="table table-striped table-hover table-bordered table-sm align-middle">
+    
+        <thead class="table-primary">
+            <tr>
+                <th>Select</th>
+                {% for col in table_data[0].keys() %}
+                    <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+    
+        <tbody>
+            {% for row in table_data %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="selected_rows" value="{{ loop.index0 }}">
+                </td>
+                {% for value in row.values() %}
+                    <td>{{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    
+    </table>
+    
+    </div>
+    
+    <br>
+    
+    <button type="submit" class="btn btn-success">
+        Save selected Rows for Order and Insert into DB
+    </button>
+    
+</form>
+
+<p class="red-bold mt-4">
+    Ref files for GRCh37
+</p>
+
+<ul class="red-list">
+    <li>ref genome: hs37d5.fasta-index.tar.gz from dnanexus (reference genome currently used for NGS pipelines)</li>
+    <li>exon ref: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.25_GRCh37.p13/GCF_000001405.25_GRCh37.p13_genomic.gtf.gz</li>
+    <li>common SNP: https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b151_GRCh37p13/00-common_all.vcf.gz</li>
+</ul>
+
+<p class="red-bold mt-4">
+    Ref files for GRCh38
+</p>
+
+<ul class="red-list">
+    <li>ref genome: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz</li>
+    <li>exon ref: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.gtf.gz</li>
+    <li>common SNP: https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b151_GRCh38p7/VCF/00-common_all.vcf.gz</li>
+</ul>
+
+<p class="green-bold mt-4">
+    Please contact Bioinformatics if you want to update any ref file.
+</p>
+
+<hr>
 
 <p>
     Go to
@@ -25,11 +111,6 @@
     {% endif %}
 </p>
 
-<p>
-    <a href="{{ url_for('download') }}" class="btn btn-primary btn-lg">
-        Download Order Sheet
-    </a>
-</p>
 
 </body>
 </html>

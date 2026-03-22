@@ -9,6 +9,8 @@ from pydantic import BaseModel, ValidationError, field_validator, model_validato
 import psycopg2
 from pathlib import Path
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(BASE_DIR, "config.json")
 
 class PrimerRecord(BaseModel):
     chr: str | int
@@ -102,11 +104,11 @@ def get_log(file_dir, datetimestr) -> logging.Logger:
     return logger
 
 
-def get_tag(config, df, tag):
+def get_tag(df, tag):
     """
     get primer tag for primer order
     """
-    with open(config, "r") as file:
+    with open(config_path, "r") as file:
         config = json.load(file)
     FW_primer = df["Left_Sequence"][0]
     RV_primer = df["Right_Sequence"][0]
@@ -229,10 +231,10 @@ def make_list(x):
 
 
 def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
-              password, db_name, db_host, config):
-    with open(config, "r") as file:
+              password, db_name, db_host):
+    with open(config_path, "r") as file:
         config = json.load(file)
-    df_insert = order_primer[["chr", "POS", "variant", "Left_Sequence",
+    df_insert = order_primer[["chr", "start_POS", "end_POS", "variant", "Left_Sequence",
                               "Right_Sequence", "Left_Start", "Left_End",
                               "Right_Start", "Right_End", "Pair_Product_Size",
                               "gene", "GRCh"]]
@@ -240,7 +242,7 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
     df_insert["tagged_RV"] = tagged_RV
     df_insert["tag"] = tag
 
-    db_cols = ["chr", "position", "variant", "left_primer_seq",
+    db_cols = ["chr", "start_pos", "end_pos", "variant", "left_primer_seq",
                "right_primer_seq", "left_primer_start", "left_primer_end",
                "right_primer_start", "right_primer_end", "product_size",
                "gene", "grch", "tagged_left", "tagged_right", "tag"]
@@ -273,11 +275,11 @@ def generate_bed(primers, build):
     return str(bed_file)
 
 
-def vcf_to_bed(bed_file, config, build):
+def vcf_to_bed(bed_file, build):
     """
     get common SNP within primers to plot on IGV
     """
-    with open(config, "r") as file:
+    with open(config_path, "r") as file:
         config = json.load(file)
     vcf_dir = Path("/app/static/temp")
     vcf_dir.mkdir(parents=True, exist_ok=True)
@@ -317,9 +319,9 @@ def vcf_to_bed(bed_file, config, build):
             bed.write(f"{chrom}\t{start}\t{end}\t{name}\n")
 
 
-def generate_filtered_vcf(bed_file, config, build):
+def generate_filtered_vcf(bed_file, build):
 
-    with open(config, "r") as file:
+    with open(config_path, "r") as file:
         config = json.load(file)
     vcf_dir = Path("/app/static/temp")
     vcf_dir.mkdir(parents=True, exist_ok=True)
@@ -410,3 +412,11 @@ def prepare_df(df, side):
         end_col: "end"
     })
     return df_side
+
+
+def prepare_order_sheet(df):
+    (FW_primer, RV_primer,
+    tagged_FW, tagged_RV,
+    tag_name_FW, tag_name_RV) = get_tag(df, df["order_tag"][0])
+
+    return FW_primer, RV_primer, tagged_FW, tagged_RV,tag_name_FW, tag_name_RV

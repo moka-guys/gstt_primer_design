@@ -18,6 +18,7 @@ class InputParam:
     pos_start: int
     pos_end: int
     build: int
+    tag: str
     opt_tm: float
     min_tm: float
     max_tm: float
@@ -47,6 +48,7 @@ class DesignPrimer:
         self.pos_end = self.input_param.pos_end
         self.build = self.input_param.build
         self.max_dist = self.config["design_param"]["max_dist"]
+        self.tag = get_value(self.input_param.tag, "T1")
         self.opt_tm = get_value(self.input_param.opt_tm, self.config["design_param"]["primer_opt_tm"])
         self.min_tm = get_value(self.input_param.min_tm, self.config["design_param"]["primer_min_tm"])
         self.max_tm = get_value(self.input_param.max_tm, self.config["design_param"]["primer_max_tm"])
@@ -501,7 +503,7 @@ class DesignPrimer:
         padding = self.config["design_param"]["padding"]
         primer_found = False
         valid_primer = False
-        order_df = pd.DataFrame()
+        #order_df = pd.DataFrame()
         designed_primer = pd.DataFrame()
 
         while (padding <= self.config["design_param"]["max_padding"] and
@@ -539,19 +541,21 @@ class DesignPrimer:
                     designed_primer["gene"] = gene
                     designed_primer["exon_num"] = exon_num
                     designed_primer["transcript"] = transcript
-                    designed_primer["ref_genome_source"] = self.src1
-                    designed_primer["common_snp_source"] = self.src2
+                    #designed_primer["ref_genome_source"] = self.src1
+                    #designed_primer["common_snp_source"] = self.src2
+                    designed_primer["order_tag"] = self.tag
                     designed_primer["chr"] = self.chr
                     designed_primer["GRCh"] = self.build
-                    designed_primer["POS"] = str(self.pos_start) + "-" + str(self.pos_end)
+                    designed_primer["start_POS"] = int(self.pos_start)
+                    designed_primer["end_POS"] = int(self.pos_end)
                     designed_primer["variant"] = self.variant
                     self.logger.info(f"****primer found with padding {padding - 30}****")
                     #designed_primer.to_excel(self.excel, sheet_name=f"{self.chr}_{self.pos_start}_{self.pos_end}", index=False)
-                    cols_to_check = ["Specificity", "snp_validity"]
+                    #cols_to_check = ["Specificity", "snp_validity"]
                     # take the 1st pair of valid primer to order
-                    order_df = designed_primer[(designed_primer[cols_to_check] == "valid").all(axis=1)]
-                    order_df = order_df.iloc[[0]]
-                    order_df = order_df.reset_index(drop=True)
+                    #order_df = designed_primer[(designed_primer[cols_to_check] == "valid").all(axis=1)]
+                    #order_df = order_df.iloc[[0]]
+                    #order_df = order_df.reset_index(drop=True)
 
                 # if none of designed primer is valid and max padding not reach yet
                 elif valid_df.shape[0] == 0 and padding <= self.config["design_param"]["max_padding"]:
@@ -571,58 +575,58 @@ class DesignPrimer:
                                             #}])
                     #empty_df.to_excel(self.excel, sheet_name=f"{self.chr}_{self.pos_start}_{self.pos_end}", index=False)
 
-        return designed_primer, order_df
+        return designed_primer
 
 
-class GenerateOrder:
+class GeneratePrimer:
     def __init__(self, app_datetimestr):
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         self.config_path = os.path.join(BASE_DIR, "config.json")
         del_file()
         self.datetimestr = app_datetimestr
 
-    def order(self, input_file, username, password, db_name, db_host):
+    def parse_input(self, input_file):
         """
         generate designed primer order sheet
         Input: input csv file
         """
         input_param = parse_csv(input_file)
-        order_sheet = f"/app/output/primer_order_sheet_TEST_VERSION_{self.datetimestr}.csv"
+        #order_sheet = f"/app/output/primer_order_sheet_TEST_VERSION_{self.datetimestr}.csv"
         #output_file = (f"/app/output/designed_primer_{self.datetimestr}.xlsx")
-        with open(order_sheet, "a", newline="") as csv_file:
-            writer = csv.writer(csv_file)
-            writer.writerow(["chr", "POS", "variant", "GRCh", "tag_name", "primer", "tagged_primer"])
-            #with pd.ExcelWriter(output_file, engine='openpyxl') as excel_writer:
-            dfs = []
-            for i in range(len(input_param["chrom"])):
-                param_i = {k: v[i] for k, v in input_param.items() if k in InputParam.__annotations__}
-                param_dict = InputParam(**param_i)
-                start_design = DesignPrimer(self.config_path, self.datetimestr, param_dict)
-                designed_primer, order_primer = start_design.design_primer()
-                dfs.append(designed_primer)
-                del_file()
-                if not order_primer.empty:
-                    (FW_primer, RV_primer,
-                    tagged_FW, tagged_RV,
-                    tag_name_FW, tag_name_RV) = get_tag(self.config_path, order_primer, input_param["tag"][i])
-                    writer.writerow([order_primer["chr"][0], order_primer["POS"][0],
-                                     order_primer["variant"][0], order_primer["GRCh"][0],
-                                     tag_name_FW, FW_primer, tagged_FW])
-                    writer.writerow([order_primer["chr"][0], order_primer["POS"][0],
-                                     order_primer["variant"][0], order_primer["GRCh"][0],
-                                     tag_name_RV, RV_primer, tagged_RV])
-                    insert_DB(order_primer, tagged_FW, tagged_RV, input_param["tag"][i], username, password,db_name, db_host, self.config_path)
-            dfs = [df for df in dfs if not df.empty]
+        #with open(order_sheet, "a", newline="") as csv_file:
+        #writer = csv.writer(csv_file)
+        #writer.writerow(["chr", "POS", "variant", "GRCh", "tag_name", "primer", "tagged_primer"])
+        #with pd.ExcelWriter(output_file, engine='openpyxl') as excel_writer:
+        dfs = []
+        for i in range(len(input_param["chrom"])):
+            param_i = {k: v[i] for k, v in input_param.items() if k in InputParam.__annotations__}
+            param_dict = InputParam(**param_i)
+            start_design = DesignPrimer(self.config_path, self.datetimestr, param_dict)
+            designed_primer = start_design.design_primer()
+            dfs.append(designed_primer)
+            del_file()
+            #if not order_primer.empty:
+                #(FW_primer, RV_primer,
+                #tagged_FW, tagged_RV,
+                #tag_name_FW, tag_name_RV) = get_tag(self.config_path, order_primer, input_param["tag"][i])
+                #writer.writerow([order_primer["chr"][0], order_primer["POS"][0],
+                                    #order_primer["variant"][0], order_primer["GRCh"][0],
+                                    #tag_name_FW, FW_primer, tagged_FW])
+                #writer.writerow([order_primer["chr"][0], order_primer["POS"][0],
+                                    #order_primer["variant"][0], order_primer["GRCh"][0],
+                                    #tag_name_RV, RV_primer, tagged_RV])
+                #insert_DB(order_primer, tagged_FW, tagged_RV, input_param["tag"][i], username, password,db_name, db_host, self.config_path)
+        dfs = [df for df in dfs if not df.empty]
 
-            if dfs:
-                df_all = pd.concat(dfs, ignore_index=True)
-            else:
-                df_all = pd.DataFrame()
+        if dfs:
+            df_all = pd.concat(dfs, ignore_index=True)
+        else:
+            df_all = pd.DataFrame()
 
-        with open(order_sheet) as f:
-            lines = f.readlines()
-        if len(lines) <= 1:
-            os.remove(order_sheet)
+        #with open(order_sheet) as f:
+            #lines = f.readlines()
+        #if len(lines) <= 1:
+            #os.remove(order_sheet)
         return df_all
 
 

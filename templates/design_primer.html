@@ -69,15 +69,20 @@
             font-size: 12px;
             text-align: left;
             overflow: hidden;
-            white-space: nowrap;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        th {
+            line-height: 1.2;
         }
 
         /* Set specific column widths */
-        th.chr, td.chr { width: 10px; }
-        th.variant, td.variant { width: 10px; }
-        th.pos_start, td.pos_start { width: 30px; }
-        th.pos_end, td.pos_end { width: 30px; }
-        th.build, td.build { width: 10px; }
+        th.chr, td.chr { width: 5px; }
+        th.variant, td.variant { width: 30px; }
+        th.pos_start, td.pos_start { width: 20px; }
+        th.pos_end, td.pos_end { width: 20px; }
+        th.build, td.build { width: 5px; }
         th.tag, td.tag { width: 10px; }
         th.opt_tm, td.opt_tm { width: 10px; }
         th.min_tm, td.min_tm { width: 10px; }
@@ -85,11 +90,11 @@
         th.opt_gc, td.opt_gc { width: 10px; }
         th.min_gc, td.min_gc { width: 10px; }
         th.max_gc, td.max_gc { width: 10px; }
-        th.min_product_size, td.min_product_size { width: 10px; }
-        th.max_product_size, td.max_product_size { width: 10px; }
-        th.opt_primer_size, td.opt_primer_size { width: 10px; }
-        th.min_primer_size, td.min_primer_size { width: 10px; }
-        th.max_primer_size, td.max_primer_size { width: 10px; }
+        th.min_product_size, td.min_product_size { width: 15px; }
+        th.max_product_size, td.max_product_size { width: 15px; }
+        th.opt_primer_size, td.opt_primer_size { width: 15px; }
+        th.min_primer_size, td.min_primer_size { width: 15px; }
+        th.max_primer_size, td.max_primer_size { width: 15px; }
         button {
             padding: 8px 12px;
             background: linear-gradient(135deg, #6a11cb, #2575fc);
@@ -139,7 +144,7 @@
         const defaults = {
             build: 37,
             variant: "variant",
-            tag: "M13",
+            tag: "T1",
             opt_tm: 60,
             min_tm: 58,
             max_tm: 63,
@@ -211,7 +216,7 @@
                         <td class="pos_start"><input type="number" name="pos_start[]" ></td>
                         <td class="pos_end"><input type="number" name="pos_end[]"></td>
                         <td class="build"><input type="number" name="build[]" value="37"></td>
-                        <td class="tag"><input type="text" name="tag[]" value="M13"></td>
+                        <td class="tag"><input type="text" name="tag[]" value="T1"></td>
                         <td class="opt_tm"><input type="number" name="opt_tm[]" value="60" step="any"></td>
                         <td class="min_tm"><input type="number" name="min_tm[]" value="58" step="any"></td>
                         <td class="max_tm"><input type="number" name="max_tm[]" value="63" step="any"></td>

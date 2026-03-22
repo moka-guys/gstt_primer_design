@@ -7,7 +7,7 @@
     },
     "db":{
       "db_name": "gstt_db",
-      "schema_name": "primer_tool_test",
+      "schema_name": "primer_tool",
       "table_name": "ordered_primers"
     },
 

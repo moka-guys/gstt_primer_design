@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Error</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; }
+        .box {
+            display: inline-block;
+            padding: 30px;
+            background: #ffe6e6;
+            border-radius: 10px;
+        }
+        a {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ff4d4d;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>❌ Insert Failed</h2>
+        <p>{{ error_message }}</p>
+        <a href="/manual_insert">Try Again</a>
+    </div>
+</body>
+</html>
