@@ -231,37 +231,80 @@ def make_list(x):
 
 
 def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
-              password, db_name, db_host):
+              password, db_name, db_host, notes="NA", passval="No"):
     with open(config_path, "r") as file:
         config = json.load(file)
-    df_insert = order_primer[["chr", "start_POS", "end_POS", "variant", "Left_Sequence",
-                              "Right_Sequence", "Left_Start", "Left_End",
-                              "Right_Start", "Right_End", "Pair_Product_Size",
-                              "gene", "GRCh"]]
+
+    # Select relevant columns from input DataFrame
+    df_insert = order_primer[[
+        "chr", "start_POS", "end_POS", "variant", "Left_Sequence",
+        "Right_Sequence", "Left_Start", "Left_End",
+        "Right_Start", "Right_End", "Pair_Product_Size",
+        "gene", "GRCh"
+    ]].copy()
+
+    # Add extra columns for tagged primers, tag, notes, passed validation
     df_insert["tagged_FW"] = tagged_FW
     df_insert["tagged_RV"] = tagged_RV
     df_insert["tag"] = tag
+    df_insert["notes"] = notes
+    df_insert["passval"] = passval
 
-    db_cols = ["chr", "start_pos", "end_pos", "variant", "left_primer_seq",
-               "right_primer_seq", "left_primer_start", "left_primer_end",
-               "right_primer_start", "right_primer_end", "product_size",
-               "gene", "grch", "tagged_left", "tagged_right", "tag"]
+    # Replace None or empty strings with 'NA'
+    for col in ["tagged_FW", "tagged_RV", "tag", "notes"]:
+        df_insert[col] = df_insert[col].replace([None, ''], 'NA')
+    df_insert["passval"] = df_insert["passval"].replace([None, ''], 'No')
+
+    # Rename columns to match DB column names
+    df_insert.rename(columns={
+        "start_POS": "start_pos",
+        "end_POS": "end_pos",
+        "Left_Sequence": "left_primer_seq",
+        "Right_Sequence": "right_primer_seq",
+        "Left_Start": "left_primer_start",
+        "Left_End": "left_primer_end",
+        "Right_Start": "right_primer_start",
+        "Right_End": "right_primer_end",
+        "Pair_Product_Size": "product_size",
+        "GRCh": "grch",
+        "tagged_FW": "tagged_left",
+        "tagged_RV": "tagged_right",
+        "passval": "passedvalidation"
+    }, inplace=True)
+
+    # Convert numpy scalars to Python scalars
     df_insert = df_insert.applymap(
         lambda x: x.item() if isinstance(x, (np.integer, np.floating)) else x
     )
+
+    # Replace any remaining NaN with None for SQL insertion
     df_insert = df_insert.where(pd.notnull(df_insert), None)
+
+    # Define DB columns (order must match the DataFrame after renaming)
+    db_cols = [
+        "chr", "start_pos", "end_pos", "variant", "left_primer_seq",
+        "right_primer_seq", "left_primer_start", "left_primer_end",
+        "right_primer_start", "right_primer_end", "product_size",
+        "gene", "grch", "tagged_left", "tagged_right", "tag",
+        "notes", "passedvalidation"
+    ]
     connection = get_postgres_connection(db_name, username, password, db_host)
     cursor = connection.cursor()
-    # Insert each row if not duplicated
+    # Insert each row
     for idx, row in df_insert.iterrows():
-        values = tuple(row.values)
+        values = tuple(row[col] for col in db_cols)  # ensure order matches db_cols
         query = f"""
-        INSERT INTO {config["db"]["schema_name"]}.{config["db"]["table_name"]} ({", ".join(db_cols)})
-        VALUES ({", ".join(["%s"] * len(db_cols))})
-        ON CONFLICT DO NOTHING;
+            INSERT INTO {config["db"]["schema_name"]}.{config["db"]["table_name"]} 
+            ({", ".join(db_cols)})
+            VALUES ({", ".join(["%s"] * len(db_cols))})
+            ON CONFLICT DO NOTHING;
         """
         cursor.execute(query, values)
+
+    # Commit transaction
     connection.commit()
+    cursor.close()
+    connection.close()
 
 
 def generate_bed(primers, build):

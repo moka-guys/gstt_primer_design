@@ -544,18 +544,16 @@ def manual_insert():
                 "chr": chr,
                 "start_POS": int(start_pos),
                 "end_POS": int(end_pos),
-                "variant": variant or None,
-                "Left_Sequence": left_seq,
-                "Right_Sequence": right_seq,
-                "Left_Start": int(left_start) if left_start else None,
-                "Left_End": int(left_end) if left_end else None,
-                "Right_Start": int(right_start) if right_start else None,
-                "Right_End": int(right_end) if right_end else None,
-                "Pair_Product_Size": int(product_size) if product_size else None,
-                "gene": gene or None,
-                "GRCh": int(grch) if grch else None,
-                "Notes": notes or None,
-                "PassedValidation": passval or None
+                "variant": variant or "variant",
+                "Left_Sequence": left_seq or "NNNNN",
+                "Right_Sequence": right_seq or "NNNNN",
+                "Left_Start": int(left_start) if left_start else 1,
+                "Left_End": int(left_end) if left_end else 1,
+                "Right_Start": int(right_start) if right_start else 1,
+                "Right_End": int(right_end) if right_end else 1,
+                "Pair_Product_Size": int(product_size) if product_size else 1,
+                "gene": gene or "gene",
+                "GRCh": int(grch)
             }])
 
             insert_DB(
@@ -563,7 +561,9 @@ def manual_insert():
                 username=DB_USER,
                 password=DB_PASSWORD,
                 db_name=DB_NAME,
-                db_host=DB_HOST
+                db_host=DB_HOST,
+                notes=notes,
+                passval=passval
             )
 
             # Success

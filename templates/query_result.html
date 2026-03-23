@@ -82,7 +82,7 @@
                 updatedData[col] = value;
             });
 
-            fetch('/update-row', {
+            fetch("{{ url_for('update_row') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
