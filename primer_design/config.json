@@ -34,18 +34,14 @@
     "ref_b37": {
         "bowtie_ref": "/app/input/hs37d5.bowtie",
         "genome_ref": "/app/input/hs37d5.fa", 
-        "snp_ref": "/app/input/00-common_all_b37.vcf.gz",
-        "exon_ref": "/app/input/GCF_000001405.25_GRCh37.p13_genomic.db",
-        "ref_genome_src":"https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.25_GRCh37.p13/",
-        "common_snp_src": "https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b151_GRCh37p13/00-common_all.vcf.gz"
+        "snp_ref": "/app/input/gnomad.exomes.r2.1.1.sites.vcf.bgz",
+        "exon_ref": "/app/input/GCF_000001405.25_GRCh37.p13_genomic.db"
      },
      "ref_b38": {
       "bowtie_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.bowtie",
       "genome_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.fna", 
-      "snp_ref": "/app/input/00-common_all_b38.vcf.gz",
-      "exon_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.db",
-      "ref_genome_src": "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/",
-      "common_snp_src": "https://ftp.ncbi.nlm.nih.gov/snp/organisms/human_9606_b151_GRCh38p7/VCF/00-common_all.vcf.gz"
+      "snp_ref": "/app/input/combined_common_snp_v410_gnomad_exome.vcf.bgz",
+      "exon_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.db"
    },
     "M13":{
       "F": "TGTAAAACGACGGCCAGT",

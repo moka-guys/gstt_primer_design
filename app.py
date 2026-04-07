@@ -163,6 +163,8 @@ def igv_view(genome):
             build = 38
         # check if the primers are for build37 or 38
         temp_df = df_combined[df_combined["GRCh"] == build]
+        if temp_df["GRCh"].iloc[0] == 38:
+            temp_df["chr"] = "chr" + temp_df["chr"].astype(str)
         temp_df = temp_df.drop(columns=["GRCh"])
         # put primers into bed format
         bed_file = generate_bed(temp_df, genome[2:])

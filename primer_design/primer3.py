@@ -69,16 +69,16 @@ class DesignPrimer:
             self.common_snp = self.config["ref_b37"]["snp_ref"]
             self.exon_db = self.config["ref_b37"]["exon_ref"]
             self.nc_pair = self.config["nc_data_b37"]
-            self.src1 = self.config["ref_b37"]["ref_genome_src"]
-            self.src2 = self.config["ref_b37"]["common_snp_src"]
+            #self.src1 = self.config["ref_b37"]["ref_genome_src"]
+            #self.src2 = self.config["ref_b37"]["common_snp_src"]
         elif self.build == 38:
             self.bowtie_ref = self.config["ref_b38"]["bowtie_ref"]
             self.ref_genome = self.config["ref_b38"]["genome_ref"]
             self.common_snp = self.config["ref_b38"]["snp_ref"]
             self.exon_db = self.config["ref_b38"]["exon_ref"]
             self.nc_pair = self.config["nc_data_b38"]
-            self.src1 = self.config["ref_b38"]["ref_genome_src"]
-            self.src2 = self.config["ref_b38"]["common_snp_src"]
+            #self.src1 = self.config["ref_b38"]["ref_genome_src"]
+            #self.src2 = self.config["ref_b38"]["common_snp_src"]
         else:
             self.logger.info("Invalid build is used in input file")        
         self.logger.info(f"Primer design for {self.chr} {self.pos_start}-{self.pos_end}")
@@ -172,8 +172,12 @@ class DesignPrimer:
         """
         get a list of snp from common snp vcf
         """
+        if self.build == 38:
+            chrom = f"chr{self.chr}"
+        else:
+            chrom = self.chr
         vcf = pysam.TabixFile(self.common_snp)
-        snps = vcf.fetch(self.chr, start, end)
+        snps = vcf.fetch(chrom, start, end)
         snp_list = list(snps)
 
         return snp_list
@@ -432,35 +436,34 @@ class DesignPrimer:
 
     def has_snp(self, new_col, updated_df, p_start, p_end):
         """
-        Check any snp in given region and update df
+        Check any snp with AF >= 0.01 in designed primer region
         """
         updated_df[new_col] = None
         for i in range(updated_df.shape[0]):
-            if updated_df["Specificity"][i] == "valid":
+            if updated_df["Specificity"][i] == "valid":  # check for primer with bowtie specificity passed
                 snp_list = self.get_snp(updated_df[p_start][i], updated_df[p_end][i])
                 snps = []
                 if len(snp_list) > 0:
                     for s in snp_list:
                         cols = s.strip().split('\t')
-                        snp_pos = int(cols[1]) - 1
-                        local_snp_pos = snp_pos - updated_df[p_start][i]
-                        length = (updated_df[p_end][i] - updated_df[p_start][i])
-                        ref = cols[3]
-                        alt = cols[4]
-                        # check type of variant SNP or INDEL or else
-                        variant_class = self.classify_variant(ref, alt)
-                        # get critical region where SNP should not be found
-                        # i.e. last third in FW primer and 1st third in RV primer
-                        if "Left" in p_start:
-                            focus_len = [(length/3) * 2, length]
-                        else:
-                            focus_len = [0, length/3]
-                        # record if SNP is located at critical region
-                        if focus_len[0] <= local_snp_pos <= focus_len[1]:
-                            snps.append(f"{cols[2]}-{variant_class} is at {local_snp_pos} of primer of {length}: critical")
-                        else:
-                            snps.append(f"{cols[2]}-{variant_class} is at {local_snp_pos} of primer of {length}")
-                    updated_df[new_col][i] = snps
+                        info_field = cols[7]
+                        info_dict = dict(item.split("=", 1) for item in info_field.split(";") if "=" in item)
+                        af = info_dict.get("AF")
+                        if af is not None:
+                            try:
+                                af_value = float(af)
+                                if af_value >= 0.01:
+                                    ref = cols[3]
+                                    alt = cols[4]
+                                    # check type of variant SNP or INDEL or else
+                                    variant_class = self.classify_variant(ref, alt)
+                                    snps.append(f"{cols[2]}-{variant_class} with AF:{af_value}is in primer region")
+                            except ValueError:
+                                continue  # skip malformed AF
+                    if snps:
+                        updated_df[new_col][i] = snps
+                    else:
+                        updated_df[new_col][i] = "no common snp"
                 else:
                     updated_df[new_col][i] = "no snp"
 
@@ -470,7 +473,12 @@ class DesignPrimer:
         return updated_df
 
     def classify_snp(self, df):
-
+        """
+        check if there is one or more than one INDEL
+        and if there is two or more than common SNP >=0.01
+        in any region of primer (in current ref file, all SNP is >=0.01)
+        and if there is, mark as invalid primer
+        """
         df["snp_validity"] = None
         for i in range(df.shape[0]):
             if df["Specificity"][i] == "valid":
@@ -481,9 +489,6 @@ class DesignPrimer:
                     df["snp_validity"][i] = "invalid"
 
                 elif len(total_snp) >= 2:
-                    df["snp_validity"][i] = "invalid"
-
-                elif any("critical" in s for s in total_snp):
                     df["snp_validity"][i] = "invalid"
 
                 else:

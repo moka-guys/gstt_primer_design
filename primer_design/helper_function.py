@@ -356,7 +356,14 @@ def vcf_to_bed(bed_file, build):
             vid = fields[2] if fields[2] != "." else "NA"
             ref = fields[3]
             alt = fields[4]
-            name = f"{vid}_{ref}_{alt}"
+            info_field = fields[7]
+            info_dict = dict(item.split("=", 1) for item in info_field.split(";") if "=" in item)
+            af = info_dict.get("AF")
+            if af is not None:
+                af_value = float(af)
+            else:
+                af_value = "NA"
+            name = f"{vid}_{ref}_{alt}_{af_value}"
             start = pos - 1  # BED is 0-based
             end = start + len(ref)  # end position
             bed.write(f"{chrom}\t{start}\t{end}\t{name}\n")
