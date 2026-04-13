@@ -32,6 +32,12 @@ CREATE TABLE IF NOT EXISTS primer_tool.ordered_primers (
     GRCh INTEGER NOT NULL CHECK (GRCh IN (37, 38)),
     Notes VARCHAR(100),
     PassedValidation yes_no,
+    Mix VARCHAR(100),
+    Dilute_time VARCHAR(100),
+    Tray VARCHAR(100),
+    Freezer VARCHAR(100),
+    Grid_FW VARCHAR(100),
+    Grid_RV VARCHAR(100),
     insert_time TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT ordered_primers_unique_all UNIQUE (
         chr,

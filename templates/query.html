@@ -138,6 +138,33 @@
     <div class="container">
         <h1>Query Data</h1>
         <h3 style="color: red;">This is Test Server. Do not use for Production/Clinical Service</h3>
+        <ul>
+            <li>
+                <span style="color: green; font-size: 1.17em; font-weight: bold;">
+                You can use single or multiple query fields. When you use multiple fields, the search returns only results that match every field you entered (AND), not results that match just one of them (OR).
+                </span>
+              </li>
+            <li>
+              <span style="color: green; font-size: 1.17em; font-weight: bold;">
+                Default GRCh to query is 37.
+              </span>
+            </li>
+            <li>
+                <span style="color: green; font-size: 1.17em; font-weight: bold;">
+                  If you use start and end Pos to query, all designed primers that fall within that region will be returned.
+                </span>
+            </li>
+            <li>
+              <span style="color: green; font-size: 1.17em; font-weight: bold;">
+                If the start and end pos are provided in GRCh37, both GRCh37 and liftover GRCh38 are used to query.
+              </span>
+            </li>
+            <li>
+                <span style="color: green; font-size: 1.17em; font-weight: bold;">
+                  If the start and end pos are provided in GRCh38, only GRCh38 is used to query.
+                </span>
+            </li>
+        </ul>
 
         <!-- Show error if Flask provides one -->
         {% if error %}
@@ -147,18 +174,18 @@
         <form method="POST" enctype="multipart/form-data">
             <div>
                 <label>Schema name:</label>
-                <input type="text" name="schema" placeholder="Enter schema name" value="{{ default_schema }}" required>
+                <input type="text" name="schema" value="{{ default_schema }}" required>
             </div>
             <div>
                 <label>Table name:</label>
-                <input type="text" name="table" placeholder="Enter table name" value="{{ default_table }}" required>
+                <input type="text" name="table" value="{{ default_table }}" required>
             </div>
 
-            <h2>Query form</h2>
+            <h2>Query field</h2>
             <div class="filter-row">
                 <div>
                     <label>Chr</label>
-                    <input type="text" name="chr" placeholder="chr" value="chr" required>
+                    <input type="text" name="chr" value="chr" required>
                 </div>
                 <div>
                     <label>Fill in chr 1-2 or X or Y</label>
@@ -169,7 +196,7 @@
             <div class="filter-row">
                 <div>
                     <label>Gene</label>
-                    <input type="text" name="gene" placeholder="gene" value="gene" required>
+                    <input type="text" name="gene" value="gene" required>
                 </div>
                 <div>
                     <label>Fill in Gene name</label>
@@ -180,7 +207,7 @@
             <div class="filter-row">
                 <div>
                     <label>Variant</label>
-                    <input type="text" name="variant" placeholder="variant" value="variant" required>
+                    <input type="text" name="variant" value="variant" required>
                 </div>
                 <div>
                     <label>Fill in variant name</label>
@@ -191,7 +218,7 @@
             <div class="filter-row">
                 <div>
                     <label>Validation</label>
-                    <input type="text" name="passedvalidation" placeholder="passedvalidation" value="passedvalidation" required>
+                    <input type="text" name="passedvalidation" value="passedvalidation" required>
                 </div>
                 <div>
                     <label>Fill in Yes or No</label>
@@ -201,7 +228,7 @@
             <div class="filter-row">
                 <div>
                     <label>start_pos</label>
-                    <input type="text" name="start_pos" placeholder="start_pos" value="start_pos" required>
+                    <input type="text" name="start_pos" value="start_pos" required>
                 </div>
                 <div>
                     <label>Fill in start position</label>
@@ -211,11 +238,21 @@
             <div class="filter-row">
                 <div>
                     <label>end_pos</label>
-                    <input type="text" name="end_pos" placeholder="end_pos" value="end_pos" required>
+                    <input type="text" name="end_pos" value="end_pos" required>
                 </div>
                 <div>
                     <label>Fill in end position</label>
                     <input type="text" name="value6">
+                </div>
+            </div>
+            <div class="filter-row">
+                <div>
+                    <label>GRCh</label>
+                    <input type="text" name="grch" value="grch" required>
+                </div>
+                <div>
+                    <label>Default is 37, overwrite it with 38 if required</label>
+                    <input type="text" name="value7" value="{{ default_grch }}" required>
                 </div>
             </div>
 

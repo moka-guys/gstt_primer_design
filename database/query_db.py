@@ -1,7 +1,7 @@
 import argparse
 import json
 from psycopg2 import sql
-from primer_design.helper_function import get_postgres_connection
+from primer_design.helper_function import get_postgres_connection, liftover_37to38
 
 
 def get_arguments() -> argparse.Namespace:
@@ -81,7 +81,7 @@ def get_arguments() -> argparse.Namespace:
 
 def search_postgres(dbname, user, password, host,
                     schema, table, col1, col2, col3, col4,
-                    value1, value2, value3, value4,
+                    value1, value2, value3, value4, col5, value7,
                     pos_start=None, pos_end=None):
     """
     Search query with exact filters + optional overlapping range
@@ -89,19 +89,25 @@ def search_postgres(dbname, user, password, host,
     # Pair columns and values
     col_value_pairs = [
         (str(c).strip(), v)
-        for c, v in zip([col1, col2, col3, col4],
-                        [value1, value2, value3, value4])
+        for c, v in zip([col1, col2, col3, col4, col5],
+                        [value1, value2, value3, value4, value7])
         if c not in (None, '') and v not in (None, '')
     ]
 
-    col_list = [c for c, v in col_value_pairs]
-    value_list = [v for c, v in col_value_pairs]
-
     conditions = []
+    value_list = []
 
-    # Exact match conditions
-    for c in col_list:
-        conditions.append(sql.SQL("{} = %s").format(sql.Identifier(c)))
+    for c, v in col_value_pairs:
+        if c == col5:  # grch input
+            if str(v) == "37":
+                conditions.append(sql.SQL("{} IN (%s, %s)").format(sql.Identifier(c)))
+                value_list.extend(["37", "38"])
+            else:
+                conditions.append(sql.SQL("{} = %s").format(sql.Identifier(c)))
+                value_list.append(v)
+        else:
+            conditions.append(sql.SQL("{} = %s").format(sql.Identifier(c)))
+            value_list.append(v)
 
     # Only add range condition if pos_start/pos_end are valid integers
     try:
@@ -115,15 +121,27 @@ def search_postgres(dbname, user, password, host,
         pos_end_int = None
 
     if pos_start_int is not None and pos_end_int is not None:
-        # overlapping region
-        conditions.append(sql.SQL("start_pos <= %s AND end_pos >= %s"))
-        value_list.extend([pos_end_int, pos_start_int])
-    elif pos_start_int is not None:
-        conditions.append(sql.SQL("end_pos >= %s"))
-        value_list.append(pos_start_int)
-    elif pos_end_int is not None:
-        conditions.append(sql.SQL("start_pos <= %s"))
-        value_list.append(pos_end_int)
+        if str(value7) == "38":
+            conditions.append(
+                sql.SQL("left_primer_start >= %s AND right_primer_end <= %s")
+            )
+            value_list.extend([pos_start_int, pos_end_int])
+        elif str(value7) == "37":
+            # 37 uses original, 38 uses liftover
+            lifted_start = liftover_37to38(f"chr{value1}", pos_start_int)
+            lifted_end = liftover_37to38(f"chr{value1}", pos_end_int)
+            conditions.append(sql.SQL("""
+            (
+                (grch = %s AND left_primer_start >= %s AND right_primer_end <= %s)
+                OR
+                (grch = %s AND left_primer_start >= %s AND right_primer_end <= %s)
+            )
+            """))
+
+            value_list.extend([
+                "37", pos_start_int, pos_end_int,
+                "38", lifted_start, lifted_end
+            ])
 
     # query
     base_query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(schema, table))
@@ -143,7 +161,12 @@ def search_postgres(dbname, user, password, host,
     rows = cursor.fetchall()
     col_names = [desc[0] for desc in cursor.description]
     result = [dict(zip(col_names, row)) for row in rows]
-
+    # reorder to show passedvalidation in earlier col
+    col_names.insert(5, col_names.pop(col_names.index("passedvalidation")))
+    result = [
+                {col: row[col] for col in col_names}
+                for row in result
+            ]
     conn.close()
     return result
 

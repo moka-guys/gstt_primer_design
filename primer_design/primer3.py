@@ -386,6 +386,12 @@ class DesignPrimer:
             result_list = []
             left = temp_df[temp_df["name"].str.contains("Left", case=False)]
             right = temp_df[temp_df["name"].str.contains("Right", case=False)]
+            # check how many primer pair can generate amplicon
+            # if left and right primers are not on the same chr
+            # they can generate amplicon
+            # if left and right primers are on the same chr, but
+            # distance is greater than 2kb, cannot generate the amplicon
+            # checking how many pair (between lt and rt) can generate amplicon
             for _, l_row in left.iterrows():
                 for _, r_row in right.iterrows():
                     if l_row["chr"] == r_row["chr"]:  # only same chromosome
@@ -402,9 +408,10 @@ class DesignPrimer:
             amplicon = pd.DataFrame(result_list)
             row = primer_df.loc[primer_df["Primer_Pair"] == i].iloc[0]
             if len(amplicon) == 1:
+                # check if the unique primer matches with req parameter
                 amp = amplicon.iloc[0]
 
-                if (                  
+                if (
                     amp["chr"] == nc_number
                     and amp["size"] == row["Pair_Product_Size"]
                     and amp["left_pos"] - 1 == row["Left_Start"]

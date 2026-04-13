@@ -8,6 +8,7 @@ import subprocess
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 import psycopg2
 from pathlib import Path
+from pyliftover import LiftOver
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(BASE_DIR, "config.json")
@@ -343,6 +344,7 @@ def vcf_to_bed(bed_file, build):
     subprocess.run([
             "bcftools", "view",
             "-R", bed_file,
+            "-i", 'INFO/AF > 0.01',
             "-o", intermediate_vcf,
             vcf_in
             ], check=True)
@@ -470,3 +472,15 @@ def prepare_order_sheet(df):
     tag_name_FW, tag_name_RV) = get_tag(df, df["order_tag"][0])
 
     return FW_primer, RV_primer, tagged_FW, tagged_RV,tag_name_FW, tag_name_RV
+
+
+def liftover_37to38(chrom, pos):
+    """
+    lift over build37 pos to build38
+    """
+    with open(config_path, "r") as file:
+        config = json.load(file)
+    liftover_ref = config["ref_b37"]["liftover"]
+    lo = LiftOver(liftover_ref)
+    result = lo.convert_coordinate(chrom, pos)
+    return int(result[0][1])

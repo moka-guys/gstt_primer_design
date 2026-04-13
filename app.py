@@ -28,7 +28,8 @@ DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 default_schema = "primer_tool"
 default_table = "ordered_primers"
-primer_editable_columns = ['notes', 'passedvalidation']
+primer_editable_columns = ['notes', 'passedvalidation', 'mix', 'dilute_time',
+                           'tray', 'freezer', 'grid_fw', 'grid_rv']
 
 
 def wait_for_db():
@@ -271,6 +272,7 @@ def query_data():
     """
     Function to query postgres tables
     """
+    default_query_grch = 37
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
     if request.method == 'POST':
@@ -286,11 +288,13 @@ def query_data():
         value4 = request.form.get('value4')
         value5 = request.form.get('value5')
         value6 = request.form.get('value6')
+        grch = request.form.get('grch')
+        value7 = request.form.get('value7')
         file = request.files.get('file')
 
         if not table or not schema:
             return "Schema and Table name are required!", 400
-        if not any([value1, value2, value3, value4, value5, value6, file]):
+        if not any([value1, value2, value3, value4, value5, value6, value7, file]):
             return render_template(
                 "query_result.html",
                 results=None,
@@ -302,7 +306,8 @@ def query_data():
                 result_list = search_postgres(
                     DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
                     schema, table, chromosome, gene, variant, passedvalidation,
-                    value1, value2, value3, value4, value5, value6
+                    value1, value2, value3, value4, grch, value7,
+                    value5, value6
                 )
             else:
                 filters = json.load(file)
@@ -334,7 +339,8 @@ def query_data():
     return render_template(
         'query.html',
         default_schema=default_schema,
-        default_table=default_table
+        default_table=default_table,
+        default_grch=default_query_grch
     )
 
 
