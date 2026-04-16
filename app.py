@@ -424,6 +424,8 @@ def save_selected():
             insert_DB(temp_df, tagged_FW, tagged_RV,temp_df["order_tag"][0],
                       DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
         df_to_order = pd.DataFrame(rows, columns=columns)
+        df_to_order["Scale"] = "25RR"
+        df_to_order["Purification"] = "STD"
         df_to_order.to_csv(f"/app/output/{session['order_sheet_name']}", index=False)
         return render_template("save_complete.html")
 

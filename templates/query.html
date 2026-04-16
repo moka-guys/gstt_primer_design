@@ -145,18 +145,19 @@
                 </span>
               </li>
             <li>
-              <span style="color: green; font-size: 1.17em; font-weight: bold;">
-                Default GRCh to query is 37.
+              <span style="color: green; font-size: 1.17em; font-weight: bold;">                
+                If the start and end pos are not provided, all primers in given chromosome will be returned.
               </span>
             </li>
             <li>
                 <span style="color: green; font-size: 1.17em; font-weight: bold;">
-                  If you use start and end Pos to query, all designed primers that fall within that region will be returned.
+                  If query is for GRCh37, both GRCh37 and GRCh38 (liftover if start and end pos are provided) will be returned. 
+                  
                 </span>
             </li>
             <li>
               <span style="color: green; font-size: 1.17em; font-weight: bold;">
-                If the start and end pos are provided in GRCh37, both GRCh37 and liftover GRCh38 are used to query.
+                If query is for GRCh38, only GRCh38 will be returned.
               </span>
             </li>
             <li>

@@ -25,6 +25,11 @@
             color: green;
             font-weight: bold;
         }
+        .highlight-row {
+            background-color: #f8d7da !important;
+            color: #721c24;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -34,6 +39,7 @@
 <ul class="red-list"> 
     <li>"Invalid" in "Specificity" col means designed primer pair can bind to multiple regions on a single chromosome and those regions are also less than 2kb base pair distance; therefore, can generate amplicon for multiple regions.</li> 
     <li>"Invalid" in “snp_validity” col means the designed primer pair has one or more INDEL OR two or more common SNP with AF>=0.01.</li>
+    <li> The row highlighted with red contains invalid primer either due to "invalid" in "Specificity" or "snp_validity"</li>
     <li>"no snp" means no snp is present in designed primer region.</li>
     <li>"no common snp" means no snp with AF>=0.01 is present in designed primer region; but rare snp may still present.</li>
 </ul>
@@ -59,8 +65,15 @@
                 <td>
                     <input type="checkbox" name="selected_rows" value="{{ loop.index0 }}">
                 </td>
-                {% for value in row.values() %}
-                    <td>{{ value }}</td>
+        
+                {% set is_invalid = row['Specificity'] == 'invalid' or row['snp_validity'] == 'invalid' %}
+        
+                {% for key, value in row.items() %}
+                    <td class="
+                        {% if is_invalid %}highlight-row{% endif %}
+                    ">
+                        {{ value }}
+                    </td>
                 {% endfor %}
             </tr>
             {% endfor %}
@@ -117,7 +130,6 @@
         or <a href="{{ url_for('igv_view', genome='hg38') }}">igv_view build38</a>
     {% endif %}
 </p>
-
 
 </body>
 </html>
