@@ -80,93 +80,118 @@ def get_arguments() -> argparse.Namespace:
 
 
 def search_postgres(dbname, user, password, host,
-                    schema, table, col1, col2, col3, col4,
-                    value1, value2, value3, value4, col5, value7,
+                    chr_val, gene_val, variant_val,
+                    validation_val, grch_val,
                     pos_start=None, pos_end=None):
-    """
-    Search query with exact filters + optional overlapping range
-    """
-    # Pair columns and values
-    col_value_pairs = [
-        (str(c).strip(), v)
-        for c, v in zip([col1, col2, col3, col4, col5],
-                        [value1, value2, value3, value4, value7])
-        if c not in (None, '') and v not in (None, '')
-    ]
 
     conditions = []
-    value_list = []
+    values = []
 
-    for c, v in col_value_pairs:
-        if c == col5:  # grch input
-            if str(v) == "37":
-                conditions.append(sql.SQL("{} IN (%s, %s)").format(sql.Identifier(c)))
-                value_list.extend(["37", "38"])
+    base_query = sql.SQL("""
+        SELECT
+            p.*,
+            b.*
+        FROM primer_tool.primers p
+        LEFT JOIN primer_tool.primer_batches b
+        ON p.primer_id = b.primer_id
+    """)
+
+    if chr_val:
+        conditions.append(sql.SQL("p.chr = %s"))
+        values.append(chr_val)
+
+    if gene_val:
+        conditions.append(sql.SQL("p.gene = %s"))
+        values.append(gene_val)
+
+    if variant_val:
+        conditions.append(sql.SQL("p.variant = %s"))
+        values.append(variant_val)
+
+    if validation_val:
+        conditions.append(sql.SQL("b.passed_validation = %s"))
+        values.append(validation_val)
+
+    try:
+        pos_start = int(pos_start) if pos_start else None
+        pos_end = int(pos_end) if pos_end else None
+    except:
+        pos_start = None
+        pos_end = None
+
+    def safe_liftover(chrom, pos):
+        try:
+            lifted = liftover_37to38(chrom, pos)
+            return int(lifted) if lifted else None
+        except:
+            return None
+    if grch_val:
+        grch_val = str(grch_val)
+
+        if grch_val == "38":
+            conditions.append(sql.SQL("p.grch = %s"))
+            values.append(38)
+
+            if pos_start is not None and pos_end is not None:
+                conditions.append(sql.SQL("""
+                    p.left_primer_start >= %s
+                    AND p.right_primer_end <= %s
+                """))
+                values.extend([pos_start, pos_end])
+
+        # liftover if grch37 and pos is given
+        elif grch_val == "37":
+
+            chrom = f"chr{chr_val}" if chr_val else None
+
+            if pos_start is not None and pos_end is not None and chrom:
+
+                lifted_start = safe_liftover(chrom, pos_start)
+                lifted_end = safe_liftover(chrom, pos_end)
+
+                # If liftover works → dual query
+                if lifted_start and lifted_end:
+                    conditions.append(sql.SQL("""
+                        (
+                            (p.grch = %s AND p.left_primer_start >= %s AND p.right_primer_end <= %s)
+                            OR
+                            (p.grch = %s AND p.left_primer_start >= %s AND p.right_primer_end <= %s)
+                        )
+                    """))
+
+                    values.extend([
+                        37, pos_start, pos_end,
+                        38, lifted_start, lifted_end
+                    ])
+
+                else:
+                    # fallback if liftover fails
+                    conditions.append(sql.SQL("""
+                        p.grch = %s
+                        AND p.left_primer_start >= %s
+                        AND p.right_primer_end <= %s
+                    """))
+                    values.extend([37, pos_start, pos_end])
+
             else:
-                conditions.append(sql.SQL("{} = %s").format(sql.Identifier(c)))
-                value_list.append(v)
-        else:
-            conditions.append(sql.SQL("{} = %s").format(sql.Identifier(c)))
-            value_list.append(v)
+                conditions.append(sql.SQL("p.grch IN (37)"))
 
-    # Only add range condition if pos_start/pos_end are valid integers
-    try:
-        pos_start_int = int(pos_start) if pos_start not in (None, '') else None
-    except ValueError:
-        pos_start_int = None
-
-    try:
-        pos_end_int = int(pos_end) if pos_end not in (None, '') else None
-    except ValueError:
-        pos_end_int = None
-
-    if pos_start_int is not None and pos_end_int is not None:
-        if str(value7) == "38":
-            conditions.append(
-                sql.SQL("left_primer_start >= %s AND right_primer_end <= %s")
-            )
-            value_list.extend([pos_start_int, pos_end_int])
-        elif str(value7) == "37":
-            # 37 uses original, 38 uses liftover
-            lifted_start = liftover_37to38(f"chr{value1}", pos_start_int)
-            lifted_end = liftover_37to38(f"chr{value1}", pos_end_int)
-            conditions.append(sql.SQL("""
-            (
-                (grch = %s AND left_primer_start >= %s AND right_primer_end <= %s)
-                OR
-                (grch = %s AND left_primer_start >= %s AND right_primer_end <= %s)
-            )
-            """))
-
-            value_list.extend([
-                "37", pos_start_int, pos_end_int,
-                "38", lifted_start, lifted_end
-            ])
-
-    # query
-    base_query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(schema, table))
+    query = base_query
 
     if conditions:
-        query = base_query + sql.SQL(" WHERE ") + sql.SQL(" AND ").join(conditions)
-    else:
-        query = base_query
-
+        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(conditions)
+    query += sql.SQL(" ORDER BY insert_time ASC, batch_id ASC")
     query += sql.SQL(" LIMIT 100")
     conn = get_postgres_connection(dbname, user, password, host)
     cursor = conn.cursor()
-    print("QUERY:", query.as_string(conn))
-    print("VALUES:", value_list)
+    cursor.execute(query, values)
 
-    cursor.execute(query, value_list)
     rows = cursor.fetchall()
-    col_names = [desc[0] for desc in cursor.description]
-    result = [dict(zip(col_names, row)) for row in rows]
-    # reorder to show passedvalidation in earlier col
-    col_names.insert(5, col_names.pop(col_names.index("passedvalidation")))
-    result = [
-                {col: row[col] for col in col_names}
-                for row in result
-            ]
+    cols = [d[0] for d in cursor.description]
+    result = [dict(zip(cols, row)) for row in rows]
+    if "passed_validation" in cols:
+        cols.insert(5, cols.pop(cols.index("passed_validation")))
+        result = [{col: row[col] for col in cols} for row in result]
     conn.close()
     return result
 

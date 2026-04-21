@@ -5,272 +5,129 @@
     <title>Query Data</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #f0f4f8, #d9e6f2);
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
             padding-top: 40px;
-            margin: 0;
         }
 
         .container {
             background: white;
-            padding: 40px 30px;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-            max-width: 600px;
-            width: 100%;
+            padding: 30px;
+            border-radius: 12px;
+            width: 650px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
-        h1 {
-            color: #2575fc;
-            text-align: center;
-            margin-bottom: 25px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        }
-
-        h2 {
-            color: #6a11cb;
-            margin-top: 25px;
-            margin-bottom: 15px;
-        }
-
-        h4 {
-            color: #333;
-            font-weight: normal;
-            margin-top: 10px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"], input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
-            border-color: #6a11cb;
-            box-shadow: 0 0 8px rgba(106,17,203,0.4) inset;
-            outline: none;
-        }
+        h1 { text-align: center; color: #2575fc; }
 
         .filter-row {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
+            margin-bottom: 12px;
         }
 
-        .filter-row > div {
+        .filter-row div {
             flex: 1;
-            min-width: 120px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
         }
 
         button {
-            padding: 14px;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            width: 100%;
+            padding: 12px;
+            background: #2575fc;
             color: white;
-            font-size: 18px;
-            font-weight: bold;
             border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-        }
-
-        figure {
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        figure img {
-            max-width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #2575fc;
-            text-decoration: none;
-            font-weight: bold;
-            transition: color 0.3s;
-        }
-
-        .back-link:hover {
-            color: #6a11cb;
+            border-radius: 8px;
+            font-size: 16px;
         }
 
         .error {
-            color: #ff4d4f;
             background: #ffe6e6;
             padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: bold;
+            color: red;
+            margin-bottom: 10px;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Query Data</h1>
-        <h3 style="color: red;">This is Test Server. Do not use for Production/Clinical Service</h3>
-        <ul>
-            <li>
-                <span style="color: green; font-size: 1.17em; font-weight: bold;">
-                You can use single or multiple query fields. When you use multiple fields, the search returns only results that match every field you entered (AND), not results that match just one of them (OR).
-                </span>
-              </li>
-            <li>
-              <span style="color: green; font-size: 1.17em; font-weight: bold;">                
-                If the start and end pos are not provided, all primers in given chromosome will be returned.
-              </span>
-            </li>
-            <li>
-                <span style="color: green; font-size: 1.17em; font-weight: bold;">
-                  If query is for GRCh37, both GRCh37 and GRCh38 (liftover if start and end pos are provided) will be returned. 
-                  
-                </span>
-            </li>
-            <li>
-              <span style="color: green; font-size: 1.17em; font-weight: bold;">
-                If query is for GRCh38, only GRCh38 will be returned.
-              </span>
-            </li>
-            <li>
-                <span style="color: green; font-size: 1.17em; font-weight: bold;">
-                  If the start and end pos are provided in GRCh38, only GRCh38 is used to query.
-                </span>
-            </li>
-        </ul>
+<div class="container">
 
-        <!-- Show error if Flask provides one -->
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
+    <h1>Query Data</h1>
 
-        <form method="POST" enctype="multipart/form-data">
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <h3>Genomic Filters</h3>
+
+        <div class="filter-row">
             <div>
-                <label>Schema name:</label>
-                <input type="text" name="schema" value="{{ default_schema }}" required>
+                <label>Chr</label>
+                <input type="text" name="chr" placeholder="1-22, X, Y">
             </div>
             <div>
-                <label>Table name:</label>
-                <input type="text" name="table" value="{{ default_table }}" required>
+                <label>Gene</label>
+                <input type="text" name="gene" placeholder="e.g. BRCA1">
             </div>
+        </div>
 
-            <h2>Query field</h2>
-            <div class="filter-row">
-                <div>
-                    <label>Chr</label>
-                    <input type="text" name="chr" value="chr" required>
-                </div>
-                <div>
-                    <label>Fill in chr 1-2 or X or Y</label>
-                    <input type="text" name="value1">
-                </div>
+        <div class="filter-row">
+            <div>
+                <label>Variant</label>
+                <input type="text" name="variant" placeholder="">
             </div>
+        </div>
 
-            <div class="filter-row">
-                <div>
-                    <label>Gene</label>
-                    <input type="text" name="gene" value="gene" required>
-                </div>
-                <div>
-                    <label>Fill in Gene name</label>
-                    <input type="text" name="value2">
-                </div>
+        <div class="filter-row">
+            <div>
+                <label>Validation</label>
+                <select name="passed_validation">
+                    <option value="">Any</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
             </div>
+        </div>
 
-            <div class="filter-row">
-                <div>
-                    <label>Variant</label>
-                    <input type="text" name="variant" value="variant" required>
-                </div>
-                <div>
-                    <label>Fill in variant name</label>
-                    <input type="text" name="value3">
-                </div>
+        <div class="filter-row">
+            <div>
+                <label>Start Position</label>
+                <input type="number" name="start">
             </div>
+            <div>
+                <label>End Position</label>
+                <input type="number" name="end">
+            </div>
+        </div>
 
-            <div class="filter-row">
-                <div>
-                    <label>Validation</label>
-                    <input type="text" name="passedvalidation" value="passedvalidation" required>
-                </div>
-                <div>
-                    <label>Fill in Yes or No</label>
-                    <input type="text" name="value4">
-                </div>
+        <div class="filter-row">
+            <div>
+                <label>GRCh</label>
+                <select name="grch">
+                    <option value="37" selected>37</option>
+                    <option value="38">38</option>
+                </select>
             </div>
-            <div class="filter-row">
-                <div>
-                    <label>start_pos</label>
-                    <input type="text" name="start_pos" value="start_pos" required>
-                </div>
-                <div>
-                    <label>Fill in start position</label>
-                    <input type="text" name="value5">
-                </div>
-            </div>
-            <div class="filter-row">
-                <div>
-                    <label>end_pos</label>
-                    <input type="text" name="end_pos" value="end_pos" required>
-                </div>
-                <div>
-                    <label>Fill in end position</label>
-                    <input type="text" name="value6">
-                </div>
-            </div>
-            <div class="filter-row">
-                <div>
-                    <label>GRCh</label>
-                    <input type="text" name="grch" value="grch" required>
-                </div>
-                <div>
-                    <label>Default is 37, overwrite it with 38 if required</label>
-                    <input type="text" name="value7" value="{{ default_grch }}" required>
-                </div>
-            </div>
+        </div>
 
+        <h3>OR Upload JSON Filter</h3>
+        <input type="file" name="file">
 
-            <button type="submit">Run Query</button>
-        </form>
+        <br><br>
+        <button type="submit">Run Query</button>
+    </form>
 
-        
-        <style>
-            .back-link {
-                display: block;     /* makes the link take the full row */
-                margin: 10px 0;     /* spacing between links */
-            }
-            </style>
-            
-            <a href="{{ url_for('index') }}" class="back-link">Back to Home</a>
-            <a href="{{ url_for('logout') }}" class="back-link">Log Out</a>
-    </div>
+</div>
 </body>
 </html>

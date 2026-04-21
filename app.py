@@ -28,8 +28,11 @@ DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 default_schema = "primer_tool"
 default_table = "ordered_primers"
-primer_editable_columns = ['notes', 'passedvalidation', 'mix', 'dilute_time',
-                           'tray', 'freezer', 'grid_fw', 'grid_rv']
+batch_editable_columns = ['notes', 'passed_validation', 'mix', 'dilute_time',
+                          'tray', 'freezer', 'grid_fw', 'grid_rv']
+primer_table = "primers"
+batch_table = "primer_batches"
+schema = "primer_tool"
 
 
 def wait_for_db():
@@ -269,79 +272,43 @@ def design_primer():
 
 @app.route('/query', methods=['GET', 'POST'])
 def query_data():
-    """
-    Function to query postgres tables
-    """
-    default_query_grch = 37
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
     if request.method == 'POST':
-        schema = request.form.get('schema') or default_schema
-        table = request.form.get('table') or default_table
-        chromosome = request.form.get('chr')
-        value1 = request.form.get('value1')
-        gene = request.form.get('gene')
-        value2 = request.form.get('value2')
-        variant = request.form.get('variant')
-        value3 = request.form.get('value3')
-        passedvalidation = request.form.get('passedvalidation')
-        value4 = request.form.get('value4')
-        value5 = request.form.get('value5')
-        value6 = request.form.get('value6')
+        chr_val = request.form.get('chr')
+        gene_val = request.form.get('gene')
+        variant_val = request.form.get('variant')
+        passed_validation = request.form.get('passed_validation')
         grch = request.form.get('grch')
-        value7 = request.form.get('value7')
-        file = request.files.get('file')
+        start = request.form.get('start')
+        end = request.form.get('end')
 
-        if not table or not schema:
-            return "Schema and Table name are required!", 400
-        if not any([value1, value2, value3, value4, value5, value6, value7, file]):
+        # ensure at least one filter exists
+        if not any([chr_val, gene_val, variant_val, passed_validation,
+                    grch, start, end]):
             return render_template(
                 "query_result.html",
                 results=None,
                 editable_columns=None,
-                error="Please provide at least one search filter."
+                error="Please provide at least one filter."
             )
         try:
-            if not file:
-                result_list = search_postgres(
-                    DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
-                    schema, table, chromosome, gene, variant, passedvalidation,
-                    value1, value2, value3, value4, grch, value7,
-                    value5, value6
-                )
-            else:
-                filters = json.load(file)
-                result_list = filter_multiple_postgres(
-                    DB_NAME, DB_USER, DB_PASSWORD,
-                    schema, table, filters
-                )
-            editable_columns = primer_editable_columns
-            # Successful query
+            result_list = search_postgres(
+                DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
+                chr_val, gene_val, variant_val, passed_validation, grch,
+                start, end
+            )
             return render_template(
                 "query_result.html",
                 results=result_list,
-                editable_columns=editable_columns,
+                editable_columns=batch_editable_columns,
                 error=None
             )
         except Exception as e:
-            # Failed query
-            print("Error type:", type(e).__name__)
-            print("Error message:", str(e))
             traceback.print_exc()
+            return render_template("query_result.html", error=str(e))
 
-            return render_template(
-                "query_result.html",
-                results=None,
-                editable_columns=None,
-                error=str(e)
-            )
-
-    return render_template(
-        'query.html',
-        default_schema=default_schema,
-        default_table=default_table,
-        default_grch=default_query_grch
-    )
+    return render_template('query.html')
 
 
 @app.route('/success_primer_design')
@@ -478,35 +445,35 @@ def update_row():
     row_id = data['id']
     updated_fields = data['data']
 
-    # Remove primary key from fields to update
-    updated_fields.pop('primerid', None)
-
-    # Only allow these columns to be updated
-    allowed_columns = primer_editable_columns
-    updated_fields = {k: v for k, v in updated_fields.items() if k in allowed_columns}
-
-    if not updated_fields:
-        return jsonify({"status": "error", "message": "No editable columns selected"})
-
-    schema_name = default_schema
-    table_name = default_table
-
-    # Get user from session for logging
+    table_type = data.get("table_type", primer_table)
+    # remove non-editable keys from payload
+    updated_fields.pop('primer_id', None)
+    updated_fields.pop('batch_id', None)
     user = session.get('username', 'unknown')
 
-    # Log what is being updated
-    app.logger.info(
-        f"User '{user}' updated row with primerid={row_id}. "
-        f"Columns changed: {list(updated_fields.keys())}. "
-        f"New values: {updated_fields}"
-    )
-
     try:
-        set_clause = ", ".join([f"{col} = %s" for col in updated_fields.keys()])
-        values = list(updated_fields.values())
-        values.append(row_id)  # for WHERE primerid = %s
+        if table_type == primer_table:
+            return jsonify({
+                "status": "error",
+                "message": "Primer table cannot be updated"
+            })
 
-        query = f"UPDATE {schema_name}.{table_name} SET {set_clause} WHERE primerid = %s"
+        elif table_type == "batches":
+            allowed_columns = batch_editable_columns
+            pk = "batch_id"
+            table_name = f"{schema}.{batch_table}"
+
+        # keep only allowed columns
+        updated_fields = {
+            k: v for k, v in updated_fields.items()
+            if k in allowed_columns
+        }
+
+        if not updated_fields:
+            return jsonify({
+                "status": "error",
+                "message": "No editable columns selected"
+            })
 
         conn = psycopg2.connect(
             dbname=DB_NAME,
@@ -515,15 +482,62 @@ def update_row():
             host=DB_HOST
         )
         cur = conn.cursor()
+        # get existing value
+        cur.execute(f"SELECT * FROM {table_name} WHERE {pk} = %s", (row_id,))
+        current_row = cur.fetchone()
+
+        if not current_row:
+            return jsonify({
+                "status": "error",
+                "message": "Row not found"
+            })
+
+        columns = [desc[0] for desc in cur.description]
+        current_dict = dict(zip(columns, current_row))
+        # get changes
+        real_changes = {}
+
+        for k, v in updated_fields.items():
+            db_val = current_dict.get(k)
+
+            if str(db_val) != str(v):
+                real_changes[k] = v
+
+        if not real_changes:
+            return jsonify({
+                "status": "error",
+                "message": "No actual changes detected"
+            })
+
+        # update query
+        set_clause = ", ".join([f"{col} = %s" for col in real_changes.keys()])
+        values = list(real_changes.values())
+        values.append(row_id)
+
+        query = f"""
+        UPDATE {table_name}
+        SET {set_clause}
+        WHERE {pk} = %s
+        """
+
         cur.execute(query, values)
         conn.commit()
+        # log for the changes
+        updated_str = ", ".join(
+            f"{col}={repr(val)}" for col, val in real_changes.items()
+        )
+
+        app.logger.info(
+            f"User '{user}' updated primer_batches table, batch_id {row_id}: {updated_str}"
+        )
+
         cur.close()
         conn.close()
 
         return jsonify({"status": "success"})
 
     except Exception as e:
-        app.logger.error(f"Error updating row {row_id} by user '{user}': {str(e)}")
+        app.logger.error(f"Update error: {str(e)}")
         return jsonify({"status": "error", "message": str(e)})
 
 

@@ -1,23 +1,44 @@
--- Create app_users table
+-- =========================
+-- USERS TABLE
+-- =========================
 CREATE TABLE IF NOT EXISTS app_users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL
 );
 
+-- =========================
+-- SCHEMA
+-- =========================
 CREATE SCHEMA IF NOT EXISTS primer_tool;
-CREATE TYPE yes_no AS ENUM ('Yes', 'No');
--- Create primer table within the schema if not exist
-CREATE TABLE IF NOT EXISTS primer_tool.ordered_primers (
-    primerid SERIAL PRIMARY KEY,
-    chr VARCHAR(3) NOT NULL
-    CHECK (
-    chr IN ('X', 'Y')
-    OR (chr ~ '^[0-9]+$' AND chr::int BETWEEN 1 AND 22)
+
+-- =========================
+-- ENUM TYPE (safe creation)
+-- =========================
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_type
+        WHERE typname = 'yes_no'
+    ) THEN
+        CREATE TYPE yes_no AS ENUM ('Yes', 'No');
+    END IF;
+END$$;
+
+-- =========================
+-- PRIMERS TABLE (CORE / UNIQUE)
+-- =========================
+CREATE TABLE IF NOT EXISTS primer_tool.primers (
+    primer_id SERIAL PRIMARY KEY,
+
+    chr VARCHAR(3) NOT NULL CHECK (
+        chr IN ('X', 'Y')
+        OR (chr ~ '^[0-9]+$' AND chr::int BETWEEN 1 AND 22)
     ),
-    start_pos INTEGER CHECK (start_pos > 0 AND start_pos <= 300000000) NOT NULL,
-    end_pos INTEGER CHECK (end_pos > 0 AND end_pos <= 300000000) NOT NULL,
-    variant VARCHAR(15), 
+
+    start_pos INTEGER NOT NULL CHECK (start_pos > 0 AND start_pos <= 300000000),
+    end_pos INTEGER NOT NULL CHECK (end_pos > 0 AND end_pos <= 300000000),
+    variant VARCHAR(15),
     left_primer_seq VARCHAR(50),
     right_primer_seq VARCHAR(50),
     left_primer_start INTEGER CHECK (left_primer_start >= 0),
@@ -25,25 +46,14 @@ CREATE TABLE IF NOT EXISTS primer_tool.ordered_primers (
     right_primer_start INTEGER CHECK (right_primer_start >= 0),
     right_primer_end INTEGER CHECK (right_primer_end >= 0),
     product_size INTEGER CHECK (product_size > 0 AND product_size < 10000),
-    gene VARCHAR(20),    
-    tagged_left VARCHAR(50),
-    tagged_right VARCHAR(50),
-    tag VARCHAR(10),
-    GRCh INTEGER NOT NULL CHECK (GRCh IN (37, 38)),
-    Notes VARCHAR(100),
-    PassedValidation yes_no,
-    Mix VARCHAR(100),
-    Dilute_time VARCHAR(100),
-    Tray VARCHAR(100),
-    Freezer VARCHAR(100),
-    Grid_FW VARCHAR(100),
-    Grid_RV VARCHAR(100),
-    insert_time TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT ordered_primers_unique_all UNIQUE (
+    gene VARCHAR(20),
+    grch INTEGER NOT NULL CHECK (grch IN (37, 38)),
+
+    CONSTRAINT unique_primer_identity UNIQUE (
         chr,
         start_pos,
         end_pos,
-        variant,
+        grch,
         left_primer_seq,
         right_primer_seq,
         left_primer_start,
@@ -51,10 +61,46 @@ CREATE TABLE IF NOT EXISTS primer_tool.ordered_primers (
         right_primer_start,
         right_primer_end,
         product_size,
-        gene,
-        tagged_left,
-        tagged_right,
-        tag,
-        GRCh
+        gene
     )
 );
+
+-- =========================
+-- BATCH TABLE (MULTIPLE PER PRIMER)
+-- =========================
+CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
+    batch_id SERIAL PRIMARY KEY,
+
+    primer_id INTEGER NOT NULL,
+
+    tagged_left VARCHAR(50),
+    tagged_right VARCHAR(50),
+    tag VARCHAR(10),
+
+    notes VARCHAR(100),
+
+    -- FIX: consistent naming style
+    passed_validation yes_no,
+
+    mix VARCHAR(100),
+    dilute_time VARCHAR(100),
+
+    tray VARCHAR(100),
+    freezer VARCHAR(100),
+
+    grid_fw VARCHAR(100),
+    grid_rv VARCHAR(100),
+
+    insert_time TIMESTAMPTZ DEFAULT NOW(),
+
+    CONSTRAINT fk_primer
+        FOREIGN KEY (primer_id)
+        REFERENCES primer_tool.primers(primer_id)
+        ON DELETE CASCADE
+);
+
+-- =========================
+-- INDEX (IMPORTANT for performance)
+-- =========================
+CREATE INDEX IF NOT EXISTS idx_primer_batches_primer_id
+ON primer_tool.primer_batches(primer_id);

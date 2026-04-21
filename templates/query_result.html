@@ -4,58 +4,102 @@
     <meta charset="UTF-8">
     <title>Query Result</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        td[contenteditable="true"] {
+        td .editable-cell {
             background-color: #fffbe6;
-            cursor: text;
+            padding: 5px;
+            border-radius: 4px;
+            min-height: 20px;
         }
-        td[contenteditable="true"]:focus {
-            outline: 2px solid #0d6efd;
+
+        td .editable-cell:focus {
             background-color: #ffffff;
+        }
+
+        select.editable-select {
+            background-color: #fffbe6;
         }
     </style>
 </head>
+
 <body class="container mt-5">
 
     <h3 class="mb-4">Query Result</h3>
+
     <p style="color: green;">Editable columns are highlighted in yellow</p>
-    <p style="color: red;">Only Yes or No is allowed in passedvalidation col</p>
-    <p style="color: green;">Click Save button after edit. Green highlight means edit is successful</p>
+    <p style="color: red;">Only Yes or No is allowed in passed_validation column</p>
+    <p style="color: green;">Click Save button after edit. Green highlight means success</p>
+
     {% if error %}
-    <div class="alert alert-danger">
-        {{ error }}
-    </div>
+        <div class="alert alert-danger">{{ error }}</div>
 
     {% elif results and results|length > 0 %}
 
-        <div style="max-height: 500px; overflow-y: auto;">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover" id="dataTable">
-                    <thead class="table-dark">
-                        <tr>
-                            {% for key in results[0].keys() %}
-                                <th>{{ key }}</th>
-                            {% endfor %}
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in results %}
-                        <tr data-id="{{ row['primerid'] }}">
+    <div style="max-height: 500px; overflow-y: auto;">
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover" id="dataTable">
+
+                <thead class="table-dark">
+                    <tr>
+                        {% for key in results[0].keys() %}
+                            <th>{{ key }}</th>
+                        {% endfor %}
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in results %}
+
+                        {% set is_batch = 'batch_id' in row %}
+                        {% set row_id = row['batch_id'] if is_batch else row['primer_id'] %}
+                        {% set row_type = 'batches' %}
+
+                        <tr data-id="{{ row_id }}" data-type="{{ row_type }}"
+                            >
+
                             {% for key, value in row.items() %}
-                                <td {% if key in editable_columns %}contenteditable="true"{% endif %} data-col="{{ key }}">
-                                    {{ value }}
+
+                                <td data-col="{{ key }}">
+
+                                    {% if key == "passed_validation" %}
+
+                                        <select class="form-select form-select-sm editable-select">
+                                            <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>
+                                            <option value="No" {% if value == "No" %}selected{% endif %}>No</option>
+                                        </select>
+
+                                    {% elif key in editable_columns %}
+
+                                        <div contenteditable="true" class="editable-cell">
+                                            {{ value }}
+                                        </div>
+
+                                    {% else %}
+
+                                        {{ value }}
+
+                                    {% endif %}
+
                                 </td>
+
                             {% endfor %}
+
                             <td>
                                 <button class="btn btn-sm btn-primary save-btn">Save</button>
                             </td>
+
                         </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+
+                    {% endfor %}
+                </tbody>
+
+            </table>
+
         </div>
+    </div>
 
     {% else %}
         <div class="alert alert-warning">No results found.</div>
@@ -72,14 +116,27 @@
 
             const row = this.closest('tr');
             const id = row.dataset.id;
-            const cells = row.querySelectorAll('[contenteditable="true"]');
+            const tableType = row.dataset.type;
+
+            const cells = row.querySelectorAll('[data-col]');
 
             let updatedData = {};
 
             cells.forEach(cell => {
                 const col = cell.dataset.col;
-                const value = cell.innerText.trim();
-                updatedData[col] = value;
+
+                // Handle dropdown (passed_validation)
+                const select = cell.querySelector('select');
+                if (select) {
+                    updatedData[col] = select.value;
+                    return;
+                }
+
+                // Handle editable text
+                const editableDiv = cell.querySelector('.editable-cell');
+                if (editableDiv) {
+                    updatedData[col] = editableDiv.innerText.trim();
+                }
             });
 
             fetch("{{ url_for('update_row') }}", {
@@ -89,6 +146,7 @@
                 },
                 body: JSON.stringify({
                     id: id,
+                    table_type: tableType,
                     data: updatedData
                 })
             })
