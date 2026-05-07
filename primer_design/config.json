@@ -42,7 +42,8 @@
       "bowtie_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.bowtie",
       "genome_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.fna", 
       "snp_ref": "/app/input/combined_common_snp_v410_gnomad_exome_AFonly.vcf.gz",
-      "exon_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.db"
+      "exon_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.db",
+      "liftover": "/app/input/hg38ToHg19.over.chain.gz"
    },
     "M13":{
       "F": "TGTAAAACGACGGCCAGT",

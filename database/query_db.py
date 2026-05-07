@@ -1,7 +1,7 @@
 import argparse
 import json
 from psycopg2 import sql
-from primer_design.helper_function import get_postgres_connection, liftover_37to38
+from primer_design.helper_function import get_postgres_connection, liftover
 
 
 def get_arguments() -> argparse.Namespace:
@@ -81,7 +81,7 @@ def get_arguments() -> argparse.Namespace:
 
 def search_postgres(dbname, user, password, host,
                     chr_val, gene_val, variant_val,
-                    validation_val, grch_val,
+                    validation_val, grch_val, archive_val,
                     pos_start=None, pos_end=None):
 
     conditions = []
@@ -89,12 +89,62 @@ def search_postgres(dbname, user, password, host,
 
     base_query = sql.SQL("""
         SELECT
-            p.*,
-            b.*
+            p.unique_primer_id,
+            b.primer_id,
+            p.chr,
+            p.grch,
+            p.primer_name,
+            b.passed_validation,
+            b.archive,
+            p.left_primer_seq,
+            p.right_primer_seq,
+            p.left_primer_start,
+            p.left_primer_end,
+            p.right_primer_start,
+            p.right_primer_end,
+            p.product_size,
+            p.gene,
+            b.tag,
+            b.notes,
+            b.mix,
+            b.dilution_date,
+            b.tray,
+            b.freezer,
+            b.grid_fw,
+            b.grid_rv,
+            b.insert_time,
+
+            -- LEFT highlight
+            (
+                %s IS NOT NULL AND %s IS NOT NULL AND
+                (
+                    (p.grch = %s AND p.left_primer_start >= %s AND p.left_primer_end <= %s)
+                    OR
+                    (p.grch = %s AND p.left_primer_start >= %s AND p.left_primer_end <= %s)
+                )
+            ) AS lt_in_range,
+
+            -- RIGHT highlight
+            (
+                %s IS NOT NULL AND %s IS NOT NULL AND
+                (
+                    (p.grch = %s AND p.right_primer_start >= %s AND p.right_primer_end <= %s)
+                    OR
+                    (p.grch = %s AND p.right_primer_start >= %s AND p.right_primer_end <= %s)
+                )
+            ) AS rt_in_range
+
         FROM primer_tool.primers p
         LEFT JOIN primer_tool.primer_batches b
-        ON p.primer_id = b.primer_id
+        ON p.unique_primer_id = b.unique_primer_id
     """)
+
+    try:
+        pos_start = int(pos_start) if pos_start is not None else None
+        pos_end = int(pos_end) if pos_end is not None else None
+    except:
+        pos_start = None
+        pos_end = None
 
     if chr_val:
         conditions.append(sql.SQL("p.chr = %s"))
@@ -105,93 +155,123 @@ def search_postgres(dbname, user, password, host,
         values.append(gene_val)
 
     if variant_val:
-        conditions.append(sql.SQL("p.variant = %s"))
+        conditions.append(sql.SQL("p.primer_name = %s"))
         values.append(variant_val)
 
     if validation_val:
         conditions.append(sql.SQL("b.passed_validation = %s"))
         values.append(validation_val)
 
-    try:
-        pos_start = int(pos_start) if pos_start else None
-        pos_end = int(pos_end) if pos_end else None
-    except:
-        pos_start = None
-        pos_end = None
+    if archive_val:
+        conditions.append(sql.SQL("b.archive = %s::yes_no"))
+        values.append(archive_val)
 
-    def safe_liftover(chrom, pos):
+    liftover_grch = None
+    lifted_start = None
+    lifted_end = None
+
+    def safe_liftover(chrom, pos, build):
         try:
-            lifted = liftover_37to38(chrom, pos)
+            lifted = liftover(chrom, pos, build)
             return int(lifted) if lifted else None
         except:
             return None
     if grch_val:
         grch_val = str(grch_val)
+        liftover_grch = "38" if grch_val == "37" else "37"
 
-        if grch_val == "38":
-            conditions.append(sql.SQL("p.grch = %s"))
-            values.append(38)
+        chrom = f"chr{chr_val}" if chr_val else None
 
-            if pos_start is not None and pos_end is not None:
-                conditions.append(sql.SQL("""
-                    p.left_primer_start >= %s
-                    AND p.right_primer_end <= %s
-                """))
-                values.extend([pos_start, pos_end])
+        if pos_start is not None and pos_end is not None and chrom:
+            lifted_start = safe_liftover(chrom, pos_start, grch_val)
+            lifted_end = safe_liftover(chrom, pos_end, grch_val)
 
-        # liftover if grch37 and pos is given
-        elif grch_val == "37":
+    use_liftover = lifted_start is not None and lifted_end is not None
+    if not use_liftover:
+        liftover_grch = grch_val
+        lifted_start = pos_start
+        lifted_end = pos_end
+    # Highlight values
+    select_values = [
+        # LEFT highlight
+        pos_start, pos_end,
+        grch_val, pos_start, pos_end,
+        liftover_grch, lifted_start, lifted_end,
 
-            chrom = f"chr{chr_val}" if chr_val else None
+        # RIGHT highlight
+        pos_start, pos_end,
+        grch_val, pos_start, pos_end,
+        liftover_grch, lifted_start, lifted_end,
+    ]
+    if pos_start is not None and pos_end is not None:
 
-            if pos_start is not None and pos_end is not None and chrom:
-
-                lifted_start = safe_liftover(chrom, pos_start)
-                lifted_end = safe_liftover(chrom, pos_end)
-
-                # If liftover works → dual query
-                if lifted_start and lifted_end:
-                    conditions.append(sql.SQL("""
-                        (
-                            (p.grch = %s AND p.left_primer_start >= %s AND p.right_primer_end <= %s)
-                            OR
-                            (p.grch = %s AND p.left_primer_start >= %s AND p.right_primer_end <= %s)
-                        )
-                    """))
-
-                    values.extend([
-                        37, pos_start, pos_end,
-                        38, lifted_start, lifted_end
-                    ])
-
-                else:
-                    # fallback if liftover fails
-                    conditions.append(sql.SQL("""
+        if use_liftover:
+            conditions.append(sql.SQL("""
+                (
+                    (
                         p.grch = %s
-                        AND p.left_primer_start >= %s
-                        AND p.right_primer_end <= %s
-                    """))
-                    values.extend([37, pos_start, pos_end])
+                        AND (
+                            (p.left_primer_start >= %s AND p.left_primer_end <= %s)
+                            OR
+                            (p.right_primer_start >= %s AND p.right_primer_end <= %s)
+                        )
+                    )
+                    OR
+                    (
+                        p.grch = %s
+                        AND (
+                            (p.left_primer_start >= %s AND p.left_primer_end <= %s)
+                            OR
+                            (p.right_primer_start >= %s AND p.right_primer_end <= %s)
+                        )
+                    )
+                )
+            """))
 
-            else:
-                conditions.append(sql.SQL("p.grch IN (37)"))
+            values.extend([
+                grch_val,
+                pos_start, pos_end,
+                pos_start, pos_end,
+                liftover_grch,
+                lifted_start, lifted_end,
+                lifted_start, lifted_end
+            ])
+
+        else:
+            conditions.append(sql.SQL("""
+                (
+                    p.grch = %s
+                    AND (
+                        (p.left_primer_start >= %s AND p.left_primer_end <= %s)
+                        OR
+                        (p.right_primer_start >= %s AND p.right_primer_end <= %s)
+                    )
+                )
+            """))
+
+            values.extend([
+                grch_val,
+                pos_start, pos_end,
+                pos_start, pos_end
+            ])
+
+    # Only apply grch filter when NOT using liftover
+    if grch_val and not use_liftover:
+        conditions.append(sql.SQL("p.grch = %s"))
+        values.append(grch_val)
 
     query = base_query
 
     if conditions:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(conditions)
-    query += sql.SQL(" ORDER BY insert_time ASC, batch_id ASC")
-    query += sql.SQL(" LIMIT 100")
+    query += sql.SQL(" ORDER BY insert_time ASC, primer_id ASC LIMIT 100")
     conn = get_postgres_connection(dbname, user, password, host)
     cursor = conn.cursor()
-    cursor.execute(query, values)
+    cursor.execute(query, select_values + values)
 
     rows = cursor.fetchall()
     cols = [d[0] for d in cursor.description]
     result = [dict(zip(cols, row)) for row in rows]
-    if "passed_validation" in cols:
-        cols.insert(5, cols.pop(cols.index("passed_validation")))
-        result = [{col: row[col] for col in cols} for row in result]
     conn.close()
     return result
 

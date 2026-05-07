@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION primer_tool.insert_primer_with_batch(
     p_start_pos INTEGER,
     p_end_pos INTEGER,
     p_grch INTEGER,
-    p_variant VARCHAR,
+    p_primer_name VARCHAR,
     p_left_primer_seq VARCHAR,
     p_right_primer_seq VARCHAR,
     p_left_primer_start INTEGER,
@@ -19,9 +19,10 @@ CREATE OR REPLACE FUNCTION primer_tool.insert_primer_with_batch(
     p_tagged_right VARCHAR,
     p_tag VARCHAR,
     p_notes VARCHAR,
-    p_passedvalidation TEXT,
+    p_passed_validation TEXT,
+    p_archive TEXT, 
     p_mix VARCHAR,
-    p_dilute_time VARCHAR,
+    p_dilution_date VARCHAR,
     p_tray VARCHAR,
     p_freezer VARCHAR,
     p_grid_fw VARCHAR,
@@ -31,15 +32,17 @@ RETURNS INTEGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_primer_id INTEGER;
+    v_unique_primer_id INTEGER;
     v_passed yes_no;
+    v_archive yes_no;
 BEGIN
 
-    IF p_passedvalidation NOT IN ('Yes', 'No') THEN
+    IF p_passed_validation NOT IN ('Yes', 'No') THEN
         RAISE EXCEPTION 'passed_validation must be Yes or No';
     END IF;
 
-    v_passed := p_passedvalidation::yes_no;
+    v_passed := p_passed_validation::yes_no;
+    v_archive := p_archive::yes_no;
 
 
     -- Primer info (no duplicate, no update allowed)
@@ -48,7 +51,7 @@ BEGIN
         start_pos,
         end_pos,
         grch,
-        variant,
+        primer_name,
         left_primer_seq,
         right_primer_seq,
         left_primer_start,
@@ -63,7 +66,7 @@ BEGIN
         p_start_pos,
         p_end_pos,
         p_grch,
-        p_variant,
+        p_primer_name,
         p_left_primer_seq,
         p_right_primer_seq,
         p_left_primer_start,
@@ -75,8 +78,7 @@ BEGIN
     )
     ON CONFLICT (
         chr,
-        start_pos,
-        end_pos,
+        primer_name,
         grch,
         left_primer_seq,
         right_primer_seq,
@@ -88,11 +90,11 @@ BEGIN
         gene
     )
     DO NOTHING
-    RETURNING primer_id INTO v_primer_id;
+    RETURNING unique_primer_id INTO v_unique_primer_id;
 
     -- If conflict happened, fetch existing primer_id
-    IF v_primer_id IS NULL THEN
-        SELECT primer_id INTO v_primer_id
+    IF v_unique_primer_id IS NULL THEN
+        SELECT unique_primer_id INTO v_unique_primer_id
         FROM primer_tool.primers
         WHERE chr = p_chr
           AND start_pos = p_start_pos
@@ -112,35 +114,37 @@ BEGIN
     -- Batch info (can duplicate, update allowed for some)
     -- =========================
     INSERT INTO primer_tool.primer_batches (
-        primer_id,
+        unique_primer_id,
         tagged_left,
         tagged_right,
         tag,
         notes,
         passed_validation,
+        archive,
         mix,
-        dilute_time,
+        dilution_date,
         tray,
         freezer,
         grid_fw,
         grid_rv
     )
     VALUES (
-        v_primer_id,
+        v_unique_primer_id,
         p_tagged_left,
         p_tagged_right,
         p_tag,
         p_notes,
         v_passed,
+        v_archive,
         p_mix,
-        p_dilute_time,
+        p_dilution_date,
         p_tray,
         p_freezer,
         p_grid_fw,
         p_grid_rv
     );
 
-    RETURN v_primer_id;
+    RETURN v_unique_primer_id;
 
 END;
 $$;

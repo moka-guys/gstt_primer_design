@@ -79,7 +79,7 @@
 
         /* Set specific column widths */
         th.chr, td.chr { width: 5px; }
-        th.variant, td.variant { width: 30px; }
+        th.primer_name, td.primer_name { width: 30px; }
         th.pos_start, td.pos_start { width: 20px; }
         th.pos_end, td.pos_end { width: 20px; }
         th.build, td.build { width: 5px; }
@@ -128,7 +128,7 @@
         const row = table.insertRow(rowCount);
 
         const fields = [
-            "chr","variant", "pos_start","pos_end","build","tag",
+            "chr","primer_name", "pos_start","pos_end","build","tag",
             "opt_tm","min_tm","max_tm","opt_gc","min_gc","max_gc",
             "min_product_size","max_product_size",
             "opt_primer_size","min_primer_size","max_primer_size"
@@ -143,7 +143,7 @@
         // default values for new rows
         const defaults = {
             build: 37,
-            variant: "variant",
+            primer_name: "primer_name",
             tag: "T1",
             opt_tm: 60,
             min_tm: 58,
@@ -193,7 +193,7 @@
                 <table id="inputTable">
                     <tr>
                         <th class="chr">chr</th>
-                        <th class="variant">variant</th>
+                        <th class="primer_name">primer_name</th>
                         <th class="pos_start">pos_start</th>
                         <th class="pos_end">pos_end</th>
                         <th class="build">build</th>
@@ -212,7 +212,7 @@
                     </tr>
                     <tr>
                         <td class="chr"><input type="text" name="chr[]"></td>
-                        <td class="variant"><input type="text" name="variant[]" value="variant"></td>
+                        <td class="primer_name"><input type="text" name="primer_name[]" value="primer_name"></td>
                         <td class="pos_start"><input type="number" name="pos_start[]" ></td>
                         <td class="pos_end"><input type="number" name="pos_end[]"></td>
                         <td class="build"><input type="number" name="build[]" value="37"></td>

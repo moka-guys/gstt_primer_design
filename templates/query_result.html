@@ -7,7 +7,7 @@
 
     <style>
         td .editable-cell {
-            background-color: #fffbe6;
+            background-color: #ffee8c;
             padding: 5px;
             border-radius: 4px;
             min-height: 20px;
@@ -18,7 +18,10 @@
         }
 
         select.editable-select {
-            background-color: #fffbe6;
+            background-color: #ffee8c;
+        }
+        .highlight-green {
+        background-color: #d4edda !important;
         }
     </style>
 </head>
@@ -27,9 +30,10 @@
 
     <h3 class="mb-4">Query Result</h3>
 
-    <p style="color: green;">Editable columns are highlighted in yellow</p>
-    <p style="color: red;">Only Yes or No is allowed in passed_validation column</p>
-    <p style="color: green;">Click Save button after edit. Green highlight means success</p>
+    <p style="color: green;">Editable columns are highlighted in yellow.</p>
+    <p style="color: green;">Click "Save" button after edit. Green highlight confirms successful editing.</p>
+    <p style="color: green;">If start and end POS are given, the primer that falls within is highlighted in green.</p>
+
 
     {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
@@ -43,7 +47,7 @@
 
                 <thead class="table-dark">
                     <tr>
-                        {% for key in results[0].keys() %}
+                        {% for key in results[0].keys() if key not in ['lt_in_range', 'rt_in_range'] %}
                             <th>{{ key }}</th>
                         {% endfor %}
                         <th>Action</th>
@@ -53,18 +57,25 @@
                 <tbody>
                     {% for row in results %}
 
-                        {% set is_batch = 'batch_id' in row %}
-                        {% set row_id = row['batch_id'] if is_batch else row['primer_id'] %}
+                        {% set is_batch = 'primer_id' in row %}
+                        {% set row_id = row['primer_id'] if is_batch else row['primer_id'] %}
                         {% set row_type = 'batches' %}
 
                         <tr data-id="{{ row_id }}" data-type="{{ row_type }}"
                             >
 
-                            {% for key, value in row.items() %}
+                            {% for key, value in row.items() if key not in ['lt_in_range', 'rt_in_range'] %}
 
-                                <td data-col="{{ key }}">
+                            <td data-col="{{ key }}"
+                            class="
+                            {% if key in ['left_primer_start', 'left_primer_end'] and row.lt_in_range %}
+                                highlight-green
+                            {% elif key in ['right_primer_start', 'right_primer_end'] and row.rt_in_range %}
+                                highlight-green
+                            {% endif %}
+                            ">
 
-                                    {% if key == "passed_validation" %}
+                                    {% if key in ["passed_validation", "archive"] %}
 
                                         <select class="form-select form-select-sm editable-select">
                                             <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>

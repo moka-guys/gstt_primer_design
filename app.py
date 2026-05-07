@@ -28,8 +28,8 @@ DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 default_schema = "primer_tool"
 default_table = "ordered_primers"
-batch_editable_columns = ['notes', 'passed_validation', 'mix', 'dilute_time',
-                          'tray', 'freezer', 'grid_fw', 'grid_rv']
+batch_editable_columns = ['notes', 'passed_validation', 'mix', 'dilution_date',
+                          'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive']
 primer_table = "primers"
 batch_table = "primer_batches"
 schema = "primer_tool"
@@ -202,7 +202,7 @@ def design_primer():
         # request.form contains multiple rows as lists
         # Each input field has name="chr[]", "position[]", etc.
         chr = request.form.getlist("chr[]")
-        variant = request.form.getlist("variant[]")
+        primer_name = request.form.getlist("primer_name[]")
         pos_start = request.form.getlist("pos_start[]")
         pos_end = request.form.getlist("pos_end[]")
         build = request.form.getlist("build[]")
@@ -224,7 +224,7 @@ def design_primer():
         for i in range(len(chr)):
             row = {
                 "chr": chr[i],
-                "variant": variant[i],
+                "primer_name": primer_name[i],
                 "pos_start": pos_start[i],
                 "pos_end": pos_end[i],
                 "build": build[i],
@@ -277,15 +277,16 @@ def query_data():
     if request.method == 'POST':
         chr_val = request.form.get('chr')
         gene_val = request.form.get('gene')
-        variant_val = request.form.get('variant')
+        variant_val = request.form.get('primer_name')
         passed_validation = request.form.get('passed_validation')
+        archive = request.form.get('archive')
         grch = request.form.get('grch')
         start = request.form.get('start')
         end = request.form.get('end')
 
         # ensure at least one filter exists
         if not any([chr_val, gene_val, variant_val, passed_validation,
-                    grch, start, end]):
+                    grch, start, end, archive]):
             return render_template(
                 "query_result.html",
                 results=None,
@@ -296,7 +297,7 @@ def query_data():
             result_list = search_postgres(
                 DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
                 chr_val, gene_val, variant_val, passed_validation, grch,
-                start, end
+                archive, start, end
             )
             return render_template(
                 "query_result.html",
@@ -326,7 +327,7 @@ def success_primer_design():
         df = pd.DataFrame(output_dict)
         builds = list(df["GRCh"].unique())
         # reorder df col to appear on UI
-        df = df[['Primer_Pair', "chr", "GRCh", "variant", "start_POS", "end_POS",
+        df = df[['Primer_Pair', "chr", "GRCh", "primer_name", "start_POS", "end_POS",
                  'Left_Sequence', 'Right_Sequence', 'Pair_Product_Size',
                  'Left_Start', 'Left_End', 'Right_Start', 'Right_End', 'Specificity',
                  'FW_primer_snp', 'RV_primer_snp', 'snp_validity', 'gene', 'exon_num',
@@ -351,8 +352,8 @@ def save_selected():
         return "No data found in session."
 
     df = pd.DataFrame(output_dict)
-    columns = ["chr", "start_POS", "end_POS", "variant", "GRCh", "tag_name",
-               "primer", "tagged_primer"]
+    columns = ["chr", "start_POS", "end_POS", "primer_name", "GRCh",
+               "tag_name", "primer", "tagged_primer"]
     rows = []
     selected_rows = request.form.getlist('selected_rows')
 
@@ -370,8 +371,8 @@ def save_selected():
                 "chr": row["chr"],
                 "start_POS": row["start_POS"],
                 "end_POS": row["end_POS"],
-                "variant": row["variant"],
-                "GRCh": row["GRCh"],   
+                "primer_name": row["primer_name"],
+                "GRCh": row["GRCh"],
                 "tag_name": tag_name_FW,
                 "primer": FW_primer,
                 "tagged_primer": tagged_FW
@@ -382,7 +383,7 @@ def save_selected():
                 "chr": row["chr"],
                 "start_POS": row["start_POS"],
                 "end_POS": row["end_POS"],
-                "variant": row["variant"],
+                "primer_name": row["primer_name"],
                 "GRCh": row["GRCh"],
                 "tag_name": tag_name_R,
                 "primer": RV_primer,
@@ -447,8 +448,8 @@ def update_row():
 
     table_type = data.get("table_type", primer_table)
     # remove non-editable keys from payload
+    updated_fields.pop('unique_primer_id', None)
     updated_fields.pop('primer_id', None)
-    updated_fields.pop('batch_id', None)
     user = session.get('username', 'unknown')
 
     try:
@@ -460,7 +461,7 @@ def update_row():
 
         elif table_type == "batches":
             allowed_columns = batch_editable_columns
-            pk = "batch_id"
+            pk = "primer_id"
             table_name = f"{schema}.{batch_table}"
 
         # keep only allowed columns
@@ -528,7 +529,7 @@ def update_row():
         )
 
         app.logger.info(
-            f"User '{user}' updated primer_batches table, batch_id {row_id}: {updated_str}"
+            f"User '{user}' updated primer_id {row_id}: {updated_str}"
         )
 
         cur.close()
@@ -546,9 +547,9 @@ def manual_insert():
     if request.method == "POST":
         try:
             chr = request.form.get("chr")
-            start_pos = request.form.get("start_POS")
-            end_pos = request.form.get("end_POS")
-            variant = request.form.get("variant")
+            #start_pos = request.form.get("start_POS")
+            #end_pos = request.form.get("end_POS")
+            primer_name = request.form.get("primer_name")
             left_seq = request.form.get("Left_Sequence")
             right_seq = request.form.get("Right_Sequence")
             left_start = request.form.get("Left_Start")
@@ -558,17 +559,17 @@ def manual_insert():
             product_size = request.form.get("Pair_Product_Size")
             gene = request.form.get("gene")
             grch = request.form.get("GRCh")
-            tagged_FW = request.form.get("tagged_FW")
-            tagged_RV = request.form.get("tagged_RV")
+            #tagged_FW = request.form.get("tagged_FW")
+            #tagged_RV = request.form.get("tagged_RV")
             tag = request.form.get("tag")
             notes = request.form.get("Notes")
-            passval = request.form.get("PassedValidation")
+            #passval = request.form.get("PassedValidation")
 
             df_insert = pd.DataFrame([{
                 "chr": chr,
-                "start_POS": int(start_pos),
-                "end_POS": int(end_pos),
-                "variant": variant or "variant",
+                "start_POS": 1,
+                "end_POS": 1,
+                "primer_name": primer_name or "primer_name",
                 "Left_Sequence": left_seq or "NNNNN",
                 "Right_Sequence": right_seq or "NNNNN",
                 "Left_Start": int(left_start) if left_start else 1,
@@ -581,13 +582,12 @@ def manual_insert():
             }])
 
             insert_DB(
-                df_insert, tagged_FW, tagged_RV, tag,
+                df_insert, None, None, tag,
                 username=DB_USER,
                 password=DB_PASSWORD,
                 db_name=DB_NAME,
                 db_host=DB_HOST,
-                notes=notes,
-                passval=passval
+                notes=notes
             )
 
             # Success

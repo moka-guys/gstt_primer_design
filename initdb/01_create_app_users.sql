@@ -1,5 +1,5 @@
 -- =========================
--- USERS TABLE
+-- Users table
 -- =========================
 CREATE TABLE IF NOT EXISTS app_users (
     id SERIAL PRIMARY KEY,
@@ -8,13 +8,13 @@ CREATE TABLE IF NOT EXISTS app_users (
 );
 
 -- =========================
--- SCHEMA
+-- Schema
 -- =========================
 CREATE SCHEMA IF NOT EXISTS primer_tool;
 
--- =========================
--- ENUM TYPE (safe creation)
--- =========================
+-- ==========
+-- Enum type 
+-- ===========
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -26,10 +26,10 @@ BEGIN
 END$$;
 
 -- =========================
--- PRIMERS TABLE (CORE / UNIQUE)
+-- Primers table (unique)
 -- =========================
 CREATE TABLE IF NOT EXISTS primer_tool.primers (
-    primer_id SERIAL PRIMARY KEY,
+    unique_primer_id SERIAL PRIMARY KEY,
 
     chr VARCHAR(3) NOT NULL CHECK (
         chr IN ('X', 'Y')
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS primer_tool.primers (
 
     start_pos INTEGER NOT NULL CHECK (start_pos > 0 AND start_pos <= 300000000),
     end_pos INTEGER NOT NULL CHECK (end_pos > 0 AND end_pos <= 300000000),
-    variant VARCHAR(15),
+    primer_name VARCHAR(15),
     left_primer_seq VARCHAR(50),
     right_primer_seq VARCHAR(50),
     left_primer_start INTEGER CHECK (left_primer_start >= 0),
@@ -51,8 +51,7 @@ CREATE TABLE IF NOT EXISTS primer_tool.primers (
 
     CONSTRAINT unique_primer_identity UNIQUE (
         chr,
-        start_pos,
-        end_pos,
+        primer_name,
         grch,
         left_primer_seq,
         right_primer_seq,
@@ -66,41 +65,33 @@ CREATE TABLE IF NOT EXISTS primer_tool.primers (
 );
 
 -- =========================
--- BATCH TABLE (MULTIPLE PER PRIMER)
+-- Batch table (Non-unique)
 -- =========================
 CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
-    batch_id SERIAL PRIMARY KEY,
-
-    primer_id INTEGER NOT NULL,
-
+    primer_id SERIAL PRIMARY KEY,
+    unique_primer_id INTEGER NOT NULL,
     tagged_left VARCHAR(50),
     tagged_right VARCHAR(50),
     tag VARCHAR(10),
-
     notes VARCHAR(100),
-
-    -- FIX: consistent naming style
     passed_validation yes_no,
-
+    archive yes_no,
     mix VARCHAR(100),
-    dilute_time VARCHAR(100),
-
+    dilution_date VARCHAR(100),
     tray VARCHAR(100),
     freezer VARCHAR(100),
-
     grid_fw VARCHAR(100),
     grid_rv VARCHAR(100),
-
     insert_time TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT fk_primer
-        FOREIGN KEY (primer_id)
-        REFERENCES primer_tool.primers(primer_id)
+        FOREIGN KEY (unique_primer_id)
+        REFERENCES primer_tool.primers(unique_primer_id)
         ON DELETE CASCADE
 );
 
 -- =========================
--- INDEX (IMPORTANT for performance)
+-- Index
 -- =========================
 CREATE INDEX IF NOT EXISTS idx_primer_batches_primer_id
-ON primer_tool.primer_batches(primer_id);
+ON primer_tool.primer_batches(unique_primer_id);

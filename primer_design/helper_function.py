@@ -15,7 +15,7 @@ config_path = os.path.join(BASE_DIR, "config.json")
 
 class PrimerRecord(BaseModel):
     chr: str | int
-    variant: str
+    primer_name: str
     pos_start: int
     pos_end: int
     build: int
@@ -165,7 +165,7 @@ def parse_csv(file):
     errors = validate_primer_csv(df)
     if not errors:
         chrom = df["chr"].to_list()
-        variant = df["variant"].to_list()
+        primer_name = df["primer_name"].to_list()
         pos_start = df["pos_start"].to_list()
         pos_end = df["pos_end"].to_list()
         build = df["build"].to_list()
@@ -183,7 +183,7 @@ def parse_csv(file):
         max_primer_size = df["max_primer_size"].to_list()
         return {
             "chrom": chrom,
-            "variant": variant,
+            "primer_name": primer_name,
             "pos_start": pos_start,
             "pos_end": pos_end,
             "build": build,
@@ -232,10 +232,11 @@ def make_list(x):
 
 
 def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
-              password, db_name, db_host, notes="NA", passval="No"):
+              password, db_name, db_host, notes="NA", passval="No",
+              archive="No"):
 
     df_insert = order_primer[[
-        "chr", "start_POS", "end_POS", "variant", "Left_Sequence",
+        "chr", "start_POS", "end_POS", "primer_name", "Left_Sequence",
         "Right_Sequence", "Left_Start", "Left_End",
         "Right_Start", "Right_End", "Pair_Product_Size",
         "gene", "GRCh"
@@ -246,12 +247,14 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
     df_insert["tag"] = tag
     df_insert["notes"] = notes
     df_insert["passval"] = passval
+    df_insert["archive"] = archive
 
     # clean empty values
     for col in ["tagged_FW", "tagged_RV", "tag", "notes"]:
         df_insert[col] = df_insert[col].replace([None, ""], "NA")
 
-    df_insert["passval"] = df_insert["passval"].replace([None, ""], "No")
+    for col in ["passval", "archive"]:
+        df_insert[col] = df_insert[col].replace([None, ""], "No")
 
     # rename to DB columns
     df_insert.rename(columns={
@@ -269,7 +272,8 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
         "tagged_RV": "p_tagged_right",
         "tag": "p_tag",
         "notes": "p_notes",
-        "passval": "p_passedvalidation"
+        "passval": "p_passed_validation",
+        "archive": "p_archive"
     }, inplace=True)
 
     df_insert = df_insert.where(pd.notnull(df_insert), None)
@@ -297,6 +301,7 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
         %s::varchar,
         %s::varchar,
         %s::text,
+        %s::text,
         %s::varchar,
         %s::varchar,
         %s::varchar,
@@ -313,7 +318,7 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
             int(row["start_pos"]),
             int(row["end_pos"]),
             int(row["grch"]),
-            str(row["variant"]) if row["variant"] else "NA",
+            str(row["primer_name"]) if row["primer_name"] else "NA",
             str(row["left_primer_seq"]),
             str(row["right_primer_seq"]),
             int(row["left_primer_start"]) if row["left_primer_start"] is not None else 0,
@@ -327,13 +332,14 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
             str(row["p_tagged_right"]),
             str(row["p_tag"]),
             str(row["p_notes"]),
-            str(row["p_passedvalidation"]),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None
+            str(row["p_passed_validation"]),
+            str(row["p_archive"]),
+            None,  # p_mix
+            None,  # p_dilution_date
+            None,  # p_tray
+            None,  # p_freezer
+            None,  # p_grid_fw
+            None   # p_grid_rv
         )
 
         cursor.execute(query, values)
@@ -509,13 +515,16 @@ def prepare_order_sheet(df):
     return FW_primer, RV_primer, tagged_FW, tagged_RV,tag_name_FW, tag_name_RV
 
 
-def liftover_37to38(chrom, pos):
+def liftover(chrom, pos, build):
     """
     lift over build37 pos to build38
     """
     with open(config_path, "r") as file:
         config = json.load(file)
-    liftover_ref = config["ref_b37"]["liftover"]
+    if int(build) == 37:
+        liftover_ref = config["ref_b37"]["liftover"]
+    elif int(build) == 38:
+        liftover_ref = config["ref_b38"]["liftover"]
     lo = LiftOver(liftover_ref)
     result = lo.convert_coordinate(chrom, pos)
     return int(result[0][1])

@@ -84,8 +84,8 @@
 
         <div class="filter-row">
             <div>
-                <label>Variant</label>
-                <input type="text" name="variant" placeholder="">
+                <label>Primer name</label>
+                <input type="text" name="primer_name" placeholder="">
             </div>
         </div>
 
@@ -98,7 +98,7 @@
                     <option value="No">No</option>
                 </select>
             </div>
-        </div>
+        </div>        
 
         <div class="filter-row">
             <div>
@@ -120,12 +120,21 @@
                 </select>
             </div>
         </div>
+        <div class="filter-row">
+            <div>
+                <label>Archive</label>
+                <select name="archive">
+                    <option value="">Any</option>
+                    <option value="No" selected>No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+        </div>
 
-        <h3>OR Upload JSON Filter</h3>
-        <input type="file" name="file">
 
         <br><br>
         <button type="submit">Run Query</button>
+        <a href="{{ url_for('index') }}" class="home-btn">Home Page</a>
     </form>
 
 </div>

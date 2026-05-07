@@ -14,7 +14,7 @@ from dataclasses import dataclass
 @dataclass
 class InputParam:
     chrom: str
-    variant: str
+    primer_name: str
     pos_start: int
     pos_end: int
     build: int
@@ -43,7 +43,7 @@ class DesignPrimer:
             self.config = json.load(file)
         self.input_param = input_param
         self.chr = self.input_param.chrom
-        self.variant = self.input_param.variant
+        self.primer_name = self.input_param.primer_name
         self.pos_start = self.input_param.pos_start
         self.pos_end = self.input_param.pos_end
         self.build = self.input_param.build
@@ -560,7 +560,7 @@ class DesignPrimer:
                     designed_primer["GRCh"] = self.build
                     designed_primer["start_POS"] = int(self.pos_start)
                     designed_primer["end_POS"] = int(self.pos_end)
-                    designed_primer["variant"] = self.variant
+                    designed_primer["primer_name"] = self.primer_name
                     self.logger.info(f"****primer found with padding {padding - 30}****")
                     #designed_primer.to_excel(self.excel, sheet_name=f"{self.chr}_{self.pos_start}_{self.pos_end}", index=False)
                     #cols_to_check = ["Specificity", "snp_validity"]
