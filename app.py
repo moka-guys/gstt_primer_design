@@ -1,6 +1,7 @@
 import os
 import csv
 import sys
+import uuid
 import time
 import pandas as pd
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, send_from_directory, after_this_request
@@ -12,7 +13,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import check_password_hash
 import psycopg2
-from database.query_db import search_postgres, filter_multiple_postgres
+from database.query_db import search_postgres
 from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -29,7 +30,7 @@ DB_PASSWORD = os.environ["DB_PASSWORD"]
 default_schema = "primer_tool"
 default_table = "ordered_primers"
 batch_editable_columns = ['notes', 'passed_validation', 'mix', 'dilution_date',
-                          'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive']
+                          'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive', 'manufacturer']
 primer_table = "primers"
 batch_table = "primer_batches"
 schema = "primer_tool"
@@ -255,12 +256,13 @@ def design_primer():
 
         if csv_file and csv_file.endswith(".csv") and not empty_chr_rows:
             app_datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            random_uuid = uuid.uuid4()
             order_primer = GeneratePrimer(app_datetimestr)
             output = order_primer.parse_input(csv_file)
             app.logger.info("Primer design done")
             session['primer_output'] = output.to_dict(orient='records')
             session["app_datetimestr"] = app_datetimestr
-            session["order_sheet_name"] = f'primer_order_sheet_TEST_VERSION_{session["app_datetimestr"]}.csv'
+            session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{session["app_datetimestr"]}.csv'
             del_file(["temp_input.csv"])
             return redirect(url_for('success_primer_design'))
 
@@ -294,7 +296,7 @@ def query_data():
                 error="Please provide at least one filter."
             )
         try:
-            result_list = search_postgres(
+            result_list, msg = search_postgres(
                 DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
                 chr_val, gene_val, variant_val, passed_validation, grch,
                 archive, start, end
@@ -302,6 +304,7 @@ def query_data():
             return render_template(
                 "query_result.html",
                 results=result_list,
+                msg=msg,
                 editable_columns=batch_editable_columns,
                 error=None
             )
@@ -352,8 +355,8 @@ def save_selected():
         return "No data found in session."
 
     df = pd.DataFrame(output_dict)
-    columns = ["chr", "start_POS", "end_POS", "primer_name", "GRCh",
-               "tag_name", "primer", "tagged_primer"]
+    columns = ["chr", "primer_name", "tag_name",
+               "primer", "tagged_primer"]
     rows = []
     selected_rows = request.form.getlist('selected_rows')
 
@@ -369,10 +372,10 @@ def save_selected():
             # Append FW
             rows.append({
                 "chr": row["chr"],
-                "start_POS": row["start_POS"],
-                "end_POS": row["end_POS"],
+                #"start_POS": row["start_POS"],
+                #"end_POS": row["end_POS"],
                 "primer_name": row["primer_name"],
-                "GRCh": row["GRCh"],
+                #"GRCh": row["GRCh"],
                 "tag_name": tag_name_FW,
                 "primer": FW_primer,
                 "tagged_primer": tagged_FW
@@ -381,20 +384,22 @@ def save_selected():
             # Append RV
             rows.append({
                 "chr": row["chr"],
-                "start_POS": row["start_POS"],
-                "end_POS": row["end_POS"],
+                #"start_POS": row["start_POS"],
+                #"end_POS": row["end_POS"],
                 "primer_name": row["primer_name"],
-                "GRCh": row["GRCh"],
+                #"GRCh": row["GRCh"],
                 "tag_name": tag_name_R,
                 "primer": RV_primer,
                 "tagged_primer": tagged_RV
             })
-            insert_DB(temp_df, tagged_FW, tagged_RV,temp_df["order_tag"][0],
-                      DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
+            inserted_ids = insert_DB(temp_df, tagged_FW,
+                                     tagged_RV,temp_df["order_tag"][0],
+                                     DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
+            app.logger.info(f"{inserted_ids} inserted automatically")
         df_to_order = pd.DataFrame(rows, columns=columns)
         df_to_order["Scale"] = "25RR"
         df_to_order["Purification"] = "STD"
-        df_to_order.to_csv(f"/app/output/{session['order_sheet_name']}", index=False)
+        df_to_order.to_csv(f"/app/output/{session['order_sheet_name_auto']}", index=False)
         return render_template("save_complete.html")
 
     return "No rows selected."
@@ -407,11 +412,14 @@ def save_complete():
     return render_template("save_complete.html")
 
 
-@app.route("/download")
-def download():
+@app.route("/download/<source>")
+def download(source):
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
-    csv_to_download = session["order_sheet_name"]
+    if source == "manual":
+        csv_to_download = session["order_sheet_name_manual"]
+    else:
+        csv_to_download = session["order_sheet_name_auto"]
     directory = app.config['DOWNLOAD_FOLDER']
     full_path = os.path.join(directory, csv_to_download)
 
@@ -544,6 +552,8 @@ def update_row():
 
 @app.route("/manual_insert", methods=["GET", "POST"])
 def manual_insert():
+    datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    random_uuid = uuid.uuid4()
     if request.method == "POST":
         try:
             chr = request.form.get("chr")
@@ -578,18 +588,62 @@ def manual_insert():
                 "Right_End": int(right_end) if right_end else 1,
                 "Pair_Product_Size": int(product_size) if product_size else 1,
                 "gene": gene or "gene",
-                "GRCh": int(grch)
+                "GRCh": int(grch),
+                "order_tag": tag
             }])
 
-            insert_DB(
-                df_insert, None, None, tag,
-                username=DB_USER,
-                password=DB_PASSWORD,
-                db_name=DB_NAME,
-                db_host=DB_HOST,
-                notes=notes
-            )
+            inserted_ids = insert_DB(
+                                df_insert, None, None, tag,
+                                username=DB_USER,
+                                password=DB_PASSWORD,
+                                db_name=DB_NAME,
+                                db_host=DB_HOST,
+                                notes=notes
+                            )
+            app.logger.info(f"{inserted_ids} inserted manually")
+            # generate order sheet for manual insert primer
+            (FW_primer, RV_primer, tagged_FW,
+             tagged_RV, tag_name_FW, tag_name_RV) = prepare_order_sheet(df_insert)
+            rows = []
+            if FW_primer != "NNNNN":
+                rows.append({
+                    "primer": FW_primer,
+                    "tagged_primer": tagged_FW,
+                    "tag_name": tag_name_FW,
+                })
 
+            if RV_primer != "NNNNN":
+                rows.append({
+                    "primer": RV_primer,
+                    "tagged_primer": tagged_RV,
+                    "tag_name": tag_name_RV,
+                })
+
+            if rows:
+                # repeat base dataframe rows to match number of primers
+                df_new = df_insert[["chr", "primer_name"]].iloc[
+                    df_insert.index.repeat(len(rows))
+                ].reset_index(drop=True)
+
+                # merge primer-specific data
+                df_rows = pd.DataFrame(rows)
+
+                df_new = pd.concat(
+                    [df_new.reset_index(drop=True), df_rows.reset_index(drop=True)],
+                    axis=1
+                )
+
+                df_new["Scale"] = "25RR"
+                df_new["Purification"] = "STD"
+
+                session["order_sheet_name_manual"] = (
+                    f"primer_order_sheet_TEST_VERSION_{random_uuid}_{datetimestr}.csv"
+                )
+
+                df_new.to_csv(
+                    f"/app/output/{session['order_sheet_name_manual']}",
+                    index=False
+                )
             # Success
             return render_template("insert_success.html")
 

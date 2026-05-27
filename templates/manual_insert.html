@@ -116,11 +116,28 @@
             <label>gene:</label>
             <input type="text" name="gene">
 
-            <label>GRCh* (msut be 37 or 38)</label>
-            <input type="text" name="GRCh">
+            <label for="grch">GRCh*</label>
+            <select name="GRCh" id="grch" required>
+            <option value="">-- Select GRCh --</option>
+            <option value="37">37</option>
+            <option value="38">38</option>
+            </select>
 
-            <label>tag</label>
-            <input type="text" name="tag">
+            <label for="tag">tag*</label>
+            <select name="tag" id="tag" required>
+            <option value="">-- Select Tag --</option>
+            <option value="M13">M13</option>
+            <option value="T1">T1</option>
+            <option value="sT1">sT1</option>
+            <option value="T2">T2</option>
+            <option value="T3">T3</option>
+            <option value="T4">T4</option>
+            <option value="FAM">FAM</option>
+            <option value="VIC">VIC</option>
+            <option value="NED">NED</option>
+            <option value="PET">PET</option>
+            <option value="no_tag">no_tag</option>
+            </select>
 
             <label>Notes</label>
             <input type="text" name="Notes">

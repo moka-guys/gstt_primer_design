@@ -9,9 +9,13 @@ from pydantic import BaseModel, ValidationError, field_validator, model_validato
 import psycopg2
 from pathlib import Path
 from pyliftover import LiftOver
+import tempfile
+import shutil
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(BASE_DIR, "config.json")
+with open(config_path, "r") as file:
+    config = json.load(file)
 
 class PrimerRecord(BaseModel):
     chr: str | int
@@ -109,8 +113,6 @@ def get_tag(df, tag):
     """
     get primer tag for primer order
     """
-    with open(config_path, "r") as file:
-        config = json.load(file)
     FW_primer = df["Left_Sequence"][0]
     RV_primer = df["Right_Sequence"][0]
     FW_tag = config[tag]["F"]
@@ -307,10 +309,11 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
         %s::varchar,
         %s::varchar,
         %s::varchar,
+        %s::varchar,
         %s::varchar
     );
     """
-
+    inserted_ids = []
     for _, row in df_insert.iterrows():
 
         values = (
@@ -339,14 +342,18 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
             None,  # p_tray
             None,  # p_freezer
             None,  # p_grid_fw
-            None   # p_grid_rv
+            None,   # p_grid_rv
+            None  # p_manufacturer
         )
 
         cursor.execute(query, values)
+        insert_id = cursor.fetchone()[0]
+        inserted_ids.append(insert_id)
 
     connection.commit()
     cursor.close()
     connection.close()
+    return inserted_ids
 
 
 def generate_bed(primers, build):
@@ -364,8 +371,6 @@ def vcf_to_bed(bed_file, build):
     """
     get common SNP within primers to plot on IGV
     """
-    with open(config_path, "r") as file:
-        config = json.load(file)
     vcf_dir = Path("/app/static/temp")
     vcf_dir.mkdir(parents=True, exist_ok=True)
 
@@ -379,7 +384,6 @@ def vcf_to_bed(bed_file, build):
         bed_file = config["inter_file"]["bed_file_38"]
         intermediate_vcf = config["inter_file"]["inter_vcf_38"]
         vcf_bed = config["inter_file"]["vcf_bed_38"]
-    print("inter", build, intermediate_vcf, vcf_in, bed_file)
 
     # filter variant with bed file
     subprocess.run([
@@ -414,8 +418,6 @@ def vcf_to_bed(bed_file, build):
 
 def generate_filtered_vcf(bed_file, build):
 
-    with open(config_path, "r") as file:
-        config = json.load(file)
     vcf_dir = Path("/app/static/temp")
     vcf_dir.mkdir(parents=True, exist_ok=True)
 
@@ -517,14 +519,78 @@ def prepare_order_sheet(df):
 
 def liftover(chrom, pos, build):
     """
-    lift over build37 pos to build38
+    LiftOver between GRCh37 and GRCh38 safely
+    Returns:
+        int position or None if not mappable
     """
-    with open(config_path, "r") as file:
-        config = json.load(file)
-    if int(build) == 37:
-        liftover_ref = config["ref_b37"]["liftover"]
-    elif int(build) == 38:
-        liftover_ref = config["ref_b38"]["liftover"]
-    lo = LiftOver(liftover_ref)
-    result = lo.convert_coordinate(chrom, pos)
-    return int(result[0][1])
+
+    try:
+        build = int(build)
+
+        if build == 37:
+            liftover_ref = config["ref_b37"]["liftover"]
+        elif build == 38:
+            liftover_ref = config["ref_b38"]["liftover"]
+        else:
+            return None
+
+        lo = LiftOver(liftover_ref)
+        result = lo.convert_coordinate(chrom, int(pos))
+
+        if not result:
+            return None
+        new_pos = result[0][1]
+
+        return int(new_pos)
+
+    except Exception as e:
+        print(f"liftover error: {e}")
+        return None
+
+
+def liftover_bed(chrom, start, end, grch):
+
+    CROSSMAP = shutil.which("CrossMap")
+    if int(grch) == 37:
+        chain_file = config["ref_b37"]["crossmap_ref"]
+    elif int(grch) == 38:
+        chain_file = config["ref_b38"]["crossmap_ref"]
+    # create temporary input/output files
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, dir="/app/output/") as in_bed:
+        in_bed.write(f"{chrom}\t{start}\t{end}\n")
+        input_path = in_bed.name
+
+    output_path = input_path + ".out.bed"
+    try:
+        # run CrossMap
+        cmd = [
+            CROSSMAP,
+            "bed",
+            chain_file,
+            input_path,
+            output_path,
+        ]
+
+        subprocess.run(cmd, check=True)
+
+        # read result
+        with open(output_path) as f:
+            line = f.readline().strip()
+
+        if not line:
+            return None
+
+        fields = line.split("\t")
+
+        return int(fields[2])
+
+    finally:
+        # cleanup temp files
+        for path in [
+            input_path,
+            output_path,
+            output_path + ".unmap",
+        ]:
+            if os.path.exists(path):
+                os.remove(path)

@@ -36,14 +36,16 @@
         "genome_ref": "/app/input/hs37d5.fa", 
         "snp_ref": "/app/input/gnomad.exomes.r2.1.1.sites_AFonly.vcf.gz",
         "exon_ref": "/app/input/GCF_000001405.25_GRCh37.p13_genomic.db",
-        "liftover": "/app/input/hg19ToHg38.over.chain.gz"
+        "liftover": "/app/input/hg19ToHg38.over.chain.gz",
+        "crossmap_ref": "/app/input/GRCh37_to_GRCh38.chain.gz"
      },
      "ref_b38": {
       "bowtie_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.bowtie",
       "genome_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.fna", 
       "snp_ref": "/app/input/combined_common_snp_v410_gnomad_exome_AFonly.vcf.gz",
       "exon_ref": "/app/input/GCF_000001405.40_GRCh38.p14_genomic.db",
-      "liftover": "/app/input/hg38ToHg19.over.chain.gz"
+      "liftover": "/app/input/hg38ToHg19.over.chain.gz",
+      "crossmap_ref": "/app/input/GRCh38_to_GRCh37.chain.gz"
    },
     "M13":{
       "F": "TGTAAAACGACGGCCAGT",

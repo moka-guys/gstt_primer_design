@@ -26,7 +26,8 @@ CREATE OR REPLACE FUNCTION primer_tool.insert_primer_with_batch(
     p_tray VARCHAR,
     p_freezer VARCHAR,
     p_grid_fw VARCHAR,
-    p_grid_rv VARCHAR
+    p_grid_rv VARCHAR,
+    p_manufacturer VARCHAR
 )
 RETURNS INTEGER
 LANGUAGE plpgsql
@@ -126,7 +127,8 @@ BEGIN
         tray,
         freezer,
         grid_fw,
-        grid_rv
+        grid_rv,
+        manufacturer
     )
     VALUES (
         v_unique_primer_id,
@@ -141,7 +143,8 @@ BEGIN
         p_tray,
         p_freezer,
         p_grid_fw,
-        p_grid_rv
+        p_grid_rv,
+        p_manufacturer
     );
 
     RETURN v_unique_primer_id;

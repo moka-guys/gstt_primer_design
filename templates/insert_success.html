@@ -27,6 +27,12 @@
         <h2>✅ Insert Successful!</h2>
         <a href="{{ url_for('manual_insert') }}">Insert More</a>
         <a href="{{ url_for('index') }}">Go to Home</a>
+        
+        <p>
+            <a href="{{ url_for('download', source='manual') }}" class="btn btn-primary btn-lg" style="margin-top: 15px; display: inline-block;">
+                Download Order Sheet
+            </a>
+        </p>
     </div>
 </body>
 </html>
