@@ -3,9 +3,9 @@ from primer_design.helper_function import get_postgres_connection, liftover, lif
 
 
 def search_postgres(dbname, user, password, host,
-                    chr_val, gene_val, variant_val,
+                    chr_val, gene_val,  primer_name,
                     validation_val, grch_val, archive_val,
-                    pos_start=None, pos_end=None):
+                    notes, pos_start=None, pos_end=None):
 
     conditions = []
     values = []
@@ -79,10 +79,6 @@ def search_postgres(dbname, user, password, host,
         conditions.append(sql.SQL("p.gene = %s"))
         values.append(gene_val)
 
-    if variant_val:
-        conditions.append(sql.SQL("p.primer_name = %s"))
-        values.append(variant_val)
-
     if validation_val:
         conditions.append(sql.SQL("b.passed_validation = %s"))
         values.append(validation_val)
@@ -90,6 +86,13 @@ def search_postgres(dbname, user, password, host,
     if archive_val:
         conditions.append(sql.SQL("b.archive = %s::yes_no"))
         values.append(archive_val)
+    if notes:
+        conditions.append(sql.SQL("b.notes ILIKE %s"))
+        values.append(f"%{notes}%")
+
+    if primer_name:
+        conditions.append(sql.SQL("p.primer_name ILIKE %s"))
+        values.append(f"%{primer_name}%")
 
     liftover_grch = None
     lifted_start = None

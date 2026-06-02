@@ -279,16 +279,17 @@ def query_data():
     if request.method == 'POST':
         chr_val = request.form.get('chr')
         gene_val = request.form.get('gene')
-        variant_val = request.form.get('primer_name')
+        primer_name = request.form.get('primer_name')
         passed_validation = request.form.get('passed_validation')
         archive = request.form.get('archive')
         grch = request.form.get('grch')
         start = request.form.get('start')
         end = request.form.get('end')
+        notes = request.form.get('notes')
 
         # ensure at least one filter exists
-        if not any([chr_val, gene_val, variant_val, passed_validation,
-                    grch, start, end, archive]):
+        if not any([chr_val, gene_val, primer_name, passed_validation,
+                    grch, start, end, archive, notes]):
             return render_template(
                 "query_result.html",
                 results=None,
@@ -298,8 +299,8 @@ def query_data():
         try:
             result_list, msg = search_postgres(
                 DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
-                chr_val, gene_val, variant_val, passed_validation, grch,
-                archive, start, end
+                chr_val, gene_val, primer_name, passed_validation, grch,
+                archive, notes, start, end
             )
             return render_template(
                 "query_result.html",

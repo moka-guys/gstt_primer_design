@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS primer_tool.primers (
 
     start_pos INTEGER NOT NULL CHECK (start_pos > 0 AND start_pos <= 300000000),
     end_pos INTEGER NOT NULL CHECK (end_pos > 0 AND end_pos <= 300000000),
-    primer_name VARCHAR(15),
+    primer_name VARCHAR(100),
     left_primer_seq VARCHAR(50),
     right_primer_seq VARCHAR(50),
     left_primer_start INTEGER CHECK (left_primer_start >= 0),
@@ -73,8 +73,8 @@ CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
         PRIMARY KEY,
 
     unique_primer_id INTEGER NOT NULL,
-    tagged_left VARCHAR(50),
-    tagged_right VARCHAR(50),
+    tagged_left VARCHAR(100),
+    tagged_right VARCHAR(100),
     tag VARCHAR(10),
     notes VARCHAR(100),
     passed_validation yes_no,
