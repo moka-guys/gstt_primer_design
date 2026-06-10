@@ -75,11 +75,19 @@
                             {% endif %}
                             ">
 
-                                    {% if key in ["passed_validation", "archive"] %}
+                                    {% if key == "archive" %}
 
                                         <select class="form-select form-select-sm editable-select">
                                             <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>
                                             <option value="No" {% if value == "No" %}selected{% endif %}>No</option>
+                                        </select>
+                                    
+                                    {% elif key == "passed_validation" %}
+
+                                        <select class="form-select form-select-sm editable-select">
+                                            <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>
+                                            <option value="No" {% if value == "No" %}selected{% endif %}>No</option>
+                                            <option value="Not_Done" {% if value == "Not_Done" %}selected{% endif %}>Not_Done</option>
                                         </select>
 
                                     {% elif key in editable_columns %}
@@ -117,8 +125,9 @@
     {% endif %}
 
     <div class="mt-4">
+        <a href="{{ url_for('export_csv') }}" class="btn btn-secondary">Export table as csv file</a>        
+        <a href="{{ url_for('query_data') }}" class="btn btn-secondary">New Query</a>
         <a href="{{ url_for('index') }}" class="btn btn-secondary">Home</a>
-        <a href="{{ url_for('query_data') }}" class="btn btn-outline-primary">New Query</a>
     </div>
 
     <script>

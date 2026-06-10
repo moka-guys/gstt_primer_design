@@ -3,8 +3,9 @@ import csv
 import sys
 import uuid
 import time
+from io import StringIO
 import pandas as pd
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session, send_from_directory, after_this_request
+from flask import Flask, request, jsonify, render_template, redirect, url_for, Response, session, send_from_directory, after_this_request
 from flask_session import Session
 import logging
 import traceback
@@ -14,6 +15,7 @@ from dotenv import load_dotenv
 from werkzeug.security import check_password_hash
 import psycopg2
 from database.query_db import search_postgres
+from database.insert_db import insert_DB
 from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -74,7 +76,6 @@ app.logger.info(DB_NAME)
 app.logger.info(DB_USER)
 app.logger.info(DB_PASSWORD)
 app.logger.info(DB_HOST)
-app.logger.info(app.config["SECRET_KEY"])
 
 
 # Print stdout/stderr to logger
@@ -112,7 +113,7 @@ def gstt_primer_design():
         result = cur.fetchone()
         conn.close()
         if result and check_password_hash(result[0], password):
-            session['username'] = user
+            session["username"] = user
             app.logger.info(f"User logged in: {user}")
             return redirect(url_for('index'))
         else:
@@ -198,7 +199,8 @@ def design_primer():
     """
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
-
+    else:
+        user = session.get('username')
     if request.method == "POST":
         # request.form contains multiple rows as lists
         # Each input field has name="chr[]", "position[]", etc.
@@ -261,9 +263,11 @@ def design_primer():
             output = order_primer.parse_input(csv_file)
             app.logger.info("Primer design done")
             session['primer_output'] = output.to_dict(orient='records')
-            session["app_datetimestr"] = app_datetimestr
-            session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{session["app_datetimestr"]}.csv'
+            session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{app_datetimestr}.csv'
             del_file(["temp_input.csv"])
+            app.logger.info(
+                            f"User '{user}' designed primer for {rows}"
+                        )
             return redirect(url_for('success_primer_design'))
 
         else:
@@ -286,10 +290,13 @@ def query_data():
         start = request.form.get('start')
         end = request.form.get('end')
         notes = request.form.get('notes')
-
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        variant_pos = request.form.get('variant_pos')
         # ensure at least one filter exists
         if not any([chr_val, gene_val, primer_name, passed_validation,
-                    grch, start, end, archive, notes]):
+                    grch, start, end, archive, notes, start_date, end_date,
+                    variant_pos]):
             return render_template(
                 "query_result.html",
                 results=None,
@@ -300,8 +307,9 @@ def query_data():
             result_list, msg = search_postgres(
                 DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
                 chr_val, gene_val, primer_name, passed_validation, grch,
-                archive, notes, start, end
+                archive, notes, variant_pos, start, end, start_date, end_date
             )
+            session["query_results"] = result_list
             return render_template(
                 "query_result.html",
                 results=result_list,
@@ -350,7 +358,7 @@ def success_primer_design():
 
 @app.route('/save_selected', methods=['POST'])
 def save_selected():
-
+    user = session.get('username')
     output_dict = session.get('primer_output')
     if not output_dict:
         return "No data found in session."
@@ -367,16 +375,14 @@ def save_selected():
         for index, row in selected_df.iterrows():
             temp_df = selected_df.loc[[index]]
             temp_df = temp_df.reset_index()
+            temp_df["designer"] = "A"
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_R) = prepare_order_sheet(temp_df)
 
             # Append FW
             rows.append({
                 "chr": row["chr"],
-                #"start_POS": row["start_POS"],
-                #"end_POS": row["end_POS"],
                 "primer_name": row["primer_name"],
-                #"GRCh": row["GRCh"],
                 "tag_name": tag_name_FW,
                 "primer": FW_primer,
                 "tagged_primer": tagged_FW
@@ -385,10 +391,7 @@ def save_selected():
             # Append RV
             rows.append({
                 "chr": row["chr"],
-                #"start_POS": row["start_POS"],
-                #"end_POS": row["end_POS"],
                 "primer_name": row["primer_name"],
-                #"GRCh": row["GRCh"],
                 "tag_name": tag_name_R,
                 "primer": RV_primer,
                 "tagged_primer": tagged_RV
@@ -396,7 +399,9 @@ def save_selected():
             inserted_ids = insert_DB(temp_df, tagged_FW,
                                      tagged_RV,temp_df["order_tag"][0],
                                      DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
-            app.logger.info(f"{inserted_ids} inserted automatically")
+            app.logger.info(
+                            f"User '{user}' selected designed primers to insert DB for unique_primer_id {inserted_ids}"
+                            )
         df_to_order = pd.DataFrame(rows, columns=columns)
         df_to_order["Scale"] = "25RR"
         df_to_order["Purification"] = "STD"
@@ -417,10 +422,13 @@ def save_complete():
 def download(source):
     if "username" not in session:
         return redirect(url_for("gstt_primer_design"))
+    csv_to_download = None
     if source == "manual":
-        csv_to_download = session["order_sheet_name_manual"]
+        csv_to_download = session.get("order_sheet_name_manual")
     else:
-        csv_to_download = session["order_sheet_name_auto"]
+        csv_to_download = session.get("order_sheet_name_auto")
+    if csv_to_download is None:
+        return "No order sheet available for download.", 400
     directory = app.config['DOWNLOAD_FOLDER']
     full_path = os.path.join(directory, csv_to_download)
 
@@ -449,7 +457,7 @@ def download(source):
     return response
 
 
-@app.route('/update-row', methods=['POST'])
+@app.route('/update_row', methods=['POST'])
 def update_row():
     data = request.get_json()
     row_id = data['id']
@@ -551,15 +559,32 @@ def update_row():
         return jsonify({"status": "error", "message": str(e)})
 
 
+@app.route("/export_csv")
+def export_csv():
+    rows = session["query_results"]
+    output = StringIO()
+
+    if rows:
+        writer = csv.DictWriter(output, fieldnames=rows[0].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=results.csv"
+        }
+    )
+
+
 @app.route("/manual_insert", methods=["GET", "POST"])
 def manual_insert():
     datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_uuid = uuid.uuid4()
+    user = session.get("username")
     if request.method == "POST":
         try:
             chr = request.form.get("chr")
-            #start_pos = request.form.get("start_POS")
-            #end_pos = request.form.get("end_POS")
             primer_name = request.form.get("primer_name")
             left_seq = request.form.get("Left_Sequence")
             right_seq = request.form.get("Right_Sequence")
@@ -570,11 +595,8 @@ def manual_insert():
             product_size = request.form.get("Pair_Product_Size")
             gene = request.form.get("gene")
             grch = request.form.get("GRCh")
-            #tagged_FW = request.form.get("tagged_FW")
-            #tagged_RV = request.form.get("tagged_RV")
             tag = request.form.get("tag")
             notes = request.form.get("Notes")
-            #passval = request.form.get("PassedValidation")
 
             df_insert = pd.DataFrame([{
                 "chr": chr,
@@ -590,7 +612,8 @@ def manual_insert():
                 "Pair_Product_Size": int(product_size) if product_size else 1,
                 "gene": gene or "gene",
                 "GRCh": int(grch),
-                "order_tag": tag
+                "order_tag": tag,
+                "designer": "M"
             }])
 
             inserted_ids = insert_DB(
@@ -601,7 +624,7 @@ def manual_insert():
                                 db_host=DB_HOST,
                                 notes=notes
                             )
-            app.logger.info(f"{inserted_ids} inserted manually")
+            app.logger.info(f"{user} inserted primer manually: unique_primer_id {inserted_ids} ")
             # generate order sheet for manual insert primer
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_RV) = prepare_order_sheet(df_insert)

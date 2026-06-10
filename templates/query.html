@@ -95,6 +95,12 @@
                 <input type="text" name="notes" placeholder="">
             </div>
         </div>
+        <div class="filter-row">
+            <div>
+                <label>Variant POS</label>
+                <input type="number" name="variant_pos" placeholder="Provide a single coordinate">
+            </div>
+        </div>
 
 
         <div class="filter-row">
@@ -102,6 +108,7 @@
                 <label>Validation</label>
                 <select name="passed_validation">
                     <option value="">Any</option>
+                    <option value="Not_Done">Not_Done</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                 </select>
@@ -111,13 +118,25 @@
         <div class="filter-row">
             <div>
                 <label>Start Position</label>
-                <input type="number" name="start">
+                <input type="number" name="start" placeholder="Provide start coordinate">
             </div>
             <div>
                 <label>End Position</label>
-                <input type="number" name="end">
+                <input type="number" name="end" placeholder="Provide end coordinate">
             </div>
         </div>
+
+        <div class="filter-row">
+            <div>
+                <label>Start Date</label>
+                <input type="date" name="start_date">
+            </div>
+            <div>
+                <label>End Date</label>
+                <input type="date" name="end_date">
+            </div>
+        </div>
+
 
         <div class="filter-row">
             <div>

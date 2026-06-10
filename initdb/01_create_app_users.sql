@@ -25,6 +25,16 @@ BEGIN
     END IF;
 END$$;
 
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_type
+        WHERE typname = 'yes_no_status'
+    ) THEN
+        CREATE TYPE yes_no_status AS ENUM ('Yes', 'No', 'Not_Done');
+    END IF;
+END$$;
+
 -- =========================
 -- Primers table (unique)
 -- =========================
@@ -77,7 +87,7 @@ CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
     tagged_right VARCHAR(100),
     tag VARCHAR(10),
     notes VARCHAR(100),
-    passed_validation yes_no,
+    passed_validation yes_no_status,
     archive yes_no,
     mix VARCHAR(100),
     dilution_date VARCHAR(100),
@@ -86,6 +96,7 @@ CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
     grid_fw VARCHAR(100),
     grid_rv VARCHAR(100),
     manufacturer VARCHAR(100),
+    designer VARCHAR(10),
     insert_time TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT fk_primer

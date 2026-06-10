@@ -27,22 +27,23 @@ CREATE OR REPLACE FUNCTION primer_tool.insert_primer_with_batch(
     p_freezer VARCHAR,
     p_grid_fw VARCHAR,
     p_grid_rv VARCHAR,
-    p_manufacturer VARCHAR
+    p_manufacturer VARCHAR,
+    p_designer VARCHAR
 )
 RETURNS INTEGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
     v_unique_primer_id INTEGER;
-    v_passed yes_no;
+    v_passed yes_no_status;
     v_archive yes_no;
 BEGIN
 
-    IF p_passed_validation NOT IN ('Yes', 'No') THEN
-        RAISE EXCEPTION 'passed_validation must be Yes or No';
+    IF p_passed_validation NOT IN ('Yes', 'No', 'Not_Done') THEN
+        RAISE EXCEPTION 'passed_validation must be Yes or No or Not_Done';
     END IF;
 
-    v_passed := p_passed_validation::yes_no;
+    v_passed := p_passed_validation::yes_no_status;
     v_archive := p_archive::yes_no;
 
 
@@ -128,7 +129,8 @@ BEGIN
         freezer,
         grid_fw,
         grid_rv,
-        manufacturer
+        manufacturer,
+        designer
     )
     VALUES (
         v_unique_primer_id,
@@ -144,7 +146,8 @@ BEGIN
         p_freezer,
         p_grid_fw,
         p_grid_rv,
-        p_manufacturer
+        p_manufacturer,
+        p_designer
     );
 
     RETURN v_unique_primer_id;
