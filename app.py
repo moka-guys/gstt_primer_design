@@ -5,7 +5,7 @@ import uuid
 import time
 from io import StringIO
 import pandas as pd
-from flask import Flask, request, jsonify, render_template, redirect, url_for, Response, session, send_from_directory, after_this_request
+from flask import Flask, request, jsonify, g, render_template, redirect, url_for, Response, session, send_from_directory, after_this_request
 from flask_session import Session
 import logging
 import traceback
@@ -19,6 +19,7 @@ from database.insert_db import insert_DB
 from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
 from werkzeug.middleware.proxy_fix import ProxyFix
+from functools import wraps
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
@@ -121,29 +122,29 @@ def gstt_primer_design():
     return render_template('gstt_primer_design.html')
 
 
-@app.route("/protected")
-def protected():
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
-    # stored on server only, not sent to browser
-    user = session["username"]
-    password = session["password"]
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "username" not in session:
+            return redirect(url_for("gstt_primer_design"))
 
-    return f"user: {user}, password: {password}"
+        g.user = session["username"]
+
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @app.route('/index')
+@login_required
 def index():
     """
     load index page if log in is successful
     """
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
-    username = session.get('username')
-    return render_template('index.html', username=username)
+    return render_template('index.html', username=g.user)
 
 
 @app.route('/igv_view/<genome>')
+@login_required
 def igv_view(genome):
     """
     Load igv_view to visualize primers and common snp
@@ -152,8 +153,6 @@ def igv_view(genome):
     Both generated primers and common SNP are loaded onto igv_view
     Genome can either be GRCh 37 or 38
     """
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
     # get primer output from design_primer
     primer_output = session.get('primer_output')
     if primer_output:
@@ -187,6 +186,7 @@ def igv_view(genome):
 
 
 @app.route('/design_primer', methods=['GET', 'POST'])
+@login_required
 def design_primer():
     """
     Design primers using GenerateOrder from primer_design.primer3.py
@@ -197,10 +197,6 @@ def design_primer():
     Valid input is used to generate primers and temp csv file is deleted
     All generated primers are printed out as table on UI
     """
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
-    else:
-        user = session.get('username')
     if request.method == "POST":
         # request.form contains multiple rows as lists
         # Each input field has name="chr[]", "position[]", etc.
@@ -266,7 +262,7 @@ def design_primer():
             session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{app_datetimestr}.csv'
             del_file(["temp_input.csv"])
             app.logger.info(
-                            f"User '{user}' designed primer for {rows}"
+                            f"User '{g.user}' designed primer for {rows}"
                         )
             return redirect(url_for('success_primer_design'))
 
@@ -277,9 +273,8 @@ def design_primer():
 
 
 @app.route('/query', methods=['GET', 'POST'])
+@login_required
 def query_data():
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
     if request.method == 'POST':
         chr_val = request.form.get('chr')
         gene_val = request.form.get('gene')
@@ -325,9 +320,8 @@ def query_data():
 
 
 @app.route('/success_primer_design')
+@login_required
 def success_primer_design():
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
     """
     Success page for primer design. Generated primers are shown as table if any.
     Option to visualize primers on igv_view is provided.
@@ -357,8 +351,8 @@ def success_primer_design():
 
 
 @app.route('/save_selected', methods=['POST'])
+@login_required
 def save_selected():
-    user = session.get('username')
     output_dict = session.get('primer_output')
     if not output_dict:
         return "No data found in session."
@@ -400,7 +394,7 @@ def save_selected():
                                      tagged_RV,temp_df["order_tag"][0],
                                      DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
             app.logger.info(
-                            f"User '{user}' selected designed primers to insert DB for unique_primer_id {inserted_ids}"
+                            f"User '{g.user}' selected designed primers to insert DB for unique_primer_id {inserted_ids}"
                             )
         df_to_order = pd.DataFrame(rows, columns=columns)
         df_to_order["Scale"] = "25RR"
@@ -412,16 +406,14 @@ def save_selected():
 
 
 @app.route("/save_complete")
+@login_required
 def save_complete():
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
     return render_template("save_complete.html")
 
 
 @app.route("/download/<source>")
+@login_required
 def download(source):
-    if "username" not in session:
-        return redirect(url_for("gstt_primer_design"))
     csv_to_download = None
     if source == "manual":
         csv_to_download = session.get("order_sheet_name_manual")
@@ -458,6 +450,7 @@ def download(source):
 
 
 @app.route('/update_row', methods=['POST'])
+@login_required
 def update_row():
     data = request.get_json()
     row_id = data['id']
@@ -467,7 +460,6 @@ def update_row():
     # remove non-editable keys from payload
     updated_fields.pop('unique_primer_id', None)
     updated_fields.pop('primer_id', None)
-    user = session.get('username', 'unknown')
 
     try:
         if table_type == primer_table:
@@ -546,7 +538,7 @@ def update_row():
         )
 
         app.logger.info(
-            f"User '{user}' updated primer_id {row_id}: {updated_str}"
+            f"User '{g.user}' updated primer_id {row_id}: {updated_str}"
         )
 
         cur.close()
@@ -578,10 +570,11 @@ def export_csv():
 
 
 @app.route("/manual_insert", methods=["GET", "POST"])
+@login_required
 def manual_insert():
     datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_uuid = uuid.uuid4()
-    user = session.get("username")
+
     if request.method == "POST":
         try:
             chr = request.form.get("chr")
@@ -624,7 +617,7 @@ def manual_insert():
                                 db_host=DB_HOST,
                                 notes=notes
                             )
-            app.logger.info(f"{user} inserted primer manually: unique_primer_id {inserted_ids} ")
+            app.logger.info(f"{g.user} inserted primer manually: unique_primer_id {inserted_ids} ")
             # generate order sheet for manual insert primer
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_RV) = prepare_order_sheet(df_insert)
