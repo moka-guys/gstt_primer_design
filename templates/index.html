@@ -1,83 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Database Dashboard</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f4f8;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<title>GSTT Primer Database</title>
 
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-top: 30px;
-        }
+<style>
 
-        /* Tabs container */
-        .tab-container {
-            display: flex;
-            flex-direction: column; /* Stack vertically */
-            align-items: center;
-            margin: 20px 0;
-            gap: 15px; /* Space between tabs */
-        }
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f4f6fa;
+}
 
-        /* Individual tabs */
-        .tab-link {
-            text-decoration: none;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: white;
-            font-weight: bold;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            width: 200px;
-            text-align: center;
-        }
+/* Header */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#ffffff;
+    padding:15px 30px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
 
-        /* Hover effect */
-        .tab-link:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-            background: linear-gradient(135deg, #2575fc, #6a11cb);
-        }
+.header h2{
+    margin:0;
+    color:#333;
+}
 
-        /* Active tab styling */
-        .tab-link.active {
-            background: linear-gradient(135deg, #ff6a00, #ee0979);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-    </style>
+/* Change password link */
+.change-password{
+    color:#0066cc;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.change-password:hover{
+    text-decoration:underline;
+}
+
+/* Main white box */
+.container{
+    width:700px;
+    margin:60px auto;
+    background:white;
+    border-radius:12px;
+    padding:40px;
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
+
+.container h1{
+    text-align:center;
+    color:#444;
+    margin-bottom:40px;
+}
+
+/* Main buttons */
+.menu{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+}
+
+.menu a{
+    width:320px;
+    padding:18px;
+    text-align:center;
+    text-decoration:none;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    background:#2575fc;
+    border-radius:10px;
+    transition:.3s;
+}
+
+.menu a:hover{
+    background:#125fd0;
+    transform:translateY(-3px);
+}
+
+/* Logout */
+.logout{
+    margin-top:50px;
+    text-align:center;
+}
+
+.logout a{
+    color:#c62828;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:16px;
+}
+
+.logout a:hover{
+    text-decoration:underline;
+}
+
+</style>
+
 </head>
+
 <body>
+
+<div class="header">
+
     <h2>Welcome, {{ username }}!</h2>
 
-    <div class="tab-container">
-        <a href="{{ url_for('design_primer') }}" class="tab-link {% if active_tab == 'design_primer' %}active{% endif %}">Design Primer</a>
-        <a href="{{ url_for('query_data') }}" class="tab-link {% if active_tab == 'query' %}active{% endif %}">Query Data</a>
-        <a href="{{ url_for('manual_insert') }}" class="tab-link {% if active_tab == 'query' %}active{% endif %}">Insert Primer Manually</a>
-        <a href="{{ url_for('logout') }}" class="tab-link {% if active_tab == 'logout' %}active{% endif %}">Log Out</a>
+    <a href="{{ url_for('change_password') }}" class="change-password">
+        Change Password
+    </a>
+
+</div>
+
+<div class="container">
+
+    <h1>GSTT Primer Database</h1>
+
+    <div class="menu">
+
+        <a href="{{ url_for('design_primer') }}">
+            Design Primer
+        </a>
+
+        <a href="{{ url_for('query_data') }}">
+            Query Data
+        </a>
+
+        <a href="{{ url_for('manual_insert') }}">
+            Insert Primer Manually
+        </a>
 
     </div>
-    <!-- JS scripts for logout -->
-    <script>
-        // Manual logout click
-        document.getElementById("logout-btn").addEventListener("click", function(e) {
-            console.log("Manual logout triggered");
-            // optional: you can do extra JS here before logout
-        });
 
-        // Auto logout when browser/tab closes
-        window.addEventListener("beforeunload", function () {
-            console.log("Auto logout triggered");
-            // Sends request to /logout when tab closes
-            navigator.sendBeacon("/logout");
-        });
-    </script>
+    <div class="logout">
+
+        <a href="{{ url_for('logout') }}">
+            Log Out
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+window.addEventListener("beforeunload", function () {
+    navigator.sendBeacon("/logout");
+});
+</script>
+
 </body>
 </html>

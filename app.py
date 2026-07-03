@@ -9,10 +9,9 @@ from flask import Flask, request, jsonify, g, render_template, redirect, url_for
 from flask_session import Session
 import logging
 import traceback
-import json
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 import psycopg2
 from database.query_db import search_postgres
 from database.insert_db import insert_DB
@@ -142,6 +141,78 @@ def index():
     """
     return render_template('index.html', username=g.user)
 
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+
+    if request.method == "POST":
+
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        if new_password != confirm_password:
+            return render_template(
+                "change_password.html",
+                error="New passwords do not match."
+            )
+
+        conn = get_postgres_connection(
+            DB_NAME,
+            DB_USER,
+            DB_PASSWORD,
+            DB_HOST
+        )
+
+        cur = conn.cursor()
+
+        # Get current password hash
+        cur.execute(
+            "SELECT password_hash FROM app_users WHERE username = %s",
+            (g.user,)
+        )
+
+        result = cur.fetchone()
+
+        if result is None:
+            conn.close()
+            return render_template(
+                "change_password.html",
+                error="User not found."
+            )
+
+        # Verify current password
+        if not check_password_hash(result[0], current_password):
+            conn.close()
+            return render_template(
+                "change_password.html",
+                error="Current password is incorrect."
+            )
+
+        # Hash the new password
+        new_hash = generate_password_hash(new_password)
+        print(new_hash)
+
+        # Update password
+        cur.execute(
+            """
+            UPDATE app_users
+            SET password_hash = %s
+            WHERE username = %s
+            """,
+            (new_hash, g.user)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return render_template(
+            "change_password.html",
+            success="Password changed successfully."
+        )
+
+    return render_template("change_password.html")
 
 @app.route('/igv_view/<genome>')
 @login_required
