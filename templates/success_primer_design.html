@@ -30,6 +30,31 @@
             color: #721c24;
             font-weight: bold;
         }
+        /* Make table scrollable */
+        .table-responsive {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #cfe2ff;
+        }
+
+        .table td:first-child,
+        .table th:first-child {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 3;
+        }
+        
+        .table thead th:first-child {
+        z-index: 4;
+        background: #cfe2ff;
+        }
     </style>
 </head>
 <body>

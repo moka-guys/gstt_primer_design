@@ -15,7 +15,8 @@ document.addEventListener("DOMContentLoaded", async function () {
                 format: "bed",
                 url: primersBedUrl,
                 displayMode: "EXPANDED",
-                color: "green"
+                color: "green",
+                height: 180 
             },
             {
                 name: "SNPs",

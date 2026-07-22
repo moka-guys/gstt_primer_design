@@ -111,16 +111,18 @@ class DesignPrimer:
         db = gffutils.FeatureDB(self.exon_db, keep_order=True)
         exons = list(db.region(region=(nc_number, start, end),
                      completely_within=False, featuretype="exon"))
+        unique_gene = []
         unique_exons = {}
         # get unique exons from found exons
 
         for exon in exons:
+            gene_id = exon.attributes["gene_id"]
             key = (exon.start, exon.end, exon.strand, exon["gene_id"][0])
-            if key not in unique_exons:
+            if gene_id not in unique_gene:
+                unique_gene.append(gene_id)
                 unique_exons[key] = exon
-        u_exons = list(unique_exons.values())
-        if len(u_exons) == 1:
-            exon = u_exons[0]
+        if len(unique_gene) == 1:
+            exon = list(unique_exons.values())[0]
             exon_found = True
         else:
             exon = None

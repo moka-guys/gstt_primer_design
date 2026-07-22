@@ -235,8 +235,10 @@ def igv_view(genome):
         df_combined = df_combined.drop(columns=["Primer_Pair"])
         if int(genome[2:]) == 19:
             build = 37
+            prefix = "chr"
         else:
             build = 38
+            prefix = ""
         # check if the primers are for build37 or 38
         temp_df = df_combined[df_combined["GRCh"] == build]
         if temp_df["GRCh"].iloc[0] == 38:
@@ -248,10 +250,10 @@ def igv_view(genome):
         # filter common SNP using primer bed
         vcf_to_bed(bed_file, genome[2:])
     # define genome and initial focus for igv_view
-    initial_query = {
-                    "genome": genome,
-                    "locus": "chr" + str(df["chr"][0]) + ":" + str(df["start_POS"][0])
-                    }
+        initial_query = {
+                        "genome": genome,
+                        "locus": f"{prefix}{temp_df.iloc[0]['chr']}:{temp_df.iloc[0]['start']}"
+                        }
 
     return render_template('igv_view.html', initial_query=initial_query)
 
