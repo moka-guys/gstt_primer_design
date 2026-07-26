@@ -4,6 +4,7 @@ import sys
 import uuid
 import time
 from io import StringIO
+from pathlib import Path
 import pandas as pd
 from flask import Flask, request, jsonify, g, render_template, redirect, url_for, Response, session, send_from_directory, after_this_request
 from flask_session import Session
@@ -246,17 +247,26 @@ def igv_view(genome):
             temp_df["chr"] = "chr" + temp_df["chr"].astype(str)
         temp_df = temp_df.drop(columns=["GRCh"])
         # put primers into bed format
-        bed_file = generate_bed(temp_df, genome[2:])
+        job_id = uuid.uuid4().hex
+        bed_file = generate_bed(temp_df, genome[2:], job_id)
+        session["primer_bed"] = bed_file
+        session.setdefault("temp_files", [])
+        session["temp_files"].append(bed_file)
         #generate_filtered_vcf(bed_file, genome[2:])
         # filter common SNP using primer bed
-        vcf_to_bed(bed_file, genome[2:])
+        snp_bed_file, vcf_temp_file = vcf_to_bed(bed_file, genome[2:], job_id)
+        session["snp_bed"] = snp_bed_file
+        session["temp_files"].append(snp_bed_file)
+        session["temp_files"].append(vcf_temp_file)
     # define genome and initial focus for igv_view
         initial_query = {
                         "genome": genome,
                         "locus": f"{prefix}{temp_df.iloc[0]['chr']}:{temp_df.iloc[0]['start']}"
                         }
 
-    return render_template('igv_view.html', initial_query=initial_query)
+    return render_template('igv_view.html', initial_query=initial_query,
+                           primer_bed=session["primer_bed"],
+                           snp_bed=session["snp_bed"])
 
 
 @app.route('/design_primer', methods=['GET', 'POST'])
@@ -271,6 +281,8 @@ def design_primer():
     Valid input is used to generate primers and temp csv file is deleted
     All generated primers are printed out as table on UI
     """
+    cleanup_old_files("/app/static/temp", 18000)
+    cleanup_old_files("/app/output", 18000)
     if request.method == "POST":
         # request.form contains multiple rows as lists
         # Each input field has name="chr[]", "position[]", etc.
@@ -497,6 +509,9 @@ def save_selected():
         df_to_order["Scale"] = "25RR"
         df_to_order["Purification"] = "STD"
         df_to_order.to_csv(f"/app/output/{session['order_sheet_name_auto']}", index=False)
+        session.setdefault("order_files", [])
+        session["order_files"].append(session["order_sheet_name_auto"])
+
         return render_template("save_complete.html")
 
     return "No rows selected."
@@ -758,6 +773,8 @@ def manual_insert():
                     f"/app/output/{session['order_sheet_name_manual']}",
                     index=False
                 )
+                session.setdefault("order_files", [])
+                session["order_files"].append(session["order_sheet_name_manual"])
             # Success
             return render_template("insert_success.html")
 
@@ -775,12 +792,67 @@ def logout():
     """
     username = session.get('username')
 
+    delete_session_files(
+        "/app/static/temp",
+        "temp_files"
+    )
+
+    delete_session_files(
+        "/app/output",
+        "order_files"
+    )
     session.clear()
     if username:
-        app.logger.info(f"User logged out: {username}")
+        app.logger.info(
+            f"User logged out: {username}"
+        )
     else:
-        app.logger.error("No user name. Check!!!")
+        app.logger.error(
+            "No user name. Check!!!"
+        )
+
     return redirect(url_for("gstt_primer_design"))
+
+
+def delete_session_files(directory, session_key):
+    """
+    Delete files stored in session under session_key
+    """
+    folder = Path(directory)
+    files = session.get(session_key, [])
+
+    for filename in files:
+        file_path = folder / filename
+
+        if file_path.exists():
+            file_path.unlink()
+
+            app.logger.info(
+                f"Deleted temporary file: {file_path}"
+            )
+
+
+def cleanup_old_files(directory, max_age_seconds):
+
+    folder = Path(directory)
+
+    if not folder.exists():
+        return
+
+    now = time.time()
+
+    for file in folder.iterdir():
+
+        if file.is_file():
+
+            age = now - file.stat().st_mtime
+
+            if age > max_age_seconds:
+                file.unlink()
+
+                app.logger.info(
+                    f"Deleted expired file: {file}"
+                )
 
 
 if __name__ == '__main__':

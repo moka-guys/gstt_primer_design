@@ -12,11 +12,9 @@
     <script>
         const genome = "{{ initial_query.genome }}";
         const initialQuery = {{ initial_query | tojson | safe }};    
-        const primersBedBase = "{{ url_for('static', filename='temp/primers_') }}";
-        const snpsBedBase    = "{{ url_for('static', filename='temp/vcf_bed_') }}";
+        const primersBedUrl = "{{ url_for('static', filename='temp/' + primer_bed) }}";
+        const snpsbedUrl    = "{{ url_for('static', filename='temp/' + snp_bed) }}";
     
-        const primersBedUrl = primersBedBase + genome.slice(2) + ".bed";
-        const snpsbedUrl    = snpsBedBase + genome.slice(2) + ".bed";
     
         console.log("Genome:", genome);
         console.log("Primers BED URL:", primersBedUrl);

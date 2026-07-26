@@ -1,5 +1,6 @@
 import os
 import subprocess
+import uuid
 import argparse
 import pysam
 import json
@@ -195,7 +196,7 @@ class DesignPrimer:
         return key_value
 
     def run_primer3(self, sequence, gene_name, primer_space, exon_plus,
-                    upstream_start):
+                    upstream_start, job_id):
         """
         design primers with primer3
         if no primer is designed, primer_found returns as False
@@ -317,7 +318,8 @@ class DesignPrimer:
             primer_found = False
             self.logger.info("xxxxx 0 primer is designed by primer3 xxxxx")
             return None, None, primer_found
-        with open("designed_primer.fa", "a") as f:
+
+        with open(f"designed_primer_{job_id}.fa", "a") as f:
             for i in range(df_filtered.shape[0]):
                 name = "PRIMER_Left_" + str(df_filtered["Primer_Pair"][i])
                 f.write(">" + name + "|" + str(self.chr) + ":" + str(df_filtered["Left_Start"][i])
@@ -565,10 +567,11 @@ class DesignPrimer:
                 sequence = self.get_seq(nc_number, upstream_start, downstream_end)
             else:
                 sequence = self.get_seq(str(self.chr), upstream_start, downstream_end)
+            job_id = uuid.uuid4().hex
             primer_fa, primer_df, primer_found = self.run_primer3(
                                                     sequence, gene,
                                                     primer_space, exon_plus,
-                                                    upstream_start)
+                                                    upstream_start, job_id)
             padding = padding + 30
             # if primer3 generates any primer
             if primer_found:
@@ -599,6 +602,7 @@ class DesignPrimer:
                     designed_primer["end_POS"] = int(self.pos_end)
                     designed_primer["primer_name"] = self.primer_name
                     self.logger.info(f"****primer found with padding {padding - 30}****")
+                    del_file([f"designed_primer_{job_id}.fa", f"designed_primer_{job_id}.fa.sam"])
                     #designed_primer.to_excel(self.excel, sheet_name=f"{self.chr}_{self.pos_start}_{self.pos_end}", index=False)
                     #cols_to_check = ["Specificity", "snp_validity"]
                     # take the 1st pair of valid primer to order
@@ -609,13 +613,13 @@ class DesignPrimer:
                 # if none of designed primer is valid and max padding not reach yet
                 elif valid_df.shape[0] == 0 and padding <= self.config["design_param"]["max_padding"]:
                     valid_primer = False
-                    os.remove("designed_primer.fa")
-                    os.remove("designed_primer.fa.sam")
+                    del_file([f"designed_primer_{job_id}.fa", f"designed_primer_{job_id}.fa.sam"])
                     continue
                 else:
                     valid_primer = False
                     self.logger.info("Valid primer not found till max padding. "
                                      "Try with different config for primer design")
+                    del_file([f"designed_primer_{job_id}.fa", f"designed_primer_{job_id}.fa.sam"])
                     #empty_df = pd.DataFrame([{
                                                 #"chr": self.chr,
                                                 #"start": self.pos_start,
@@ -631,7 +635,7 @@ class GeneratePrimer:
     def __init__(self, app_datetimestr):
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         self.config_path = os.path.join(BASE_DIR, "config.json")
-        del_file()
+        #del_file()
         self.datetimestr = app_datetimestr
 
     def parse_input(self, input_file):
@@ -653,7 +657,7 @@ class GeneratePrimer:
             start_design = DesignPrimer(self.config_path, self.datetimestr, param_dict)
             designed_primer = start_design.design_primer()
             dfs.append(designed_primer)
-            del_file()
+            #del_file()
             #if not order_primer.empty:
                 #(FW_primer, RV_primer,
                 #tagged_FW, tagged_RV,

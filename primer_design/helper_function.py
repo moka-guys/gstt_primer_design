@@ -232,18 +232,18 @@ def make_list(x):
     return [x]
 
 
-def generate_bed(primers, build):
+def generate_bed(primers, build, job_id):
     """
     put generated primers into bed format to plot on IGV
     """
     temp_dir = Path("/app/static/temp")
     temp_dir.mkdir(parents=True, exist_ok=True)
-    bed_file = temp_dir / f"primers_{build}.bed"
+    bed_file = temp_dir / f"primers_{build}_{job_id}.bed"
     primers.to_csv(bed_file, sep="\t", header=False, index=False)
-    return str(bed_file)
+    return str(os.path.basename(bed_file))
 
 
-def vcf_to_bed(bed_file, build):
+def vcf_to_bed(bed_file, build, job_id):
     """
     get common SNP within primers to plot on IGV
     """
@@ -252,14 +252,14 @@ def vcf_to_bed(bed_file, build):
 
     if int(build) == 19:
         vcf_in = config["ref_b37"]["snp_ref"]
-        bed_file = config["inter_file"]["bed_file_37"]
-        intermediate_vcf = config["inter_file"]["inter_vcf_37"]
-        vcf_bed = config["inter_file"]["vcf_bed_37"]
+        bed_file = f"{vcf_dir}/{bed_file}"
+        intermediate_vcf = f"{vcf_dir}/tmp_filtered_19_{job_id}.vcf"
+        vcf_bed = f"{vcf_dir}/vcf_bed_19_{job_id}.vcf"
     else:
         vcf_in = config["ref_b38"]["snp_ref"]
-        bed_file = config["inter_file"]["bed_file_38"]
-        intermediate_vcf = config["inter_file"]["inter_vcf_38"]
-        vcf_bed = config["inter_file"]["vcf_bed_38"]
+        bed_file = f"{vcf_dir}/{bed_file}"
+        intermediate_vcf = f"{vcf_dir}/tmp_filtered_38_{job_id}.vcf"
+        vcf_bed = f"{vcf_dir}/vcf_bed_38_{job_id}.vcf"
 
     # filter variant with bed file
     subprocess.run([
@@ -290,7 +290,7 @@ def vcf_to_bed(bed_file, build):
             start = pos - 1  # BED is 0-based
             end = start + len(ref)  # end position
             bed.write(f"{chrom}\t{start}\t{end}\t{name}\n")
-
+    return str(os.path.basename(vcf_bed)), str(os.path.basename(intermediate_vcf))
 
 def generate_filtered_vcf(bed_file, build):
 
