@@ -191,6 +191,7 @@
         <form method="POST">
             <div class="table-wrapper">
                 <table id="inputTable">
+
                     <tr>
                         <th class="chr">chr</th>
                         <th class="primer_name">primer_name</th>
@@ -210,25 +211,108 @@
                         <th class="min_primer_size">min_primer_size</th>
                         <th class="max_primer_size">max_primer_size</th>
                     </tr>
-                    <tr>
-                        <td class="chr"><input type="text" name="chr[]"></td>
-                        <td class="primer_name"><input type="text" name="primer_name[]" value="primer_name"></td>
-                        <td class="pos_start"><input type="number" name="pos_start[]" ></td>
-                        <td class="pos_end"><input type="number" name="pos_end[]"></td>
-                        <td class="build"><input type="number" name="build[]" value="37"></td>
-                        <td class="tag"><input type="text" name="tag[]" value="T1"></td>
-                        <td class="opt_tm"><input type="number" name="opt_tm[]" value="60" step="any"></td>
-                        <td class="min_tm"><input type="number" name="min_tm[]" value="58" step="any"></td>
-                        <td class="max_tm"><input type="number" name="max_tm[]" value="63" step="any"></td>
-                        <td class="opt_gc"><input type="number" name="opt_gc[]" value="50" step="any"></td>
-                        <td class="min_gc"><input type="number" name="min_gc[]" value="40" step="any"></td>
-                        <td class="max_gc"><input type="number" name="max_gc[]" value="60" step="any"></td>
-                        <td class="min_product_size"><input type="number" name="min_product_size[]" value="100"></td>
-                        <td class="max_product_size"><input type="number" name="max_product_size[]" value="600"></td>
-                        <td class="opt_primer_size"><input type="number" name="opt_primer_size[]" value="22"></td>
-                        <td class="min_primer_size"><input type="number" name="min_primer_size[]" value="18"></td>
-                        <td class="max_primer_size"><input type="number" name="max_primer_size[]" value="28"></td>
-                    </tr>
+
+                    {% if saved_rows %}
+
+                        {% for row in saved_rows %}
+                        <tr>
+
+                            <td class="chr">
+                                <input type="text" name="chr[]" value="{{ row.chr }}">
+                            </td>
+
+                            <td class="primer_name">
+                                <input type="text" name="primer_name[]" value="{{ row.primer_name }}">
+                            </td>
+
+                            <td class="pos_start">
+                                <input type="number" name="pos_start[]" value="{{ row.pos_start }}">
+                            </td>
+
+                            <td class="pos_end">
+                                <input type="number" name="pos_end[]" value="{{ row.pos_end }}">
+                            </td>
+
+                            <td class="build">
+                                <input type="number" name="build[]" value="{{ row.build }}">
+                            </td>
+
+                            <td class="tag">
+                                <input type="text" name="tag[]" value="{{ row.tag }}">
+                            </td>
+
+                            <td class="opt_tm">
+                                <input type="number" step="any" name="opt_tm[]" value="{{ row.opt_tm }}">
+                            </td>
+
+                            <td class="min_tm">
+                                <input type="number" step="any" name="min_tm[]" value="{{ row.min_tm }}">
+                            </td>
+
+                            <td class="max_tm">
+                                <input type="number" step="any" name="max_tm[]" value="{{ row.max_tm }}">
+                            </td>
+
+                            <td class="opt_gc">
+                                <input type="number" step="any" name="opt_gc[]" value="{{ row.opt_gc }}">
+                            </td>
+
+                            <td class="min_gc">
+                                <input type="number" step="any" name="min_gc[]" value="{{ row.min_gc }}">
+                            </td>
+
+                            <td class="max_gc">
+                                <input type="number" step="any" name="max_gc[]" value="{{ row.max_gc }}">
+                            </td>
+
+                            <td class="min_product_size">
+                                <input type="number" name="min_product_size[]" value="{{ row.min_product_size }}">
+                            </td>
+
+                            <td class="max_product_size">
+                                <input type="number" name="max_product_size[]" value="{{ row.max_product_size }}">
+                            </td>
+
+                            <td class="opt_primer_size">
+                                <input type="number" name="opt_primer_size[]" value="{{ row.opt_primer_size }}">
+                            </td>
+
+                            <td class="min_primer_size">
+                                <input type="number" name="min_primer_size[]" value="{{ row.min_primer_size }}">
+                            </td>
+
+                            <td class="max_primer_size">
+                                <input type="number" name="max_primer_size[]" value="{{ row.max_primer_size }}">
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                    {% else %}
+
+                        <tr>
+                            <td class="chr"><input type="text" name="chr[]"></td>
+                            <td class="primer_name"><input type="text" name="primer_name[]" value="primer_name"></td>
+                            <td class="pos_start"><input type="number" name="pos_start[]"></td>
+                            <td class="pos_end"><input type="number" name="pos_end[]"></td>
+                            <td class="build"><input type="number" name="build[]" value="37"></td>
+                            <td class="tag"><input type="text" name="tag[]" value="T1"></td>
+                            <td class="opt_tm"><input type="number" name="opt_tm[]" value="60" step="any"></td>
+                            <td class="min_tm"><input type="number" name="min_tm[]" value="58" step="any"></td>
+                            <td class="max_tm"><input type="number" name="max_tm[]" value="63" step="any"></td>
+                            <td class="opt_gc"><input type="number" name="opt_gc[]" value="50" step="any"></td>
+                            <td class="min_gc"><input type="number" name="min_gc[]" value="40" step="any"></td>
+                            <td class="max_gc"><input type="number" name="max_gc[]" value="60" step="any"></td>
+                            <td class="min_product_size"><input type="number" name="min_product_size[]" value="100"></td>
+                            <td class="max_product_size"><input type="number" name="max_product_size[]" value="600"></td>
+                            <td class="opt_primer_size"><input type="number" name="opt_primer_size[]" value="22"></td>
+                            <td class="min_primer_size"><input type="number" name="min_primer_size[]" value="18"></td>
+                            <td class="max_primer_size"><input type="number" name="max_primer_size[]" value="28"></td>
+                        </tr>
+
+                    {% endif %}
                 </table>
             </div>
             <button type="button" onclick="addRow()">Add Row</button>

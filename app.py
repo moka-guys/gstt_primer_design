@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify, g, render_template, redirect, url_for
 from flask_session import Session
 import logging
 import traceback
+import tempfile
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -318,22 +319,34 @@ def design_primer():
         # Get the fieldnames from the first dictionary
         fieldnames = rows[0].keys()
         # save into temp csv
-        csv_file = "temp_input.csv"
-        with open(csv_file, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()  # write the header row
-            writer.writerows(rows)  # write all rows
+        temp = tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".csv",
+            prefix="primer_input_",
+            delete=False
+        )
+
+        csv_file = temp.name
+
+        with temp:
+            writer = csv.DictWriter(
+                temp,
+                fieldnames=fieldnames
+            )
+            writer.writeheader()
+            writer.writerows(rows)
         empty_chr_rows = [row for row in rows if not row["chr"]]
 
         if csv_file and csv_file.endswith(".csv") and not empty_chr_rows:
             app_datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
             random_uuid = uuid.uuid4()
+            session['primer_input'] = rows
             order_primer = GeneratePrimer(app_datetimestr)
             output = order_primer.parse_input(csv_file)
             app.logger.info("Primer design done")
             session['primer_output'] = output.to_dict(orient='records')
             session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{app_datetimestr}.csv'
-            del_file(["temp_input.csv"])
+            del_file([csv_file])
             app.logger.info(
                             f"User '{g.user}' designed primer for {rows}"
                         )
@@ -342,7 +355,18 @@ def design_primer():
         else:
             return render_template("missing_input.html")
 
-    return render_template('design_primer.html')
+    return render_template('design_primer.html', saved_rows=[])
+
+
+@app.route("/modify_primer", methods=["GET", "POST"])
+def modify_primer():
+    if request.method == "POST":
+        return design_primer()
+
+    return render_template(
+        "design_primer.html",
+        saved_rows=session.get("primer_input", [])
+    )
 
 
 @app.route('/query', methods=['GET', 'POST'])
