@@ -221,7 +221,9 @@ class DesignPrimer:
             "PRIMER_PICK_RIGHT_PRIMER": 1,
             "PRIMER_PRODUCT_SIZE_RANGE": [[self.min_product_size, self.max_product_size]],
             "PRIMER_LOWERCASE_MASKING": 1,
-            "PRIMER_MAX_NS_ACCEPTED": 1,
+            "PRIMER_MAX_NS_ACCEPTED": 0,
+            "PRIMER_MAX_SELF_ANY": 8,
+            "PRIMER_MAX_SELF_END": 3,
             "PRIMER_MIN_THREE_PRIME_DISTANCE": 3,
             "SEQUENCE_TARGET": [primer_space, exon_plus],
             "PRIMER_NUM_RETURN": self.config["design_param"]["primer_num_return"],
@@ -308,23 +310,58 @@ class DesignPrimer:
                     df.loc[primer_num, "Left_Start"] = absolute_start
                     df.loc[primer_num, "Left_End"] = absolute_end
 
-        if df.empty:
+        df_filtered = df[df.apply(self.keep_primer_pair, axis=1)].copy().reset_index(drop=True)
+        df_filtered["Primer_Pair"] = range(len(df_filtered))
+
+        if df_filtered.empty:
             primer_found = False
             self.logger.info("xxxxx 0 primer is designed by primer3 xxxxx")
             return None, None, primer_found
         with open("designed_primer.fa", "a") as f:
-            for i in range(df.shape[0]):
-                name = "PRIMER_Left_" + str(df["Primer_Pair"][i])
-                f.write(">" + name + "|" + str(self.chr) + ":" + str(df["Left_Start"][i])
-                        + "-" + str(df["Left_End"][i]) + "\n")
-                f.write(df["Left_Sequence"][i] + "\n")
-                name = "PRIMER_Right_" + str(df["Primer_Pair"][i])
-                f.write(">" + name + "|" + str(self.chr) + ":" + str(df["Right_Start"][i])
-                        + "-" + str(df["Right_End"][i]) + "\n")
-                f.write(df["Right_Sequence"][i] + "\n")
+            for i in range(df_filtered.shape[0]):
+                name = "PRIMER_Left_" + str(df_filtered["Primer_Pair"][i])
+                f.write(">" + name + "|" + str(self.chr) + ":" + str(df_filtered["Left_Start"][i])
+                        + "-" + str(df_filtered["Left_End"][i]) + "\n")
+                f.write(df_filtered["Left_Sequence"][i] + "\n")
+                name = "PRIMER_Right_" + str(df_filtered["Primer_Pair"][i])
+                f.write(">" + name + "|" + str(self.chr) + ":" + str(df_filtered["Right_Start"][i])
+                        + "-" + str(df_filtered["Right_End"][i]) + "\n")
+                f.write(df_filtered["Right_Sequence"][i] + "\n")
         primer_found = True
 
-        return f, df, primer_found
+        return f, df_filtered, primer_found
+
+    def has_tandem_repeat(self, seq, unit_size, min_repeats):
+        seq = seq.upper()
+
+        for i in range(len(seq) - unit_size * min_repeats + 1):
+            motif = seq[i:i + unit_size]
+
+            if motif * min_repeats in seq:
+                return True
+
+        return False
+
+    def passes_repeat_filter(self, seq):
+        # Reject dinucleotide repeats (e.g. ACACACAC), min_repeat num inclusive
+        if self.has_tandem_repeat(seq, unit_size=2, min_repeats=4):
+            return False
+
+        # Reject trinucleotide repeats (e.g. CAGCAGCAG)
+        if self.has_tandem_repeat(seq, unit_size=3, min_repeats=3):
+            return False
+
+        # Reject tetra nucleotide repeats
+        if self.has_tandem_repeat(seq, unit_size=4, min_repeats=3):
+            return False
+
+        return True
+
+    def keep_primer_pair(self, row):
+        return (
+            self.passes_repeat_filter(row["Left_Sequence"]) and
+            self.passes_repeat_filter(row["Right_Sequence"])
+        )
 
     def bowtie_mapping(self, primer_fa):
         """
@@ -338,7 +375,7 @@ class DesignPrimer:
                 proc = subprocess.check_call(
                     [
                         "bowtie2", "-f", "--end-to-end", "-p", "2",
-                        "-k", str(5), "-L", "10", "-N", "1", "-D", "20",
+                        "-k", str(50), "-L", "10", "-N", "1", "-D", "20",
                         "-R", "3", "-x", self.bowtie_ref, "-U", primer_fa,
                     ],
                     stdout=outfile,
@@ -466,7 +503,7 @@ class DesignPrimer:
                                     alt = cols[4]
                                     # check type of variant SNP or INDEL or else
                                     variant_class = self.classify_variant(ref, alt)
-                                    snps.append(f"{cols[2]}-{variant_class} with AF:{af_value}is in primer region")
+                                    snps.append(f"{cols[2]}-{variant_class} with AF:{af_value}")
                             except ValueError:
                                 continue  # skip malformed AF
                     if snps:
@@ -483,9 +520,7 @@ class DesignPrimer:
 
     def classify_snp(self, df):
         """
-        check if there is one or more than one INDEL
-        and if there is two or more than common SNP >=0.01
-        in any region of primer (in current ref file, all SNP is >=0.01)
+        check if there is one or more than variant AF >=0.01
         and if there is, mark as invalid primer
         """
         df["snp_validity"] = None
@@ -497,7 +532,7 @@ class DesignPrimer:
                 if any("INDEL" in s for s in total_snp):
                     df["snp_validity"][i] = "invalid"
 
-                elif len(total_snp) >= 2:
+                elif len(total_snp) >= 1:
                     df["snp_validity"][i] = "invalid"
 
                 else:
