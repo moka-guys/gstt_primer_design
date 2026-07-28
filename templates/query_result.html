@@ -23,10 +23,45 @@
         .highlight-green {
         background-color: #d4edda !important;
         }
+        /* Make table scrollable */
+        .table-responsive {
+            max-height: 80vh;
+            overflow-y: auto;
+            overflow-x: auto;
+            border: 1px solid #dee2e6;
+        }
+
+        .table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #cfe2ff;
+        color: #000;
+        }
+
+        .table td:first-child,
+        .table th:first-child {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 3;
+        }
+
+        .table thead th:first-child {
+            z-index: 4;
+            background: #cfe2ff;
+            color:#000
+        }
+
+        /* Selected row highlight */
+        .table tbody tr.selected-row td {
+            background-color: #b8c1d1 !important;
+        }
     </style>
 </head>
 
-<body class="container mt-5">
+<body>
+    <div class="container mt-5">
 
     <h3 class="mb-4">Query Result</h3>
 
@@ -40,10 +75,9 @@
 
     {% elif results and results|length > 0 %}
 
-    <div style="max-height: 500px; overflow-y: auto;">
-        <div class="table-responsive">
+    <div class="table-responsive">
 
-            <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-hover" id="dataTable">
 
                 <thead class="table-dark">
                     <tr>
@@ -186,7 +220,29 @@
 
         });
     });
-    </script>
+    // Row selection highlight
+    document.addEventListener("DOMContentLoaded", function () {
 
+    document.querySelectorAll("#dataTable tbody tr").forEach(row => {
+        row.addEventListener("click", function(event) {
+
+            // Do not trigger row selection when clicking Save button
+            if (event.target.classList.contains("save-btn")) {
+                return;
+            }
+
+            // Remove previous selection
+            document.querySelectorAll("#dataTable tbody tr")
+                .forEach(r => r.classList.remove("selected-row"));
+
+            // Highlight current row
+            this.classList.add("selected-row");
+        });
+    });
+
+    });
+
+    </script>
+</div>
 </body>
 </html>

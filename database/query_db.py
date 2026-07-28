@@ -29,7 +29,7 @@ def safe_liftover(chrom, pos, build):
 
 
 def search_postgres(dbname, user, password, host,
-                    chr_val, gene_val, primer_name,
+                    chr_val, gene_val, primer_name, primer_id,
                     validation_val, grch_val, archive_val,
                     notes, variant_pos=None, pos_start=None, pos_end=None,
                     start_date=None, end_date=None):
@@ -39,7 +39,6 @@ def search_postgres(dbname, user, password, host,
     msg_to_return = None
     base_query = sql.SQL("""
         SELECT
-            p.unique_primer_id,
             b.primer_id,
             p.chr,
             p.grch,
@@ -64,6 +63,7 @@ def search_postgres(dbname, user, password, host,
             b.manufacturer,
             b.designer,
             b.insert_time,
+            p.unique_primer_id,
 
             -- LEFT highlight
             (
@@ -111,7 +111,7 @@ def search_postgres(dbname, user, password, host,
         values.append(chr_val)
 
     if gene_val:
-        conditions.append(sql.SQL("p.gene = %s"))
+        conditions.append(sql.SQL("p.gene ILIKE %s"))
         values.append(gene_val)
 
     if validation_val:
@@ -128,6 +128,11 @@ def search_postgres(dbname, user, password, host,
     if primer_name:
         conditions.append(sql.SQL("p.primer_name ILIKE %s"))
         values.append(f"%{primer_name}%")
+
+    if primer_id:
+        conditions.append(sql.SQL("b.primer_id = %s"))
+        values.append(int(primer_id))
+
     if start_date and end_date:
         end_date_plus_one = (datetime.strptime(end_date, "%Y-%m-%d") +
                              timedelta(days=1)).strftime("%Y-%m-%d")

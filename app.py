@@ -388,6 +388,7 @@ def query_data():
         chr_val = request.form.get('chr')
         gene_val = request.form.get('gene')
         primer_name = request.form.get('primer_name')
+        primer_id = request.form.get('primer_id')
         passed_validation = request.form.get('passed_validation')
         archive = request.form.get('archive')
         grch = request.form.get('grch')
@@ -398,7 +399,7 @@ def query_data():
         end_date = request.form.get('end_date')
         variant_pos = request.form.get('variant_pos')
         # ensure at least one filter exists
-        if not any([chr_val, gene_val, primer_name, passed_validation,
+        if not any([chr_val, gene_val, primer_name, primer_id, passed_validation,
                     grch, start, end, archive, notes, start_date, end_date,
                     variant_pos]):
             return render_template(
@@ -410,7 +411,7 @@ def query_data():
         try:
             result_list, msg = search_postgres(
                 DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
-                chr_val, gene_val, primer_name, passed_validation, grch,
+                chr_val, gene_val, primer_name, primer_id, passed_validation, grch,
                 archive, notes, variant_pos, start, end, start_date, end_date
             )
             session["query_results"] = result_list
@@ -676,7 +677,7 @@ def export_csv():
         output.getvalue(),
         mimetype="text/csv",
         headers={
-            "Content-Disposition": "attachment; filename=results.csv"
+            "Content-Disposition": "attachment; filename=exported_primers.csv"
         }
     )
 
