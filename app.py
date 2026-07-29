@@ -21,6 +21,8 @@ from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
 from werkzeug.middleware.proxy_fix import ProxyFix
 from functools import wraps
+import warnings
+warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
@@ -33,7 +35,7 @@ DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 default_schema = "primer_tool"
 default_table = "ordered_primers"
-batch_editable_columns = ['notes', 'passed_validation', 'mix', 'dilution_date',
+batch_editable_columns = ['notes', 'passed_validation', 'mix', 'arrival_date',
                           'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive', 'manufacturer']
 primer_table = "primers"
 batch_table = "primer_batches"
@@ -646,6 +648,13 @@ def update_row():
 
         cur.execute(query, values)
         conn.commit()
+        if "query_results" in session:
+            for row in session["query_results"]:
+                if str(row["primer_id"]) == str(row_id):
+                    row.update(real_changes)
+                    break
+
+            session.modified = True
         # log for the changes
         updated_str = ", ".join(
             f"{col}={repr(val)}" for col, val in real_changes.items()

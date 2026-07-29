@@ -31,7 +31,7 @@ BEGIN
         SELECT 1 FROM pg_type
         WHERE typname = 'yes_no_status'
     ) THEN
-        CREATE TYPE yes_no_status AS ENUM ('Yes', 'No', 'Not_Done');
+        CREATE TYPE yes_no_status AS ENUM ('Pass', 'Fail', 'Not_Done');
     END IF;
 END$$;
 
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
     passed_validation yes_no_status,
     archive yes_no,
     mix VARCHAR(100),
-    dilution_date VARCHAR(100),
+    arrival_date VARCHAR(100),
     tray VARCHAR(100),
     freezer VARCHAR(100),
     grid_fw VARCHAR(100),

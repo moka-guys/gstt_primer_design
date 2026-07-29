@@ -79,6 +79,7 @@
     <p style="color: green;">Editable columns are highlighted in yellow.</p>
     <p style="color: green;">Click "Save" button after edit. Green highlight confirms successful editing.</p>
     <p style="color: green;">If start and end POS are given, the primer that falls within is highlighted in green.</p>
+    <p style="color: green;">Maximum row to return is limited to 10000.</p>
 
 
     {% if error %}
@@ -130,8 +131,8 @@
                                     {% elif key == "passed_validation" %}
 
                                         <select class="form-select form-select-sm editable-select">
-                                            <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>
-                                            <option value="No" {% if value == "No" %}selected{% endif %}>No</option>
+                                            <option value="Pass" {% if value == "Pass" %}selected{% endif %}>Pass</option>
+                                            <option value="Fail" {% if value == "Fail" %}selected{% endif %}>Fail</option>
                                             <option value="Not_Done" {% if value == "Not_Done" %}selected{% endif %}>Not_Done</option>
                                         </select>
 

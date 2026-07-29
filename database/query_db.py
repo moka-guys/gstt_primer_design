@@ -55,7 +55,7 @@ def search_postgres(dbname, user, password, host,
             p.product_size,
             p.gene,
             b.mix,
-            b.dilution_date,
+            b.arrival_date,
             b.tray,
             b.freezer,
             b.grid_fw,
@@ -309,7 +309,7 @@ def search_postgres(dbname, user, password, host,
 
     if conditions:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(conditions)
-    query += sql.SQL(" ORDER BY insert_time ASC, primer_id ASC LIMIT 1000")
+    query += sql.SQL(" ORDER BY insert_time ASC, primer_id ASC LIMIT 10000")
     conn = get_postgres_connection(dbname, user, password, host)
     cursor = conn.cursor()
     print(query)

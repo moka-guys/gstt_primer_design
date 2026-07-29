@@ -22,7 +22,7 @@ CREATE OR REPLACE FUNCTION primer_tool.insert_primer_with_batch(
     p_passed_validation TEXT,
     p_archive TEXT, 
     p_mix VARCHAR,
-    p_dilution_date VARCHAR,
+    p_arrival_date VARCHAR,
     p_tray VARCHAR,
     p_freezer VARCHAR,
     p_grid_fw VARCHAR,
@@ -39,8 +39,8 @@ DECLARE
     v_archive yes_no;
 BEGIN
 
-    IF p_passed_validation NOT IN ('Yes', 'No', 'Not_Done') THEN
-        RAISE EXCEPTION 'passed_validation must be Yes or No or Not_Done';
+    IF p_passed_validation NOT IN ('Pass', 'Fail', 'Not_Done') THEN
+        RAISE EXCEPTION 'passed_validation must be Pass or Fail or Not_Done';
     END IF;
 
     v_passed := p_passed_validation::yes_no_status;
@@ -124,7 +124,7 @@ BEGIN
         passed_validation,
         archive,
         mix,
-        dilution_date,
+        arrival_date,
         tray,
         freezer,
         grid_fw,
@@ -141,7 +141,7 @@ BEGIN
         v_passed,
         v_archive,
         p_mix,
-        p_dilution_date,
+        p_arrival_date,
         p_tray,
         p_freezer,
         p_grid_fw,
