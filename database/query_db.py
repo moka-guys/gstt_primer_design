@@ -30,7 +30,7 @@ def safe_liftover(chrom, pos, build):
 
 def search_postgres(dbname, user, password, host,
                     chr_val, gene_val, primer_name, primer_id,
-                    validation_val, grch_val, archive_val,
+                    validation_val, grch_val, tray, archive_val,
                     notes, variant_pos=None, pos_start=None, pos_end=None,
                     start_date=None, end_date=None):
 
@@ -45,6 +45,7 @@ def search_postgres(dbname, user, password, host,
             p.primer_name,
             b.passed_validation,
             b.archive,
+            b.notes,
             p.left_primer_seq,
             p.right_primer_seq,
             p.left_primer_start,
@@ -53,7 +54,6 @@ def search_postgres(dbname, user, password, host,
             p.right_primer_end,
             p.product_size,
             p.gene,
-            b.notes,
             b.mix,
             b.dilution_date,
             b.tray,
@@ -132,6 +132,10 @@ def search_postgres(dbname, user, password, host,
     if primer_id:
         conditions.append(sql.SQL("b.primer_id = %s"))
         values.append(int(primer_id))
+
+    if tray:
+        conditions.append(sql.SQL("b.tray ILIKE %s"))
+        values.append(tray)
 
     if start_date and end_date:
         end_date_plus_one = (datetime.strptime(end_date, "%Y-%m-%d") +

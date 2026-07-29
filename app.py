@@ -392,6 +392,7 @@ def query_data():
         passed_validation = request.form.get('passed_validation')
         archive = request.form.get('archive')
         grch = request.form.get('grch')
+        tray = request.form.get('tray')
         start = request.form.get('start')
         end = request.form.get('end')
         notes = request.form.get('notes')
@@ -400,7 +401,7 @@ def query_data():
         variant_pos = request.form.get('variant_pos')
         # ensure at least one filter exists
         if not any([chr_val, gene_val, primer_name, primer_id, passed_validation,
-                    grch, start, end, archive, notes, start_date, end_date,
+                    grch, tray, start, end, archive, notes, start_date, end_date,
                     variant_pos]):
             return render_template(
                 "query_result.html",
@@ -412,7 +413,7 @@ def query_data():
             result_list, msg = search_postgres(
                 DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
                 chr_val, gene_val, primer_name, primer_id, passed_validation, grch,
-                archive, notes, variant_pos, start, end, start_date, end_date
+                tray, archive, notes, variant_pos, start, end, start_date, end_date
             )
             session["query_results"] = result_list
             return render_template(
