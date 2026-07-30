@@ -34,7 +34,7 @@ RETURNS INTEGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_unique_primer_id INTEGER;
+    v_upi INTEGER;
     v_passed yes_no_status;
     v_archive yes_no;
 BEGIN
@@ -92,11 +92,11 @@ BEGIN
         gene
     )
     DO NOTHING
-    RETURNING unique_primer_id INTO v_unique_primer_id;
+    RETURNING upi INTO v_upi;
 
     -- If conflict happened, fetch existing primer_id
-    IF v_unique_primer_id IS NULL THEN
-        SELECT unique_primer_id INTO v_unique_primer_id
+    IF v_upi IS NULL THEN
+        SELECT upi INTO v_upi
         FROM primer_tool.primers
         WHERE chr = p_chr
           AND start_pos = p_start_pos
@@ -116,7 +116,7 @@ BEGIN
     -- Batch info (can duplicate, update allowed for some)
     -- =========================
     INSERT INTO primer_tool.primer_batches (
-        unique_primer_id,
+        upi,
         tagged_left,
         tagged_right,
         tag,
@@ -133,7 +133,7 @@ BEGIN
         designer
     )
     VALUES (
-        v_unique_primer_id,
+        v_upi,
         p_tagged_left,
         p_tagged_right,
         p_tag,
@@ -150,7 +150,7 @@ BEGIN
         p_designer
     );
 
-    RETURN v_unique_primer_id;
+    RETURN v_upi;
 
 END;
 $$;

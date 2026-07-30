@@ -33,8 +33,6 @@ DB_HOST = os.environ["DB_HOST"]
 DB_NAME = os.environ["DB_NAME"]
 DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
-default_schema = "primer_tool"
-default_table = "ordered_primers"
 batch_editable_columns = ['notes', 'passed_validation', 'mix', 'arrival_date',
                           'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive', 'manufacturer']
 primer_table = "primers"
@@ -506,7 +504,7 @@ def save_selected():
                                      tagged_RV,temp_df["order_tag"][0],
                                      DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
             app.logger.info(
-                            f"User '{g.user}' selected designed primers to insert DB for unique_primer_id {inserted_ids}"
+                            f"User '{g.user}' selected designed primers to insert DB for upi {inserted_ids}"
                             )
         df_to_order = pd.DataFrame(rows, columns=columns)
         df_to_order["Scale"] = "25RR"
@@ -573,7 +571,7 @@ def update_row():
 
     table_type = data.get("table_type", primer_table)
     # remove non-editable keys from payload
-    updated_fields.pop('unique_primer_id', None)
+    updated_fields.pop('upi', None)
     updated_fields.pop('primer_id', None)
 
     try:
@@ -739,7 +737,7 @@ def manual_insert():
                                 db_host=DB_HOST,
                                 notes=notes
                             )
-            app.logger.info(f"{g.user} inserted primer manually: unique_primer_id {inserted_ids} ")
+            app.logger.info(f"{g.user} inserted primer manually: upi {inserted_ids} ")
             # generate order sheet for manual insert primer
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_RV) = prepare_order_sheet(df_insert)

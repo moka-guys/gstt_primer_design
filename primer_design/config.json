@@ -7,11 +7,6 @@
        "output_folder": "/app/output",
        "temp_folder": "/app/static/temp"
     },
-    "db":{
-      "db_name": "gstt_db",
-      "schema_name": "primer_tool",
-      "table_name": "ordered_primers"
-    },
 
     "design_param": {
         "min_product_size": 100,
@@ -126,7 +121,7 @@
       "F_name": "No_Tag_Forward",
       "R_name": "No_Tag_Reverse"
     },
-    "primer3_config": "/zippy_moka/phigis/primer3_config/",
+
     "nc_data_b38": {"NC_000001.11": 1,
                     "NC_000002.12": 2,
                     "NC_000003.12": 3,

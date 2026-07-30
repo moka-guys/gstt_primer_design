@@ -63,7 +63,7 @@ def search_postgres(dbname, user, password, host,
             b.manufacturer,
             b.designer,
             b.insert_time,
-            p.unique_primer_id,
+            p.upi,
 
             -- LEFT highlight
             (
@@ -87,7 +87,7 @@ def search_postgres(dbname, user, password, host,
 
         FROM primer_tool.primers p
         LEFT JOIN primer_tool.primer_batches b
-        ON p.unique_primer_id = b.unique_primer_id
+        ON p.upi = b.upi
     """)
     try:
         pos_start = int(pos_start) if pos_start is not None else None

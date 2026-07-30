@@ -39,7 +39,7 @@ END$$;
 -- Primers table (unique)
 -- =========================
 CREATE TABLE IF NOT EXISTS primer_tool.primers (
-    unique_primer_id SERIAL PRIMARY KEY,
+    upi SERIAL PRIMARY KEY,
 
     chr VARCHAR(3) NOT NULL CHECK (
         chr IN ('X', 'Y')
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
         (START WITH 20000)
         PRIMARY KEY,
 
-    unique_primer_id INTEGER NOT NULL,
+    upi INTEGER NOT NULL,
     tagged_left VARCHAR(100),
     tagged_right VARCHAR(100),
     tag VARCHAR(10),
@@ -100,12 +100,12 @@ CREATE TABLE IF NOT EXISTS primer_tool.primer_batches (
     insert_time TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT fk_primer
-        FOREIGN KEY (unique_primer_id)
-        REFERENCES primer_tool.primers(unique_primer_id)
+        FOREIGN KEY (upi)
+        REFERENCES primer_tool.primers(upi)
         ON DELETE CASCADE
 );
 -- =========================
 -- Index
 -- =========================
 CREATE INDEX IF NOT EXISTS idx_primer_batches_primer_id
-ON primer_tool.primer_batches(unique_primer_id);
+ON primer_tool.primer_batches(upi);
