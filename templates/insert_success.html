@@ -26,13 +26,16 @@
     <div class="box">
         <h2>✅ Insert Successful!</h2>
         <a href="{{ url_for('manual_insert') }}">Insert More</a>
-        <a href="{{ url_for('index') }}">Go to Home</a>
+        <p style="margin-top:15px; color:#555;">
+            Complete all primer insertions before downloading the order sheet so all primers are in a single order sheet.
+        </p>
         
         <p>
             <a href="{{ url_for('download', source='manual') }}" class="btn btn-primary btn-lg" style="margin-top: 15px; display: inline-block;">
                 Download Order Sheet
             </a>
         </p>
+        <a href="{{ url_for('index') }}">Go to Home</a>
     </div>
 </body>
 </html>

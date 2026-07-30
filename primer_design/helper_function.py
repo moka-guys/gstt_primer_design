@@ -236,7 +236,7 @@ def generate_bed(primers, build, job_id):
     """
     put generated primers into bed format to plot on IGV
     """
-    temp_dir = Path("/app/static/temp")
+    temp_dir = Path(config["directory"]["temp_folder"])
     temp_dir.mkdir(parents=True, exist_ok=True)
     bed_file = temp_dir / f"primers_{build}_{job_id}.bed"
     primers.to_csv(bed_file, sep="\t", header=False, index=False)
@@ -247,7 +247,7 @@ def vcf_to_bed(bed_file, build, job_id):
     """
     get common SNP within primers to plot on IGV
     """
-    vcf_dir = Path("/app/static/temp")
+    vcf_dir = Path(config["directory"]["temp_folder"])
     vcf_dir.mkdir(parents=True, exist_ok=True)
 
     if int(build) == 19:
@@ -291,47 +291,6 @@ def vcf_to_bed(bed_file, build, job_id):
             end = start + len(ref)  # end position
             bed.write(f"{chrom}\t{start}\t{end}\t{name}\n")
     return str(os.path.basename(vcf_bed)), str(os.path.basename(intermediate_vcf))
-
-def generate_filtered_vcf(bed_file, build):
-
-    vcf_dir = Path("/app/static/temp")
-    vcf_dir.mkdir(parents=True, exist_ok=True)
-
-    if int(build) == 19:
-        vcf_in = config["ref_b37"]["snp_ref"]
-        bed_file = config["inter_file"]["bed_file_37"]
-        vcf_out = config["inter_file"]["vcf_file_37"]
-        intermediate_vcf = config["inter_file"]["inter_vcf_37"]
-    else:
-        vcf_in = config["ref_b38"]["snp_ref"]
-        bed_file = config["inter_file"]["bed_file_38"]
-        vcf_out = config["inter_file"]["vcf_file_38"]
-        intermediate_vcf = config["inter_file"]["inter_vcf_38"]
-    # filter variant with bed file
-    subprocess.run([
-        "bcftools", "view",
-        "-R", bed_file,
-        "-o", intermediate_vcf,
-        vcf_in
-    ], check=True)
-    # remove duplicated variants
-    try:
-        subprocess.run([
-            "bcftools", "norm",
-            "-d", "both",
-            "-Oz",
-            "-o", vcf_out,
-            intermediate_vcf
-        ], check=True, capture_output=True, text=True)
-    except subprocess.CalledProcessError as e:
-        print("Exit code:", e.returncode)
-        print("stdout:", e.stdout)
-        print("stderr:", e.stderr)
-    # generate index file
-    subprocess.run([
-        "bcftools", "index", "--tbi",
-        vcf_out
-    ], check=True)
 
 
 def del_file(files_to_remove=None, base_dir="/app"):
@@ -433,7 +392,7 @@ def liftover_bed(chrom, start, end, grch):
         chain_file = config["ref_b38"]["crossmap_ref"]
     # create temporary input/output files
 
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, dir="/app/output/") as in_bed:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=config["directory"]["output_folder"]) as in_bed:
         in_bed.write(f"{chrom}\t{start}\t{end}\n")
         input_path = in_bed.name
 

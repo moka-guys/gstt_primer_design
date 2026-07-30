@@ -2,8 +2,10 @@
     "app_name": "gstt_primer_design",
     "version": "1.0.0",
     "debug": true,
-    "logging": {
-       "output": "/app/logs/"
+    "directory": {
+       "log_folder": "/app/logs/",
+       "output_folder": "/app/output",
+       "temp_folder": "/app/static/temp"
     },
     "db":{
       "db_name": "gstt_db",
@@ -16,7 +18,7 @@
         "max_product_size": 600,
         "flank" : 15,
         "padding": 95,
-        "primer_min_size": 18,
+        "primer_min_size": 19,
         "primer_opt_size": 22,
         "primer_max_size": 28,
         "primer_num_return": 10,
@@ -123,16 +125,6 @@
       "ordername": "_01",
       "F_name": "No_Tag_Forward",
       "R_name": "No_Tag_Reverse"
-    },
-    "inter_file":{
-      "bed_file_37": "/app/static/temp/primers_19.bed",
-      "vcf_file_37": "/app/static/temp/filtered_19.vcf.gz",
-      "inter_vcf_37": "/app/static/temp/tmp_filtered_19.vcf",
-      "vcf_bed_37": "/app/static/temp/vcf_bed_19.bed",
-      "bed_file_38": "/app/static/temp/primers_38.bed",
-      "vcf_file_38": "/app/static/temp/filtered_38.vcf.gz",
-      "inter_vcf_38": "/app/static/temp/tmp_filtered_38.vcf",
-      "vcf_bed_38": "/app/static/temp/vcf_bed_38.bed"
     },
     "primer3_config": "/zippy_moka/phigis/primer3_config/",
     "nc_data_b38": {"NC_000001.11": 1,

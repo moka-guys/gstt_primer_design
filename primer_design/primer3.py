@@ -61,7 +61,7 @@ class DesignPrimer:
         self.min_primer_size = get_value(self.input_param.min_primer_size, self.config["design_param"]["primer_min_size"])
         self.max_primer_size = get_value(self.input_param.max_primer_size, self.config["design_param"]["primer_max_size"])
         self.opt_primer_size = get_value(self.input_param.opt_primer_size, self.config["design_param"]["primer_opt_size"])
-        self.log_folder = self.config["logging"]["output"]
+        self.log_folder = self.config["directory"]["log_folder"]
         self.logger = get_log(self.log_folder, datetimestr)
 
         if self.build == 37:

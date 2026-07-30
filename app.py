@@ -254,7 +254,6 @@ def igv_view(genome):
         session["primer_bed"] = bed_file
         session.setdefault("temp_files", [])
         session["temp_files"].append(bed_file)
-        #generate_filtered_vcf(bed_file, genome[2:])
         # filter common SNP using primer bed
         snp_bed_file, vcf_temp_file = vcf_to_bed(bed_file, genome[2:], job_id)
         session["snp_bed"] = snp_bed_file
@@ -776,16 +775,28 @@ def manual_insert():
                 df_new["Scale"] = "25RR"
                 df_new["Purification"] = "STD"
 
-                session["order_sheet_name_manual"] = (
-                    f"primer_order_sheet_TEST_VERSION_{random_uuid}_{datetimestr}.csv"
+                if "order_sheet_name_manual" not in session:
+                    session["order_sheet_name_manual"] = (
+                        f"primer_order_sheet_TEST_VERSION_{random_uuid}_{datetimestr}.csv"
+                    )
+
+                filepath = os.path.join(
+                    app.config["DOWNLOAD_FOLDER"],
+                    session["order_sheet_name_manual"]
                 )
 
-                df_new.to_csv(
-                    f"/app/output/{session['order_sheet_name_manual']}",
-                    index=False
-                )
-                session.setdefault("order_files", [])
-                session["order_files"].append(session["order_sheet_name_manual"])
+                if os.path.exists(filepath):
+                    df_new.to_csv(
+                        filepath,
+                        mode="a",
+                        header=False,
+                        index=False
+                    )
+                else:
+                    df_new.to_csv(
+                        filepath,
+                        index=False
+                    )
             # Success
             return render_template("insert_success.html")
 
