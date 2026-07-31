@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GSTT Primer Database</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, Helvetica, sans-serif;
+    background:#eef2f7;
+    min-height:100vh;
+}
+
+/* Header */
+
+.header{
+    background:linear-gradient(90deg,#1f4e79,#2c7be5);
+    color:white;
+    padding:20px 40px;
+    box-shadow:0 3px 10px rgba(0,0,0,.2);
+}
+
+.header h1{
+    font-size:30px;
+}
+
+.header p{
+    margin-top:5px;
+    opacity:.9;
+}
+
+/* Main card */
+
+.container{
+    width:700px;
+    max-width:90%;
+    margin:60px auto;
+    background:white;
+    border-radius:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+    padding:50px;
+}
+
+/* Title */
+
+.container h2{
+    text-align:center;
+    color:#1f4e79;
+    margin-bottom:15px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#666;
+    margin-bottom:45px;
+}
+
+/* Menu */
+
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.menu a{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    font-size:18px;
+    font-weight:bold;
+    padding:18px;
+    border-radius:10px;
+    color:white;
+    background:linear-gradient(90deg,#2575fc,#1f4e79);
+    transition:.25s;
+    box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+.menu a:hover{
+    transform:translateY(-3px);
+    box-shadow:0 8px 18px rgba(0,0,0,.25);
+}
+.index{
+    text-align:center;
+    margin-top:40px;
+}
+
+.index a{
+    display:inline-block;
+    padding:12px 30px;
+    text-decoration:none;
+    border-radius:8px;
+    background:#28a745;
+    color:white;
+    font-weight:bold;
+    transition:.25s;
+}
+
+.index a:hover{
+    background:#218838;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <h1>🧬 Legacy MOKA Data</h1>
+</div>
+
+<div class="container">
+
+    <p class="subtitle">
+        Select one of the search options.
+    </p>
+
+    <div class="menu">
+
+        <a href="{{ url_for('query_moka_id') }}">
+            Search MOKA by Primer ID
+        </a>
+
+        <a href="{{ url_for('query_moka_id') }}">
+            Search MOKA by Variant
+        </a>
+
+    </div>
+    <div class="index">
+        <a href="{{ url_for('index') }}">
+            Go back to Home
+        </a>
+    </div>
+
+</div>
+
+
+</body>
+</html>

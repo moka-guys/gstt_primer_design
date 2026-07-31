@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
 import psycopg2
-from database.query_db import search_postgres
+from database.query_db import *
 from database.insert_db import insert_DB
 from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
@@ -142,6 +142,15 @@ def index():
     load index page if log in is successful
     """
     return render_template('index.html', username=g.user)
+
+
+@app.route('/moka_index')
+@login_required
+def moka_index():
+    """
+    load index page for moka query
+    """
+    return render_template('moka_index.html')
 
 
 @app.route('/change_password', methods=['GET', 'POST'])
@@ -427,6 +436,56 @@ def query_data():
             return render_template("query_result.html", error=str(e))
 
     return render_template('query.html')
+
+
+@app.route('/query_moka_id', methods=['GET', 'POST'])
+@login_required
+def query_moka_id():
+    # Display the search form
+    if request.method == 'GET':
+        return render_template('query_moka_id.html')
+
+    # Get and validate the input
+    primer_id = request.form.get('primer_id', '').strip()
+
+    if not primer_id:
+        return render_template(
+            'query_moka_id_result.html',
+            results=[],
+            error='Please enter a Primer ID.'
+        )
+
+    try:
+        # Query the database
+        result_list = query_moka_by_id(
+            DB_NAME,
+            DB_USER,
+            DB_PASSWORD,
+            DB_HOST,
+            primer_id
+        )
+
+        # No records found
+        if not result_list:
+            return render_template(
+                'query_moka_id_result.html',
+                results=[],
+                msg='No matching primers found.'
+            )
+
+        # Display results
+        return render_template(
+            'query_moka_id_result.html',
+            results=result_list
+        )
+
+    except Exception:
+        app.logger.exception("Error while querying the MOKA database.")
+        return render_template(
+            'query_moka_id_result.html',
+            results=[],
+            error='An unexpected error occurred while querying the database. Please try again later.'
+        )
 
 
 @app.route('/success_primer_design')

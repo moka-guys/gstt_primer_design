@@ -322,3 +322,41 @@ def search_postgres(dbname, user, password, host,
     conn.close()
     return result, msg_to_return
 
+
+def query_moka_by_id(dbname, user, password, host,
+                     primer_name):
+    conn = get_postgres_connection(dbname, user, password, host)
+    query = """
+    SELECT DISTINCT
+        pa."PrimerName",
+        c."Chr",
+        pa."Start19",
+        pa."Stop19",
+        pa."Notes",
+        pa."ForwardSeq",
+        pa."ReverseSeq",
+        pa."Mix",
+        pa."RTray",
+        pa."RFreezer",
+        pa."FGrid",
+        pa."FTray",
+        pa."FFreezer",
+        pa."TestResultNotes",
+        pa."Status",
+        ftag."Item" AS "ForwardTag",
+        rtag."Item" AS "ReverseTag"
+    FROM "moka_legacy"."PrimerAmplicon" pa
+    INNER JOIN "moka_legacy"."Chromosome" c
+        ON pa."ChromosomeID" = c."ChrID"
+    INNER JOIN "moka_legacy"."Item" ftag
+        ON pa."FTagName" = ftag."ItemID"
+    INNER JOIN "moka_legacy"."Item" rtag
+        ON pa."RTagName" = rtag."ItemID"
+    WHERE pa."PrimerName" = %s
+      AND pa."Status" = 1202218832;
+    """
+
+    with conn.cursor() as cursor:
+        cursor.execute(query, (primer_name,))
+        return cursor.fetchall()
+    
