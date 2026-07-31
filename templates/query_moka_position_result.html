@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MOKA Query Results</title>
+
+<style>
+
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    padding:30px;
+}
+
+.container{
+    max-width:1600px;
+    margin:auto;
+}
+
+h2{
+    color:#1f4e79;
+    margin-bottom:20px;
+}
+
+/* Messages */
+
+.message{
+    padding:12px;
+    border-radius:5px;
+    margin-bottom:20px;
+}
+
+.error{
+    background:#ffe6e6;
+    color:#b00020;
+    border:1px solid #ffb3b3;
+}
+
+.success{
+    background:#eaf7ea;
+    color:#1b5e20;
+    border:1px solid #b9e6b9;
+}
+
+
+/* Table scrolling area */
+
+.table-container{
+    max-height:700px;
+    overflow:auto;
+    border:1px solid #ccc;
+    border-radius:8px;
+    background:white;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+
+/* Table */
+
+table{
+    border-collapse:collapse;
+    width:max-content;
+    min-width:100%;
+}
+
+th,
+td{
+    border:1px solid #ddd;
+    padding:8px 12px;
+    white-space:nowrap;
+}
+
+
+/* Sticky column headers */
+
+thead th{
+    position:sticky;
+    top:0;
+    background:#1f4e79;
+    color:white;
+    z-index:3;
+}
+
+
+/* Alternating rows */
+
+tbody tr:nth-child(even){
+    background:#f8f8f8;
+}
+
+
+/* Selected row */
+
+tbody tr.selected{
+    background:#fff3cd !important;
+}
+
+
+/* Sticky first column */
+
+th:first-child,
+td:first-child{
+    position:sticky;
+    left:0;
+    background:white;
+    font-weight:bold;
+    z-index:2;
+}
+
+
+/* Keep first header cell above everything */
+
+thead th:first-child{
+    background:#1f4e79;
+    color:white;
+    z-index:5;
+}
+
+
+/* Buttons */
+
+.buttons{
+    margin-top:25px;
+}
+
+.button{
+    display:inline-block;
+    padding:10px 18px;
+    margin-right:12px;
+    text-decoration:none;
+    color:white;
+    background:#1f4e79;
+    border-radius:5px;
+    transition:.2s;
+}
+
+.button:hover{
+    background:#163a5a;
+}
+
+.logout{
+    background:#b22222;
+}
+
+.logout:hover{
+    background:#8b1a1a;
+}
+
+
+/* Make selected row visible even with sticky first column */
+
+tbody tr.selected td:first-child{
+    background:#fff3cd;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+<h2>MOKA Query Results</h2>
+
+
+{% if error %}
+<div class="message error">
+    {{ error }}
+</div>
+{% endif %}
+
+
+{% if msg %}
+<div class="message success">
+    {{ msg }}
+</div>
+{% endif %}
+
+
+
+{% if results %}
+
+
+<div class="table-container">
+
+<table>
+
+    <thead>
+        <tr>
+            <th>Primer Name</th>
+            <th>Chromosome</th>
+            <th>Start19</th>
+            <th>Stop19</th>
+            <th>Notes</th>
+            <th>Forward Seq</th>
+            <th>Reverse Seq</th>
+            <th>Test Result Notes</th>
+            <th>Mix</th>
+            <th>F Freezer</th>
+            <th>F Tray</th>
+            <th>F Grid</th>
+            <th>R Freezer</th>
+            <th>R Tray</th>
+            <th>R Grid</th>
+            <th>Reverse Tag</th>
+            <th>Forward Tag</th>
+        </tr>
+        </thead>
+
+
+<tbody>
+
+{% for row in results %}
+
+<tr>
+
+    <td>{{ row[0] }}</td>
+    <td>{{ row[1] }}</td>
+    <td>{{ row[2] }}</td>
+    <td>{{ row[3] }}</td>
+    <td>{{ row[4] }}</td>
+    <td>{{ row[5] }}</td>
+    <td>{{ row[6] }}</td>
+    <td>{{ row[7] }}</td>
+    <td>{{ row[8] }}</td>
+    <td>{{ row[9] }}</td>
+    <td>{{ row[10] }}</td>
+    <td>{{ row[11] }}</td>
+    <td>{{ row[12] }}</td>
+    <td>{{ row[13] }}</td>
+    <td>{{ row[14] }}</td>
+    <td>{{ row[15] }}</td>
+    <td>{{ row[16] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+{% else %}
+
+<p><strong>No records found.</strong></p>
+
+{% endif %}
+
+
+
+<div class="buttons">
+
+<a href="{{ url_for('query_moka_position') }}" class="button">
+    New Search
+</a>
+
+
+<a href="{{ url_for('moka_index') }}" class="button">
+    Back to MOKA Search Options
+</a>
+
+
+<a href="{{ url_for('logout') }}" class="button logout">
+    Log Out
+</a>
+
+</div>
+
+
+</div>
+
+
+
+<script>
+
+// Click row to select
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const rows = document.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+
+        row.addEventListener("click", function () {
+
+            // remove previous selection
+            rows.forEach(r => {
+                r.classList.remove("selected");
+            });
+
+            // highlight clicked row
+            this.classList.add("selected");
+
+        });
+
+    });
+
+});
+
+</script>
+
+
+</body>
+</html>

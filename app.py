@@ -488,6 +488,67 @@ def query_moka_id():
         )
 
 
+@app.route('/query_moka_position', methods=['GET', 'POST'])
+@login_required
+def query_moka_position():
+    # Display the search form
+    if request.method == 'GET':
+        return render_template('query_moka_position.html')
+
+    # Get and validate the input
+    chromosome = request.form.get('chromosome', '').strip()
+    position = request.form.get('position', '').strip()
+
+    if not chromosome or not position:
+        return render_template(
+            'query_moka_position_result.html',
+            results=[],
+            error='Please enter both a chromosome and genomic position.'
+        )
+
+    try:
+        position = int(position)
+
+        # Query the database
+        result_list = query_moka_by_position(
+            DB_NAME,
+            DB_USER,
+            DB_PASSWORD,
+            DB_HOST,
+            chromosome,
+            position
+        )
+
+        # No records found
+        if not result_list:
+            return render_template(
+                'query_moka_position_result.html',
+                results=[],
+                msg='No matching primers found.'
+            )
+
+        # Display results
+        return render_template(
+            'query_moka_position_result.html',
+            results=result_list
+        )
+
+    except ValueError:
+        return render_template(
+            'query_moka_position_result.html',
+            results=[],
+            error='Genomic position must be a valid integer.'
+        )
+
+    except Exception:
+        app.logger.exception("Error while querying the MOKA database.")
+        return render_template(
+            'query_moka_position_result.html',
+            results=[],
+            error='An unexpected error occurred while querying the database. Please try again later.'
+        )
+
+
 @app.route('/success_primer_design')
 @login_required
 def success_primer_design():

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Query MOKA by Position</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:linear-gradient(135deg,#eef4fb,#d7e6f5);
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    background:white;
+    padding:40px;
+    border-radius:12px;
+    width:450px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.15);
+}
+
+h2{
+    text-align:center;
+    color:#1f4e79;
+    margin-bottom:30px;
+}
+
+label{
+    display:block;
+    font-weight:bold;
+    margin-bottom:8px;
+    color:#333;
+}
+
+input[type=text],
+input[type=number]{
+    width:100%;
+    padding:12px;
+    font-size:16px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    margin-bottom:25px;
+}
+
+input[type=text]:focus,
+input[type=number]:focus{
+    outline:none;
+    border-color:#1f4e79;
+    box-shadow:0 0 5px rgba(31,78,121,.4);
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:6px;
+    background:#1f4e79;
+    color:white;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
+}
+
+button:hover{
+    background:#163a5a;
+}
+
+.links{
+    margin-top:30px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.button-link{
+    text-decoration:none;
+    color:white;
+    padding:10px 16px;
+    border-radius:5px;
+    background:#6c757d;
+    transition:.2s;
+}
+
+.button-link:hover{
+    background:#555;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>MOKA Search by Coordinate</h2>
+
+<form method="POST" action="{{ url_for('query_moka_position') }}">
+
+    <label for="chromosome">Chromosome</label>
+
+    <input
+        type="text"
+        id="chromosome"
+        name="chromosome"
+        placeholder="e.g. 16"
+        required
+        autofocus
+    >
+
+    <label for="position">Genomic Position (GRCh37)</label>
+
+    <input
+        type="number"
+        id="position"
+        name="position"
+        placeholder="e.g. 70534900"
+        required
+    >
+
+    <button type="submit">
+        Search
+    </button>
+
+</form>
+
+<div class="links">
+
+    <a href="{{ url_for('moka_index') }}" class="button-link">
+        Go back to MOKA search options
+    </a>
+
+</div>
+
+</div>
+
+</body>
+</html>
