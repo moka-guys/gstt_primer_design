@@ -549,6 +549,40 @@ def query_moka_position():
         )
 
 
+@app.route('/query_moka_all_approved', methods=['GET'])
+@login_required
+def query_moka_all_approved():
+    try:
+        # Query the database
+        result_list = query_moka_approved(
+            DB_NAME,
+            DB_USER,
+            DB_PASSWORD,
+            DB_HOST
+        )
+
+        # No records found
+        if not result_list:
+            return render_template(
+                'query_moka_all_approved_result.html',
+                results=[],
+                msg='No active primer found.'
+            )
+
+        # Display results
+        return render_template(
+            'query_moka_all_approved_result.html',
+            results=result_list
+        )
+
+    except Exception:
+        app.logger.exception("Error while querying the MOKA database.")
+        return render_template(
+            'query_moka_all_approved_result.html',
+            results=[],
+            error='An unexpected error occurred while querying the database. Please try again later.'
+        )
+
 @app.route('/success_primer_design')
 @login_required
 def success_primer_design():

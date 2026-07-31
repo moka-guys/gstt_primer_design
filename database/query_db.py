@@ -401,3 +401,48 @@ def query_moka_by_position(dbname, user, password, host,
     with conn.cursor() as cursor:
         cursor.execute(query, (chromosome, position, position))
         return cursor.fetchall()
+
+
+def query_moka_approved(dbname, user, password, host):
+    conn = get_postgres_connection(dbname, user, password, host)
+
+    query = """
+    SELECT
+        pa."AmpliconID",
+        c."Chr",
+        pa."Start19",
+        pa."Stop19",
+        pa."Notes",
+        pa."ForwardSeq",
+        pa."ReverseSeq",
+        pa."Mix",
+        pa."RTray",
+        pa."RFreezer",
+        pa."FGrid",
+        pa."FTray",
+        pa."FFreezer",
+        pa."TestResultNotes",
+        pa."RGrid",
+        pa."PrimerName",
+        rtag."Item" AS "ReverseTag",
+        ftag."Item" AS "ForwardTag",
+        pa."DateOrdered",
+        pa."Manufacturer"
+
+    FROM "moka_legacy"."PrimerAmplicon" pa
+
+    INNER JOIN "moka_legacy"."Chromosome" c
+        ON pa."ChromosomeID" = c."ChrID"
+
+    INNER JOIN "moka_legacy"."Item" rtag
+        ON pa."RTagName" = rtag."ItemID"
+
+    INNER JOIN "moka_legacy"."Item" ftag
+        ON pa."FTagName" = ftag."ItemID"
+
+    WHERE pa."Status" = 1202218832;
+    """
+
+    with conn.cursor() as cursor:
+        cursor.execute(query)
+        return cursor.fetchall()
