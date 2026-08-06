@@ -682,20 +682,3 @@ class GeneratePrimer:
             #os.remove(order_sheet)
         return df_all
 
-
-def parse_args():
-    """get input arguments"""
-    parser = argparse.ArgumentParser(description="Primer design tool")
-    parser.add_argument("-c", "--config_file", default="./config.json", help="Path to config.json")
-    parser.add_argument("-i", "--input_file", help="Path to input file")
-    parser.add_argument("-u", "--user", help="user name")
-    parser.add_argument("-pw", "--password", help="password")
-    parser.add_argument("-db", "--database", help="database name")
-
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
-    order_primer = GenerateOrder()
-    order_primer.order(args.input_file, args.user, args.password, args.database)
