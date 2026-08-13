@@ -1,150 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<title>MOKA All Amplicons Results</title>
+
+<title>MOKA All Approved Primers</title>
 
 <style>
 
-body{
+body {
     font-family: Arial, Helvetica, sans-serif;
-    background:#f4f6f9;
-    margin:0;
-    padding:30px;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 30px;
 }
 
-.container{
-    max-width:1800px;
-    margin:auto;
+.container {
+    max-width: 1800px;
+    margin: auto;
 }
 
-h2{
-    color:#1f4e79;
-    margin-bottom:20px;
+h2 {
+    color: #1f4e79;
+    margin-bottom: 20px;
 }
 
 
 /* Messages */
 
-.message{
-    padding:12px;
-    border-radius:5px;
-    margin-bottom:20px;
+.message {
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
 }
 
-.error{
-    background:#ffe6e6;
-    color:#b00020;
-    border:1px solid #ffb3b3;
+.error {
+    background: #ffe6e6;
+    color: #b00020;
+    border: 1px solid #ffb3b3;
 }
 
-.success{
-    background:#eaf7ea;
-    color:#1b5e20;
-    border:1px solid #b9e6b9;
+.success {
+    background: #eaf7ea;
+    color: #1b5e20;
+    border: 1px solid #b9e6b9;
+}
+
+
+/* Filter controls */
+
+.filter-bar {
+    margin-bottom: 20px;
+}
+
+.filter-button {
+    padding: 10px 20px;
+    background: #1f4e79;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.filter-button:hover {
+    background: #163a5a;
+}
+
+.clear-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-left: 10px;
+    background: #777;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.clear-button:hover {
+    background: #555;
+}
+
+
+/* Table scrolling */
+
+.table-container {
+    max-height: 750px;
+    overflow: auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
 
 
 /* Table */
 
-.table-container{
-    max-height:750px;
-    overflow:auto;
-    border:1px solid #ccc;
-    border-radius:8px;
-    background:white;
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
+table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
 }
-
-
-table{
-    border-collapse:collapse;
-    width:max-content;
-    min-width:100%;
-}
-
 
 th,
-td{
-    border:1px solid #ddd;
-    padding:8px 12px;
-    white-space:nowrap;
+td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    white-space: nowrap;
 }
 
 
-thead th{
-    position:sticky;
-    top:0;
-    background:#1f4e79;
-    color:white;
-    z-index:3;
+/* Header */
+
+thead th {
+    position: sticky;
+    top: 0;
+    background: #1f4e79;
+    color: white;
+    z-index: 3;
 }
 
 
-tbody tr:nth-child(even){
-    background:#f8f8f8;
+/* Filter row */
+
+.filter-row th {
+    position: sticky;
+    top: 42px;
+    background: #dce6f1;
+    z-index: 3;
+    padding: 5px;
+}
+
+.filter-row input {
+    width: 110px;
+    box-sizing: border-box;
+    padding: 6px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+}
+
+.filter-row input:focus {
+    outline: 2px solid #6ea8d7;
 }
 
 
-tbody tr.selected{
-    background:#fff3cd !important;
+/* Alternating rows */
+
+tbody tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+
+/* Selected row */
+
+tbody tr.selected {
+    background: #fff3cd !important;
 }
 
 
 /* Sticky first column */
 
 th:first-child,
-td:first-child{
-    position:sticky;
-    left:0;
-    background:white;
-    font-weight:bold;
-    z-index:2;
+td:first-child {
+    position: sticky;
+    left: 0;
+    background: white;
+    font-weight: bold;
+    z-index: 2;
 }
 
 
-thead th:first-child{
-    background:#1f4e79;
-    color:white;
-    z-index:5;
+/* First header */
+
+thead tr:first-child th:first-child {
+    background: #1f4e79;
+    color: white;
+    z-index: 5;
 }
 
 
-tbody tr.selected td:first-child{
-    background:#fff3cd;
+/* First filter cell */
+
+.filter-row th:first-child {
+    background: #dce6f1;
+    z-index: 5;
+}
+
+
+/* Selected sticky first column */
+
+tbody tr.selected td:first-child {
+    background: #fff3cd;
 }
 
 
 /* Buttons */
 
-.buttons{
-    margin-top:25px;
+.buttons {
+    margin-top: 25px;
 }
 
-
-.button{
-    display:inline-block;
-    padding:10px 18px;
-    margin-right:12px;
-    text-decoration:none;
-    color:white;
-    background:#1f4e79;
-    border-radius:5px;
+.button {
+    display: inline-block;
+    padding: 10px 18px;
+    margin-right: 12px;
+    text-decoration: none;
+    color: white;
+    background: #1f4e79;
+    border-radius: 5px;
 }
 
-
-.button:hover{
-    background:#163a5a;
+.button:hover {
+    background: #163a5a;
 }
 
-
-.logout{
-    background:#b22222;
+.logout {
+    background: #b22222;
 }
 
-
-.logout:hover{
-    background:#8b1a1a;
+.logout:hover {
+    background: #8b1a1a;
 }
 
 </style>
@@ -160,33 +238,39 @@ tbody tr.selected td:first-child{
 
 
 {% if error %}
+
 <div class="message error">
     {{ error }}
 </div>
+
 {% endif %}
 
 
 {% if msg %}
+
 <div class="message success">
     {{ msg }}
 </div>
+
 {% endif %}
 
 
+<!-- FILTER FORM -->
 
-{% if results %}
+<form method="POST" action="{{ url_for('query_moka_all_approved') }}">
 
 <div class="table-container">
 
 <table>
 
 <thead>
+
 <tr>
-    <th>Amplicon ID</th>
+    <th>Fragment ID</th>
     <th>Chromosome</th>
-    <th>Start19</th>
-    <th>Stop19</th>
-    <th>Notes</th>
+    <th>Start</th>
+    <th>Stop</th>
+    <th>Amplicon Name</th>
     <th>Forward Seq</th>
     <th>Reverse Seq</th>
     <th>Mix</th>
@@ -202,6 +286,191 @@ tbody tr.selected td:first-child{
     <th>Forward Tag</th>
     <th>Date Ordered</th>
     <th>Manufacturer</th>
+</tr>
+<!-- FILTER INPUTS -->
+
+<tr class="filter-row">
+
+    <th>
+        <input
+            type="text"
+            name="amplicon_id"
+            placeholder="ID"
+            value="{{ filters.get('amplicon_id', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="chromosome"
+            placeholder="= 1"
+            value="{{ filters.get('chromosome', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="start"
+            placeholder="Start"
+            value="{{ filters.get('start', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="stop"
+            placeholder="Stop"
+            value="{{ filters.get('stop', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="notes"
+            placeholder="Contains..."
+            value="{{ filters.get('notes', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="forward_seq"
+            placeholder="Contains..."
+            value="{{ filters.get('forward_seq', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="reverse_seq"
+            placeholder="Contains..."
+            value="{{ filters.get('reverse_seq', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="mix"
+            placeholder="Contains..."
+            value="{{ filters.get('mix', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_tray"
+            placeholder="Contains..."
+            value="{{ filters.get('r_tray', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_freezer"
+            placeholder="Contains..."
+            value="{{ filters.get('r_freezer', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="f_grid"
+            placeholder="Contains..."
+            value="{{ filters.get('f_grid', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="f_tray"
+            placeholder="Contains..."
+            value="{{ filters.get('f_tray', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="f_freezer"
+            placeholder="Contains..."
+            value="{{ filters.get('f_freezer', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="test_result_notes"
+            placeholder="Contains..."
+            value="{{ filters.get('test_result_notes', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_grid"
+            placeholder="Contains..."
+            value="{{ filters.get('r_grid', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="primer_name"
+            placeholder="ID"
+            value="{{ filters.get('primer_name', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="reverse_tag"
+            placeholder="Contains..."
+            value="{{ filters.get('reverse_tag', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="forward_tag"
+            placeholder="Contains..."
+            value="{{ filters.get('forward_tag', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="date_ordered"
+            placeholder="Contains..."
+            value="{{ filters.get('date_ordered', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="manufacturer"
+            placeholder="ID"
+            value="{{ filters.get('manufacturer', '') }}"
+        >
+    </th>
+
 </tr>
 </thead>
 
@@ -244,22 +513,45 @@ tbody tr.selected td:first-child{
 </div>
 
 
-{% else %}
+<div class="filter-bar">
 
-<p><strong>No records found.</strong></p>
+    <button type="submit" class="filter-button">
+        Apply Filters
+    </button>
+
+    <a
+        href="{{ url_for('query_moka_all_approved') }}"
+        class="clear-button"
+    >
+        Clear Filters
+    </a>
+
+</div>
+
+</form>
+
+{% if not results %}
+
+<p>
+    <strong>No records found.</strong>
+</p>
 
 {% endif %}
 
 
-
 <div class="buttons">
 
-<a href="{{ url_for('moka_index') }}" class="button">
+<a
+    href="{{ url_for('moka_index') }}"
+    class="button"
+>
     Back to MOKA Search Options
 </a>
 
-
-<a href="{{ url_for('logout') }}" class="button logout">
+<a
+    href="{{ url_for('logout') }}"
+    class="button logout"
+>
     Log Out
 </a>
 
@@ -267,7 +559,6 @@ tbody tr.selected td:first-child{
 
 
 </div>
-
 
 
 <script>
@@ -298,4 +589,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 </body>
+
 </html>

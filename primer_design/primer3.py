@@ -632,10 +632,13 @@ class DesignPrimer:
 
 
 class GeneratePrimer:
-    def __init__(self, app_datetimestr):
+    def __init__(self, app_datetimestr, config_path=None):
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        self.config_path = os.path.join(BASE_DIR, "config.json")
-        #del_file()
+
+        if config_path is None:
+            config_path = os.path.join(BASE_DIR, "config.json")
+
+        self.config_path = config_path
         self.datetimestr = app_datetimestr
 
     def parse_input(self, input_file):

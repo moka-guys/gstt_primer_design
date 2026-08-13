@@ -549,39 +549,66 @@ def query_moka_position():
         )
 
 
-@app.route('/query_moka_all_approved', methods=['GET'])
+@app.route("/query_moka_all_approved", methods=["GET", "POST"])
 @login_required
 def query_moka_all_approved():
+    # define filters
+    filters = {}
+    # Default result
+    results = []
+
     try:
-        # Query the database
-        result_list = query_moka_approved(
+
+        if request.method == "POST":
+
+            filters = {
+                "amplicon_id": request.form.get("amplicon_id", "").strip(),
+                "chromosome": request.form.get("chromosome", "").strip(),
+                "start": request.form.get("start", "").strip(),
+                "stop": request.form.get("stop", "").strip(),
+                "notes": request.form.get("notes", "").strip(),
+                "forward_seq": request.form.get("forward_seq", "").strip(),
+                "reverse_seq": request.form.get("reverse_seq", "").strip(),
+                "mix": request.form.get("mix", "").strip(),
+                "r_tray": request.form.get("r_tray", "").strip(),
+                "r_freezer": request.form.get("r_freezer", "").strip(),
+                "f_grid": request.form.get("f_grid", "").strip(),
+                "f_tray": request.form.get("f_tray", "").strip(),
+                "f_freezer": request.form.get("f_freezer", "").strip(),
+                "test_result_notes": request.form.get(
+                    "test_result_notes", ""
+                ).strip(),
+                "r_grid": request.form.get("r_grid", "").strip(),
+                "primer_name": request.form.get("primer_name", "").strip(),
+                "reverse_tag": request.form.get("reverse_tag", "").strip(),
+                "forward_tag": request.form.get("forward_tag", "").strip(),
+                "date_ordered": request.form.get("date_ordered", "").strip(),
+                "manufacturer": request.form.get("manufacturer", "").strip()
+            }
+
+        results = query_moka_approved(
             DB_NAME,
             DB_USER,
             DB_PASSWORD,
-            DB_HOST
+            DB_HOST,
+            filters=filters
         )
 
-        # No records found
-        if not result_list:
-            return render_template(
-                'query_moka_all_approved_result.html',
-                results=[],
-                msg='No active primer found.'
-            )
-
-        # Display results
         return render_template(
-            'query_moka_all_approved_result.html',
-            results=result_list
+            "query_moka_all_approved_result.html",
+            results=results,
+            filters=filters
         )
 
-    except Exception:
-        app.logger.exception("Error while querying the MOKA database.")
+    except Exception as e:
+
         return render_template(
-            'query_moka_all_approved_result.html',
+            "query_moka_all_approved_result.html",
             results=[],
-            error='An unexpected error occurred while querying the database. Please try again later.'
+            filters=filters,
+            error=str(e)
         )
+
 
 @app.route('/success_primer_design')
 @login_required

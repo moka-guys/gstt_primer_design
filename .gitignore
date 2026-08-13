@@ -16,3 +16,7 @@ initdb/migrate_chromosome.sql
 initdb/migrate_item.sql
 initdb/query_moka.sql
 initdb/status.sql
+test
+.coverage
+database/__pycache__/
+primer_design/__pycache__/
