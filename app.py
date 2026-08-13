@@ -407,6 +407,26 @@ def query_data():
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
         variant_pos = request.form.get('variant_pos')
+
+        if bool(start) != bool(end):
+            return render_template(
+                "query_result.html",
+                results=None,
+                editable_columns=None,
+                error="Please provide both Start Position and End Position."
+            )
+
+        # If any genomic coordinate is provided, GRCh is required
+        if (variant_pos or start or end) and grch not in ("37", "38"):
+            return render_template(
+                "query_result.html",
+                results=None,
+                editable_columns=None,
+                error=(
+                    "Please select GRCh 37 or GRCh 38 when using "
+                    "Variant POS, Start Position, or End Position."
+                )
+            )
         # ensure at least one filter exists
         if not any([chr_val, gene_val, primer_name, primer_id, passed_validation,
                     grch, tray, start, end, archive, notes, start_date, end_date,

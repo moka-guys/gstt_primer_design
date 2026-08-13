@@ -34,9 +34,16 @@ def search_postgres(dbname, user, password, host,
                     notes, variant_pos=None, pos_start=None, pos_end=None,
                     start_date=None, end_date=None):
 
+    if variant_pos or pos_start or pos_end:
+        if grch_val not in ("37", "38"):
+            raise ValueError(
+                "GRCh must be 37 or 38 when searching by genomic or variant position."
+            )
     conditions = []
     values = []
     msg_to_return = None
+    if grch_val == "":
+        grch_val = None
     base_query = sql.SQL("""
         SELECT
             b.primer_id,
@@ -107,7 +114,7 @@ def search_postgres(dbname, user, password, host,
         variant_pos = None
 
     if chr_val:
-        conditions.append(sql.SQL("p.chr = %s"))
+        conditions.append(sql.SQL("p.chr ILIKE %s"))
         values.append(chr_val)
 
     if gene_val:
@@ -301,9 +308,13 @@ def search_postgres(dbname, user, password, host,
                     ])
 
     # Only apply grch filter when not using liftover for both range and variant pos
-    if grch_val and not use_liftover and not use_variant_liftover:
-        conditions.append(sql.SQL("p.grch = %s"))
-        values.append(grch_val)
+    if not use_liftover and not use_variant_liftover:
+        if grch_val:
+            conditions.append(sql.SQL("p.grch = %s"))
+            values.append(grch_val)
+        else:
+            conditions.append(sql.SQL("p.grch IN (%s, %s)"))
+            values.extend(["37", "38"])
 
     query = base_query
 

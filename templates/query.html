@@ -148,10 +148,14 @@
         <div class="filter-row">
             <div>
                 <label>GRCh</label>
-                <select name="grch">
-                    <option value="37" selected>37</option>
+                <select name="grch" id="grch">
+                    <option value="">Any</option>
+                    <option value="37">37</option>
                     <option value="38">38</option>
                 </select>
+                <small id="grch-help" style="color: #c14040;">
+                    Required when using Variant POS, Start Position, or End Position.
+                </small>
             </div>
         </div>
         <div class="filter-row">
@@ -176,7 +180,30 @@
         <button type="submit">Run Query</button>
         <a href="{{ url_for('index') }}" class="home-btn">Home Page</a>
     </form>
-
+    <script>
+        document.querySelector("form").addEventListener("submit", function(event) {
+        
+            const variantPos = document.querySelector('input[name="variant_pos"]').value.trim();
+            const startPos = document.querySelector('input[name="start"]').value.trim();
+            const endPos = document.querySelector('input[name="end"]').value.trim();
+            const grch = document.querySelector('select[name="grch"]').value;
+        
+            const hasCoordinate =
+                variantPos !== "" ||
+                startPos !== "" ||
+                endPos !== "";
+        
+            if (hasCoordinate && grch === "") {
+                event.preventDefault();
+        
+                alert(
+                    "Please select GRCh 37 or GRCh 38 when entering Variant POS, Start Position, or End Position."
+                );
+        
+                document.querySelector('select[name="grch"]').focus();
+            }
+        });
+        </script>
 </div>
 </body>
 </html>
