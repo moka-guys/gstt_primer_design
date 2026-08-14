@@ -56,7 +56,7 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
     connection = get_postgres_connection(db_name, username, password, db_host)
     cursor = connection.cursor()
     query = """
-    SELECT primer_tool.insert_primer_with_batch(
+    SELECT * FROM primer_tool.insert_primer_with_batch(
         %s::varchar,
         %s::int,
         %s::int,
@@ -122,8 +122,8 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
         )
 
         cursor.execute(query, values)
-        insert_id = cursor.fetchone()[0]
-        inserted_ids.append(insert_id)
+        upi, primer_id = cursor.fetchone()
+        inserted_ids.append([upi, primer_id])
 
     connection.commit()
     cursor.close()

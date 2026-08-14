@@ -30,11 +30,15 @@ CREATE OR REPLACE FUNCTION primer_tool.insert_primer_with_batch(
     p_manufacturer VARCHAR,
     p_designer VARCHAR
 )
-RETURNS INTEGER
+RETURNS TABLE (
+    upi INTEGER,
+    primer_id INTEGER
+)
 LANGUAGE plpgsql
 AS $$
 DECLARE
     v_upi INTEGER;
+    v_primer_id INTEGER;
     v_passed yes_no_status;
     v_archive yes_no;
 BEGIN
@@ -92,24 +96,25 @@ BEGIN
         gene
     )
     DO NOTHING
-    RETURNING upi INTO v_upi;
+    RETURNING primers.upi INTO v_upi;
 
     -- If conflict happened, fetch existing primer_id
     IF v_upi IS NULL THEN
-        SELECT upi INTO v_upi
-        FROM primer_tool.primers
-        WHERE chr = p_chr
-          AND start_pos = p_start_pos
-          AND end_pos = p_end_pos
-          AND grch = p_grch
-          AND left_primer_seq = p_left_primer_seq
-          AND right_primer_seq = p_right_primer_seq
-          AND left_primer_start = p_left_primer_start
-          AND left_primer_end = p_left_primer_end
-          AND right_primer_start = p_right_primer_start
-          AND right_primer_end = p_right_primer_end
-          AND product_size = p_product_size
-          AND gene = p_gene;
+        SELECT p.upi INTO v_upi
+        FROM primer_tool.primers AS p
+        WHERE p.chr = p_chr
+          AND p.start_pos = p_start_pos
+          AND p.end_pos = p_end_pos
+          AND p.grch = p_grch
+          AND p.primer_name = p_primer_name
+          AND p.left_primer_seq = p_left_primer_seq
+          AND p.right_primer_seq = p_right_primer_seq
+          AND p.left_primer_start = p_left_primer_start
+          AND p.left_primer_end = p_left_primer_end
+          AND p.right_primer_start = p_right_primer_start
+          AND p.right_primer_end = p_right_primer_end
+          AND p.product_size = p_product_size
+          AND p.gene = p_gene;
     END IF;
 
     -- =========================
@@ -148,9 +153,11 @@ BEGIN
         p_grid_rv,
         p_manufacturer,
         p_designer
-    );
+    )
 
-    RETURN v_upi;
+    RETURNING primer_batches.primer_id INTO v_primer_id;
+    RETURN QUERY
+    SELECT v_upi, v_primer_id;
 
 END;
 $$;

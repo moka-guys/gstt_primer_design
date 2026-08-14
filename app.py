@@ -668,7 +668,7 @@ def save_selected():
         return "No data found in session."
 
     df = pd.DataFrame(output_dict)
-    columns = ["chr", "primer_name", "tag_name",
+    columns = ["primer_id", "chr", "primer_name", "tag_name",
                "primer", "tagged_primer"]
     rows = []
     selected_rows = request.form.getlist('selected_rows')
@@ -683,8 +683,16 @@ def save_selected():
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_R) = prepare_order_sheet(temp_df)
 
+            inserted_ids = insert_DB(temp_df, tagged_FW,
+                                     tagged_RV,temp_df["order_tag"][0],
+                                     DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
+            primer_id = inserted_ids[0][1]
+            app.logger.info(
+                            f"User '{g.user}' selected designed primers to insert DB for upi {inserted_ids}"
+                            )
             # Append FW
             rows.append({
+                "primer_id": primer_id,
                 "chr": row["chr"],
                 "primer_name": row["primer_name"],
                 "tag_name": tag_name_FW,
@@ -694,18 +702,13 @@ def save_selected():
 
             # Append RV
             rows.append({
+                "primer_id": primer_id,
                 "chr": row["chr"],
                 "primer_name": row["primer_name"],
                 "tag_name": tag_name_R,
                 "primer": RV_primer,
                 "tagged_primer": tagged_RV
             })
-            inserted_ids = insert_DB(temp_df, tagged_FW,
-                                     tagged_RV,temp_df["order_tag"][0],
-                                     DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
-            app.logger.info(
-                            f"User '{g.user}' selected designed primers to insert DB for upi {inserted_ids}"
-                            )
         df_to_order = pd.DataFrame(rows, columns=columns)
         df_to_order["Scale"] = "25RR"
         df_to_order["Purification"] = "STD"
@@ -727,13 +730,14 @@ def save_complete():
 @app.route("/download/<source>")
 @login_required
 def download(source):
-    csv_to_download = None
     if source == "manual":
-        csv_to_download = session.get("order_sheet_name_manual")
+        session_key = "order_sheet_name_manual"
     else:
-        csv_to_download = session.get("order_sheet_name_auto")
+        session_key = "order_sheet_name_auto"
+    csv_to_download = session.get(session_key)
     if csv_to_download is None:
-        return "No order sheet available for download.", 400
+        return "No order sheet available for download. Please note that each order sheet can only be downloaded once", 400
+
     directory = app.config['DOWNLOAD_FOLDER']
     full_path = os.path.join(directory, csv_to_download)
 
@@ -743,22 +747,26 @@ def download(source):
     else:
         app.logger.info("attempt to download")
 
-        response = send_from_directory(
-            directory=directory,
-            path=csv_to_download,
-            as_attachment=True
-        )
+    response = send_from_directory(
+        directory=directory,
+        path=csv_to_download,
+        as_attachment=True
+    )
 
-        # Cleanup after sending
-        @after_this_request
-        def cleanup(resp):
-            try:
-                if os.path.exists(full_path):
-                    os.remove(full_path)
-                    print("Deleted file:", full_path)
-            except Exception as e:
-                print("Error deleting file:", e)
-            return resp
+    @after_this_request
+    def cleanup(resp):
+        try:
+            if os.path.exists(full_path):
+                os.remove(full_path)
+                app.logger.info("Deleted file: %s", full_path)
+
+            # Remove filename from session
+            session.pop(session_key, None)
+            app.logger.info("Removed session key: %s", session_key)
+
+        except Exception as e:
+            app.logger.error("Error during download cleanup: %s", e)
+        return resp
     return response
 
 
@@ -972,6 +980,8 @@ def manual_insert():
 
                 df_new["Scale"] = "25RR"
                 df_new["Purification"] = "STD"
+                primer_id = inserted_ids[0][1]
+                df_new.insert(0, "primer_id", primer_id)
 
                 if "order_sheet_name_manual" not in session:
                     session["order_sheet_name_manual"] = (
