@@ -270,20 +270,19 @@ tbody tr.selected td:first-child {
     <th>Chromosome</th>
     <th>Start</th>
     <th>Stop</th>
-    <th>Amplicon Name</th>
     <th>Forward Seq</th>
     <th>Reverse Seq</th>
-    <th>Mix</th>
-    <th>R Tray</th>
-    <th>R Freezer</th>
-    <th>F Grid</th>
-    <th>F Tray</th>
-    <th>F Freezer</th>
-    <th>Test Result Notes</th>
-    <th>R Grid</th>
-    <th>Primer Name</th>
     <th>Reverse Tag</th>
     <th>Forward Tag</th>
+    <th>Mix</th>
+    <th>Amplicon Name</th>
+    <th>Test Result Notes</th>
+    <th>F Freezer</th>
+    <th>F Tray</th>
+    <th>F Grid</th>    
+    <th>R Freezer</th>
+    <th>R Tray</th>
+    <th>R Grid</th>
     <th>Date Ordered</th>
     <th>Manufacturer</th>
 </tr>
@@ -326,16 +325,6 @@ tbody tr.selected td:first-child {
             value="{{ filters.get('stop', '') }}"
         >
     </th>
-
-    <th>
-        <input
-            type="text"
-            name="notes"
-            placeholder="Contains..."
-            value="{{ filters.get('notes', '') }}"
-        >
-    </th>
-
     <th>
         <input
             type="text"
@@ -353,88 +342,6 @@ tbody tr.selected td:first-child {
             value="{{ filters.get('reverse_seq', '') }}"
         >
     </th>
-
-    <th>
-        <input
-            type="text"
-            name="mix"
-            placeholder="Contains..."
-            value="{{ filters.get('mix', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="r_tray"
-            placeholder="Contains..."
-            value="{{ filters.get('r_tray', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="r_freezer"
-            placeholder="Contains..."
-            value="{{ filters.get('r_freezer', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="f_grid"
-            placeholder="Contains..."
-            value="{{ filters.get('f_grid', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="f_tray"
-            placeholder="Contains..."
-            value="{{ filters.get('f_tray', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="f_freezer"
-            placeholder="Contains..."
-            value="{{ filters.get('f_freezer', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="test_result_notes"
-            placeholder="Contains..."
-            value="{{ filters.get('test_result_notes', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="r_grid"
-            placeholder="Contains..."
-            value="{{ filters.get('r_grid', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="primer_name"
-            placeholder="ID"
-            value="{{ filters.get('primer_name', '') }}"
-        >
-    </th>
-
     <th>
         <input
             type="text"
@@ -452,6 +359,84 @@ tbody tr.selected td:first-child {
             value="{{ filters.get('forward_tag', '') }}"
         >
     </th>
+    <th>
+        <input
+            type="text"
+            name="mix"
+            placeholder="Contains..."
+            value="{{ filters.get('mix', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="notes"
+            placeholder="Contains..."
+            value="{{ filters.get('notes', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="test_result_notes"
+            placeholder="Contains..."
+            value="{{ filters.get('test_result_notes', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="f_freezer"
+            placeholder="Contains..."
+            value="{{ filters.get('f_freezer', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="f_tray"
+            placeholder="Contains..."
+            value="{{ filters.get('f_tray', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="f_grid"
+            placeholder="Contains..."
+            value="{{ filters.get('f_grid', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_freezer"
+            placeholder="Contains..."
+            value="{{ filters.get('r_freezer', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_tray"
+            placeholder="Contains..."
+            value="{{ filters.get('r_tray', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_grid"
+            placeholder="Contains..."
+            value="{{ filters.get('r_grid', '') }}"
+        >
+    </th>
+
 
     <th>
         <input
@@ -500,7 +485,6 @@ tbody tr.selected td:first-child {
     <td>{{ row[16] }}</td>
     <td>{{ row[17] }}</td>
     <td>{{ row[18] }}</td>
-    <td>{{ row[19] }}</td>
 
 </tr>
 

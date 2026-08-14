@@ -195,19 +195,21 @@ tbody tr.selected td:first-child{
     <th>Chromosome</th>
     <th>Start</th>
     <th>Stop</th>
-    <th>Amplicon Name</th>
     <th>Forward Seq</th>
     <th>Reverse Seq</th>
-    <th>Mix</th>
-    <th>R Tray</th>
-    <th>R Freezer</th>
-    <th>F Grid</th>
-    <th>F Tray</th>
-    <th>F Freezer</th>
-    <th>Test Result Notes</th>
-    <th>Status</th>
     <th>Forward Tag</th>
     <th>Reverse Tag</th>
+    <th>Mix</th>
+    <th>Amplicon Name</th>
+    <th>Test Result Notes</th>
+    <th>F Freezer</th>
+    <th>F Tray</th>
+    <th>F Grid</th>
+    <th>R Freezer</th>
+    <th>R Tray</th>
+    <th>R Grid</th>
+    <th>Date Ordered</th>
+    <th>Manufacturer</th>
 </tr>
 </thead>
 
@@ -235,7 +237,8 @@ tbody tr.selected td:first-child{
     <td>{{ row[14] }}</td>
     <td>{{ row[15] }}</td>
     <td>{{ row[16] }}</td>
-
+    <td>{{ row[17] }}</td>
+    <td>{{ row[18] }}</td>
 </tr>
 
 {% endfor %}
