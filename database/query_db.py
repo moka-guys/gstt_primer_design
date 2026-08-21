@@ -421,7 +421,7 @@ def query_moka_approved(dbname, user, password, host, filters=None):
 
     query = """
     SELECT
-        pa."AmpliconID",
+        pa."PrimerName",
         c."Chr",
         pa."Start19",
         pa."Stop19",

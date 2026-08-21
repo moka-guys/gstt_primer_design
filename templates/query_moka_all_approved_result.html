@@ -293,9 +293,9 @@ tbody tr.selected td:first-child {
     <th>
         <input
             type="text"
-            name="amplicon_id"
+            name="primer_name"
             placeholder="ID"
-            value="{{ filters.get('amplicon_id', '') }}"
+            value="{{ filters.get('primer_name', '') }}"
         >
     </th>
 
@@ -531,6 +531,14 @@ tbody tr.selected td:first-child {
 >
     Back to MOKA Search Options
 </a>
+{% if results %}
+<a
+    href="{{ url_for('export_moka_csv') }}"
+    class="button"
+>
+    Export CSV
+</a>
+{% endif %}
 
 <a
     href="{{ url_for('logout') }}"

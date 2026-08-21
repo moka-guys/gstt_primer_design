@@ -489,7 +489,12 @@ def query_moka_id():
                 msg='No matching primers found.'
             )
 
-        # Display results
+        # Save the successful query for CSV export
+        session["moka_export"] = {
+                                "type": "id",
+                                "primer_id": primer_id
+                                }
+
         return render_template(
             'query_moka_id_result.html',
             results=result_list
@@ -542,7 +547,11 @@ def query_moka_position():
                 results=[],
                 msg='No matching primers found.'
             )
-
+        session["moka_export"] = {
+                                    "type": "position",
+                                    "chromosome": chromosome,
+                                    "position": position
+                                }
         # Display results
         return render_template(
             'query_moka_position_result.html',
@@ -578,7 +587,7 @@ def query_moka_all_approved():
         if request.method == "POST":
 
             filters = {
-                "amplicon_id": request.form.get("amplicon_id", "").strip(),
+                "primer_name": request.form.get("primer_name", "").strip(),
                 "chromosome": request.form.get("chromosome", "").strip(),
                 "start": request.form.get("start", "").strip(),
                 "stop": request.form.get("stop", "").strip(),
@@ -608,6 +617,11 @@ def query_moka_all_approved():
             DB_HOST,
             filters=filters
         )
+        # Save the query used for the current results
+        session["moka_export"] = {
+                                    "type": "approved",
+                                    "filters": filters
+                                }
 
         return render_template(
             "query_moka_all_approved_result.html",
@@ -876,6 +890,7 @@ def update_row():
 
 
 @app.route("/export_csv")
+@login_required
 def export_csv():
     rows = session["query_results"]
     output = StringIO()
@@ -891,6 +906,98 @@ def export_csv():
             "Content-Disposition": "attachment; filename=exported_primers.csv"
         }
     )
+
+
+@app.route("/export_moka_csv")
+@login_required
+def export_moka_csv():
+
+    export_info = session.get("moka_export")
+
+    if not export_info:
+        return "No MOKA query available for export.", 400
+
+    try:
+
+        if export_info["type"] == "id":
+            primer_id = export_info["primer_id"]
+            rows = query_moka_by_id(
+                DB_NAME,
+                DB_USER,
+                DB_PASSWORD,
+                DB_HOST,
+                primer_id
+            )
+
+            filename = "moka_id_results.csv"
+
+        elif export_info["type"] == "position":
+            chromosome = export_info["chromosome"]
+            position = export_info["position"]
+
+            rows = query_moka_by_position(
+                DB_NAME,
+                DB_USER,
+                DB_PASSWORD,
+                DB_HOST,
+                chromosome,
+                position
+            )
+
+            filename = "moka_position_results.csv"
+
+        elif export_info["type"] == "approved":
+            rows = query_moka_approved(
+                DB_NAME,
+                DB_USER,
+                DB_PASSWORD,
+                DB_HOST,
+                filters=export_info["filters"]
+            )
+
+            filename = "moka_filtered_results.csv"
+        else:
+            return "Invalid MOKA export type.", 400
+
+        output = StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow([
+            "Fragment ID",
+            "Chromosome",
+            "Start",
+            "Stop",
+            "Forward Seq",
+            "Reverse Seq",
+            "Forward Tag",
+            "Reverse Tag",
+            "Mix",
+            "Amplicon Name",
+            "Test Result Notes",
+            "F Freezer",
+            "F Tray",
+            "F Grid",
+            "R Freezer",
+            "R Tray",
+            "R Grid",
+            "Date Ordered",
+            "Manufacturer"
+        ])
+
+        writer.writerows(rows)
+
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition":
+                    f"attachment; filename={filename}"
+            }
+        )
+
+    except Exception:
+        app.logger.exception("Error exporting MOKA results")
+        return "Error generating CSV.", 500
 
 
 @app.route("/manual_insert", methods=["GET", "POST"])

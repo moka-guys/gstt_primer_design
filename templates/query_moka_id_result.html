@@ -269,6 +269,12 @@ tbody tr.selected td:first-child{
     Back to MOKA Search Options
 </a>
 
+{% if results %}
+<a href="{{ url_for('export_moka_csv') }}" class="button">
+    Export CSV
+</a>
+{% endif %}
+
 
 <a href="{{ url_for('logout') }}" class="button logout">
     Log Out
