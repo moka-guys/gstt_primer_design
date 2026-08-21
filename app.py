@@ -12,6 +12,9 @@ import logging
 import traceback
 import tempfile
 from datetime import datetime, timedelta
+from werkzeug.middleware.proxy_fix import ProxyFix
+from functools import wraps
+import warnings
 from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
 import psycopg2
@@ -19,15 +22,12 @@ from database.query_db import *
 from database.insert_db import insert_DB
 from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
-from werkzeug.middleware.proxy_fix import ProxyFix
-from functools import wraps
-import warnings
+
 warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__, static_folder='static')
-#app.config["APPLICATION_ROOT"] = "/gstt_primer_design"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_prefix=1)
 DB_HOST = os.environ["DB_HOST"]
 DB_NAME = os.environ["DB_NAME"]
@@ -61,7 +61,6 @@ app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = os.environ["SESSION_FILE_DIR"]
 app.config["SESSION_PERMANENT"] = True
-#app.config["SESSION_COOKIE_EXPIRES"] = None
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)  # log out after 30 min idle
 app.config['DOWNLOAD_FOLDER'] = os.environ["DOWNLOAD_FOLDER"]
 Session(app)
@@ -73,11 +72,6 @@ file_handler = logging.FileHandler("/app/logs/primer_app.log")
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 app.logger.addHandler(file_handler)
-app.logger.info("xxxxxxxxKEYSxxxxxx")
-app.logger.info(DB_NAME)
-app.logger.info(DB_USER)
-app.logger.info(DB_PASSWORD)
-app.logger.info(DB_HOST)
 
 
 # Print stdout/stderr to logger
@@ -225,6 +219,7 @@ def change_password():
 
     return render_template("change_password.html")
 
+
 @app.route('/igv_view/<genome>')
 @login_required
 def igv_view(genome):
@@ -266,7 +261,7 @@ def igv_view(genome):
         session["snp_bed"] = snp_bed_file
         session["temp_files"].append(snp_bed_file)
         session["temp_files"].append(vcf_temp_file)
-    # define genome and initial focus for igv_view
+        # define genome and initial focus for igv_view
         initial_query = {
                         "genome": genome,
                         "locus": f"{prefix}{temp_df.iloc[0]['chr']}:{temp_df.iloc[0]['start']}"
@@ -379,6 +374,7 @@ def design_primer():
 
 
 @app.route("/modify_primer", methods=["GET", "POST"])
+@login_required
 def modify_primer():
     if request.method == "POST":
         return design_primer()
@@ -736,7 +732,7 @@ def download(source):
         session_key = "order_sheet_name_auto"
     csv_to_download = session.get(session_key)
     if csv_to_download is None:
-        return "No order sheet available for download. Please note that each order sheet can only be downloaded once", 400
+        return render_template("download_not_found.html"), 400
 
     directory = app.config['DOWNLOAD_FOLDER']
     full_path = os.path.join(directory, csv_to_download)

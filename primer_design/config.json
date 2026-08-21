@@ -95,7 +95,7 @@
     },
     "VIC":{
       "F": "VIC_",
-      "R": "FVIC_",
+      "R": "VIC_",
       "ordername": "VIC_01",
       "F_name": "VIC_Forward",
       "R_name": "VIC_Reverse"
@@ -113,6 +113,34 @@
       "ordername": "PET_01",
       "F_name": "PET_Forward",
       "R_name": "PET_Reverse"
+    },
+    "ATTO550":{
+      "F": "ATTO550_",
+      "R": "ATTO550_",
+      "ordername": "ATTO550_01",
+      "F_name": "ATTO550_Forward",
+      "R_name": "ATTO550_Reverse"
+    },
+    "CY5":{
+      "F": "CY5_",
+      "R": "CY5_",
+      "ordername": "CY5_01",
+      "F_name": "CY5_Forward",
+      "R_name": "CY5_Reverse"
+    },
+    "ABY":{
+      "F": "ABY_",
+      "R": "ABY_",
+      "ordername": "ABY_01",
+      "F_name": "ABY_Forward",
+      "R_name": "ABY_Reverse"
+    },
+    "HEX":{
+      "F": "HEX_",
+      "R": "HEX_",
+      "ordername": "HEX_01",
+      "F_name": "HEX_Forward",
+      "R_name": "HEX_Reverse"
     },
     "no_tag":{
       "F": "",

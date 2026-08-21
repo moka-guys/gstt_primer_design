@@ -1,6 +1,6 @@
 from psycopg2 import sql
 from datetime import datetime, timedelta
-from primer_design.helper_function import get_postgres_connection, liftover, liftover_bed
+from primer_design.helper_function import get_postgres_connection, liftover, liftover_crossmap
 
 
 def safe_liftover(chrom, pos, build):
@@ -8,7 +8,7 @@ def safe_liftover(chrom, pos, build):
         print(chrom, pos, build)
         lifted = liftover(chrom, pos, build)
         print(lifted)
-        crossmap = liftover_bed(chrom, pos, pos, build)
+        crossmap = liftover_crossmap(chrom, pos, pos, build)
         print(crossmap)
 
         if lifted is None or crossmap is None:
@@ -53,6 +53,7 @@ def search_postgres(dbname, user, password, host,
             b.passed_validation,
             b.archive,
             b.notes,
+            b.tag,
             p.left_primer_seq,
             p.right_primer_seq,
             p.left_primer_start,
@@ -101,7 +102,7 @@ def search_postgres(dbname, user, password, host,
         pos_end = int(pos_end) if pos_end is not None else None
         msg_to_return = "Range lift over done."
 
-    except:
+    except (ValueError, TypeError):
         msg_to_return = "Range lift over is not done. "
         pos_start = None
         pos_end = None
@@ -109,7 +110,7 @@ def search_postgres(dbname, user, password, host,
     try:
         variant_pos = int(variant_pos) if variant_pos is not None else None
         msg_to_return += "Variant lift over done"
-    except:
+    except (ValueError, TypeError):
         msg_to_return += "Variant lift over is not done"
         variant_pos = None
 
@@ -156,7 +157,7 @@ def search_postgres(dbname, user, password, host,
         grch_val = str(grch_val)
         liftover_variant_grch = liftover_grch = "38" if grch_val == "37" else "37"
 
-        chrom = f"chr{chr_val}" if chr_val else None
+    chrom = f"chr{chr_val}" if chr_val else None
 
     # range position lift over
     if pos_start is not None and pos_end is not None and chrom:
@@ -237,34 +238,31 @@ def search_postgres(dbname, user, password, host,
         lifted_variant_pos, msg_to_return = safe_liftover(chrom, variant_pos, grch_val)
 
     use_variant_liftover = lifted_variant_pos is not None
-    if not use_variant_liftover:
-        liftover_variant_grch = grch_val
-        lifted_variant_pos = variant_pos
     if variant_pos is not None:
         if use_variant_liftover:
             conditions.append(sql.SQL("""
                                     (
-                                        (p.grch = %s AND p.left_primer_end <= %s AND p.right_primer_start >= %s)
+                                        (p.grch = %s AND p.left_primer_end <= %s - 25  AND p.right_primer_start >= %s + 25)
 
                                         OR
 
-                                        (p.grch = %s AND p.left_primer_end <= %s AND p.right_primer_start >= %s)
+                                        (p.grch = %s AND p.left_primer_end <= %s - 25 AND p.right_primer_start >= %s + 25)
 
                                         OR
 
-                                        (p.grch = %s AND p.left_primer_end <= %s AND p.right_primer_start = 1 AND p.left_primer_start <> 1)
+                                        (p.grch = %s AND p.left_primer_end <= %s - 25 AND p.right_primer_start = 1 AND p.left_primer_end <> 1)
 
                                         OR
 
-                                        (p.grch = %s AND p.left_primer_end = 1 AND p.right_primer_start >= %s AND p.right_primer_start <> 1)
+                                        (p.grch = %s AND p.left_primer_end = 1 AND p.right_primer_start >= %s + 25 AND p.right_primer_start <> 1)
 
                                         OR
 
-                                        (p.grch = %s AND p.left_primer_end <= %s AND p.right_primer_start = 1 AND p.left_primer_start <> 1)
+                                        (p.grch = %s AND p.left_primer_end <= %s - 25 AND p.right_primer_start = 1 AND p.left_primer_end <> 1)
 
                                         OR
 
-                                        (p.grch = %s AND p.left_primer_end = 1 AND p.right_primer_start >= %s AND p.right_primer_start <> 1)
+                                        (p.grch = %s AND p.left_primer_end = 1 AND p.right_primer_start >= %s + 25 AND p.right_primer_start <> 1)
                                     )
                                     """))
             values.extend([
@@ -282,21 +280,21 @@ def search_postgres(dbname, user, password, host,
                                         (
                                             (
                                                 p.grch = %s
-                                                AND p.left_primer_end <= %s
-                                                AND p.right_primer_start >= %s
+                                                AND p.left_primer_end <= %s - 25
+                                                AND p.right_primer_start >= %s + 25
                                             )
                                             OR
                                             (
                                                 p.grch = %s
-                                                AND p.left_primer_end <= %s
+                                                AND p.left_primer_end <= %s - 25
                                                 AND p.right_primer_start = 1
-                                                AND p.left_primer_start <> 1
+                                                AND p.left_primer_end <> 1
                                             )
                                             OR
                                             (
                                                 p.grch = %s
                                                 AND p.left_primer_end = 1
-                                                AND p.right_primer_start >= %s
+                                                AND p.right_primer_start >= %s + 25
                                                 AND p.right_primer_start <> 1
                                             )
                                         )

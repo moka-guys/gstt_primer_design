@@ -30,27 +30,6 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
     for col in ["passval"]:
         df_insert[col] = df_insert[col].replace([None, ""], "Not_Done")
 
-    # rename to DB columns
-    df_insert.rename(columns={
-        "start_POS": "start_pos",
-        "end_POS": "end_pos",
-        "Left_Sequence": "left_primer_seq",
-        "Right_Sequence": "right_primer_seq",
-        "Left_Start": "left_primer_start",
-        "Left_End": "left_primer_end",
-        "Right_Start": "right_primer_start",
-        "Right_End": "right_primer_end",
-        "Pair_Product_Size": "product_size",
-        "GRCh": "grch",
-        "tagged_FW": "p_tagged_left",
-        "tagged_RV": "p_tagged_right",
-        "tag": "p_tag",
-        "notes": "p_notes",
-        "passval": "p_passed_validation",
-        "archive": "p_archive",
-        "designer": "p_designer"
-    }, inplace=True)
-
     df_insert = df_insert.where(pd.notnull(df_insert), None)
 
     connection = get_postgres_connection(db_name, username, password, db_host)
@@ -92,25 +71,25 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
 
         values = (
             str(row["chr"]),
-            int(row["start_pos"]),
-            int(row["end_pos"]),
-            int(row["grch"]),
+            int(row["start_POS"]),
+            int(row["end_POS"]),
+            int(row["GRCh"]),
             str(row["primer_name"]) if row["primer_name"] else "NA",
-            str(row["left_primer_seq"]),
-            str(row["right_primer_seq"]),
-            int(row["left_primer_start"]) if row["left_primer_start"] is not None else 0,
-            int(row["left_primer_end"]) if row["left_primer_end"] is not None else 0,
-            int(row["right_primer_start"]) if row["right_primer_start"] is not None else 0,
-            int(row["right_primer_end"]) if row["right_primer_end"] is not None else 0,
-            int(row["product_size"]) if row["product_size"] is not None else 0,
+            str(row["Left_Sequence"]),
+            str(row["Right_Sequence"]),
+            int(row["Left_Start"]) if row["Left_Start"] is not None else 0,
+            int(row["Left_End"]) if row["Left_End"] is not None else 0,
+            int(row["Right_Start"]) if row["Right_Start"] is not None else 0,
+            int(row["Right_End"]) if row["Right_End"] is not None else 0,
+            int(row["Pair_Product_Size"]) if row["Pair_Product_Size"] is not None else 0,
             str(row["gene"]),
 
-            str(row["p_tagged_left"]),
-            str(row["p_tagged_right"]),
-            str(row["p_tag"]),
-            str(row["p_notes"]),
-            str(row["p_passed_validation"]),
-            str(row["p_archive"]),
+            str(row["tagged_FW"]),
+            str(row["tagged_RV"]),
+            str(row["tag"]),
+            str(row["notes"]),
+            str(row["passval"]),
+            str(row["archive"]),
             None,  # p_mix
             None,  # p_dilution_date
             None,  # p_tray
@@ -118,7 +97,7 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
             None,  # p_grid_fw
             None,   # p_grid_rv
             None,  # p_manufacturer
-            str(row["p_designer"])
+            str(row["designer"])
         )
 
         cursor.execute(query, values)

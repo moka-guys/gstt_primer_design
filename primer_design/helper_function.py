@@ -16,6 +16,7 @@ config_path = os.path.join(BASE_DIR, "config.json")
 with open(config_path, "r") as file:
     config = json.load(file)
 
+
 class PrimerRecord(BaseModel):
     chr: str | int
     primer_name: str
@@ -61,7 +62,8 @@ class PrimerRecord(BaseModel):
     @field_validator("tag")
     def validate_tag(cls, v):
         if v not in ("M13", "T1", "T2", "T3", "T4", "sT1", "FAM",
-                     "VIC", "NED", "PET", "no_tag"):
+                     "VIC", "NED", "PET", "ATTO550", "CY5",
+                     "ABY", "HEX", "no_tag"):
             raise ValueError("invalid tag")
         return v
 
@@ -383,7 +385,7 @@ def liftover(chrom, pos, build):
         return None
 
 
-def liftover_bed(chrom, start, end, grch):
+def liftover_crossmap(chrom, start, end, grch):
 
     CROSSMAP = shutil.which("CrossMap")
     if int(grch) == 37:

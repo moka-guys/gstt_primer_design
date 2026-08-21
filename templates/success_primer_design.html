@@ -69,7 +69,7 @@
     <li>"no common snp" means no snp with AF>=0.01 is present in designed primer region; but rare snp may still be present.</li>
 </ul>
 
-<form method="POST" action="{{ url_for('save_selected') }}">
+<form method="POST" action="{{ url_for('save_selected') }}" id="saveForm">
 
     <div class="table-responsive shadow-sm rounded">
     
@@ -156,6 +156,20 @@
         Or <a href="{{ url_for('igv_view', genome='hg38') }}">igv_view build38</a>
     {% endif %}
 </p>
+<script>
+    document.getElementById("saveForm").addEventListener("submit", function(event) {
 
+        const selectedRows = document.querySelectorAll(
+            'input[name="selected_rows"]:checked'
+        );
+
+        if (selectedRows.length === 0) {
+            event.preventDefault();
+
+            alert("You have not selected any row. Please select at least one row before saving.");
+        }
+
+    });
+</script>
 </body>
 </html>

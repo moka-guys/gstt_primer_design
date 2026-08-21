@@ -1,14 +1,12 @@
 import os
 import subprocess
 import uuid
-import argparse
 import pysam
 import json
 import primer3
 import pandas as pd
 import gffutils
 from primer_design.helper_function import *
-import csv
 from dataclasses import dataclass
 
 
@@ -39,7 +37,6 @@ class DesignPrimer:
         Use params from config unless they are
         specified in input file
         """
-        #self.excel = excel_writer
         with open(config_file, "r") as file:
             self.config = json.load(file)
         self.input_param = input_param
@@ -70,18 +67,16 @@ class DesignPrimer:
             self.common_snp = self.config["ref_b37"]["snp_ref"]
             self.exon_db = self.config["ref_b37"]["exon_ref"]
             self.nc_pair = self.config["nc_data_b37"]
-            #self.src1 = self.config["ref_b37"]["ref_genome_src"]
-            #self.src2 = self.config["ref_b37"]["common_snp_src"]
+
         elif self.build == 38:
             self.bowtie_ref = self.config["ref_b38"]["bowtie_ref"]
             self.ref_genome = self.config["ref_b38"]["genome_ref"]
             self.common_snp = self.config["ref_b38"]["snp_ref"]
             self.exon_db = self.config["ref_b38"]["exon_ref"]
             self.nc_pair = self.config["nc_data_b38"]
-            #self.src1 = self.config["ref_b38"]["ref_genome_src"]
-            #self.src2 = self.config["ref_b38"]["common_snp_src"]
+
         else:
-            self.logger.info("Invalid build is used in input file")        
+            self.logger.info("Invalid build is used in input file")
         self.logger.info(f"Primer design for {self.chr} {self.pos_start}-{self.pos_end}")
         self.logger.info(f"Design for Build {self.build} using {self.ref_genome}, "
                          f"{self.bowtie_ref}, {self.common_snp} and {self.exon_db}")
@@ -236,8 +231,7 @@ class DesignPrimer:
             "PRIMER_MAX_GC": self.max_gc,
             "PRIMER_MAX_POLY_X": self.config["design_param"]["primer_max_poly_x"],
             "PRIMER_GC_CLAMP": self.config["design_param"]["primer_gc_clamp"],
-            #"PRIMER_THERMODYNAMIC_PARAMETERS_PATH": self.config["primer3_config"]
-        }
+         }
         self.logger.info(f"primer is designed with parameters {param}")
         primers = primer3.bindings.design_primers(seq, param)
         primer_key_value = {}
@@ -593,8 +587,6 @@ class DesignPrimer:
                     designed_primer["gene"] = gene
                     designed_primer["exon_num"] = exon_num
                     designed_primer["transcript"] = transcript
-                    #designed_primer["ref_genome_source"] = self.src1
-                    #designed_primer["common_snp_source"] = self.src2
                     designed_primer["order_tag"] = self.tag
                     designed_primer["chr"] = self.chr
                     designed_primer["GRCh"] = self.build
@@ -603,12 +595,6 @@ class DesignPrimer:
                     designed_primer["primer_name"] = self.primer_name
                     self.logger.info(f"****primer found with padding {padding - 30}****")
                     del_file([f"designed_primer_{job_id}.fa", f"designed_primer_{job_id}.fa.sam"])
-                    #designed_primer.to_excel(self.excel, sheet_name=f"{self.chr}_{self.pos_start}_{self.pos_end}", index=False)
-                    #cols_to_check = ["Specificity", "snp_validity"]
-                    # take the 1st pair of valid primer to order
-                    #order_df = designed_primer[(designed_primer[cols_to_check] == "valid").all(axis=1)]
-                    #order_df = order_df.iloc[[0]]
-                    #order_df = order_df.reset_index(drop=True)
 
                 # if none of designed primer is valid and max padding not reach yet
                 elif valid_df.shape[0] == 0 and padding <= self.config["design_param"]["max_padding"]:
@@ -620,13 +606,6 @@ class DesignPrimer:
                     self.logger.info("Valid primer not found till max padding. "
                                      "Try with different config for primer design")
                     del_file([f"designed_primer_{job_id}.fa", f"designed_primer_{job_id}.fa.sam"])
-                    #empty_df = pd.DataFrame([{
-                                                #"chr": self.chr,
-                                                #"start": self.pos_start,
-                                                #"end": self.pos_end,
-                                                #"message": "No primers found. Try with different config values"
-                                            #}])
-                    #empty_df.to_excel(self.excel, sheet_name=f"{self.chr}_{self.pos_start}_{self.pos_end}", index=False)
 
         return designed_primer
 
@@ -647,12 +626,6 @@ class GeneratePrimer:
         Input: input csv file
         """
         input_param = parse_csv(input_file)
-        #order_sheet = f"/app/output/primer_order_sheet_TEST_VERSION_{self.datetimestr}.csv"
-        #output_file = (f"/app/output/designed_primer_{self.datetimestr}.xlsx")
-        #with open(order_sheet, "a", newline="") as csv_file:
-        #writer = csv.writer(csv_file)
-        #writer.writerow(["chr", "POS", "variant", "GRCh", "tag_name", "primer", "tagged_primer"])
-        #with pd.ExcelWriter(output_file, engine='openpyxl') as excel_writer:
         dfs = []
         for i in range(len(input_param["chrom"])):
             param_i = {k: v[i] for k, v in input_param.items() if k in InputParam.__annotations__}
@@ -660,18 +633,7 @@ class GeneratePrimer:
             start_design = DesignPrimer(self.config_path, self.datetimestr, param_dict)
             designed_primer = start_design.design_primer()
             dfs.append(designed_primer)
-            #del_file()
-            #if not order_primer.empty:
-                #(FW_primer, RV_primer,
-                #tagged_FW, tagged_RV,
-                #tag_name_FW, tag_name_RV) = get_tag(self.config_path, order_primer, input_param["tag"][i])
-                #writer.writerow([order_primer["chr"][0], order_primer["POS"][0],
-                                    #order_primer["variant"][0], order_primer["GRCh"][0],
-                                    #tag_name_FW, FW_primer, tagged_FW])
-                #writer.writerow([order_primer["chr"][0], order_primer["POS"][0],
-                                    #order_primer["variant"][0], order_primer["GRCh"][0],
-                                    #tag_name_RV, RV_primer, tagged_RV])
-                #insert_DB(order_primer, tagged_FW, tagged_RV, input_param["tag"][i], username, password,db_name, db_host, self.config_path)
+
         dfs = [df for df in dfs if not df.empty]
 
         if dfs:
@@ -679,9 +641,5 @@ class GeneratePrimer:
         else:
             df_all = pd.DataFrame()
 
-        #with open(order_sheet) as f:
-            #lines = f.readlines()
-        #if len(lines) <= 1:
-            #os.remove(order_sheet)
         return df_all
 

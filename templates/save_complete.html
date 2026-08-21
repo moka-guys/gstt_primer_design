@@ -11,16 +11,43 @@
     </h2>
 
     <p>
-        <a href="{{ url_for('download', source='auto') }}" class="btn btn-primary btn-lg">
+        <a href="{{ url_for('download', source='auto') }}"
+           id="downloadBtn"
+           class="btn btn-primary btn-lg">
             Download Order Sheet
         </a>
     </p>
 
     <br><br>
 
-    <a href="{{ url_for('design_primer') }}">
+    <a href="{{ url_for('design_primer') }}"
+       id="backBtn">
         Back to Design Page
     </a>
+
+    <script>
+        let hasDownloaded = false;
+
+        // Mark as downloaded when user clicks Download
+        document.getElementById("downloadBtn").addEventListener("click", function () {
+            hasDownloaded = true;
+        });
+
+        // Ask only if the user has NOT downloaded
+        document.getElementById("backBtn").addEventListener("click", function (event) {
+
+            if (!hasDownloaded) {
+                const confirmLeave = confirm(
+                    "You have not downloaded the Order Sheet. Are you sure you want to go back?"
+                );
+
+                if (!confirmLeave) {
+                    event.preventDefault();
+                }
+            }
+
+        });
+    </script>
 
 </body>
 </html>
