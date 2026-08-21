@@ -330,7 +330,13 @@ def design_primer():
                 "max_primer_size": max_primer_size[i]
             }
             rows.append(row)
-
+        # Remove rows if any value is missing
+        rows = [
+            row for row in rows
+            if all(str(value).strip() for value in row.values())
+        ]
+        if not rows:
+            return render_template("missing_input.html")
         # Get the fieldnames from the first dictionary
         fieldnames = rows[0].keys()
         # save into temp csv
@@ -350,14 +356,18 @@ def design_primer():
             )
             writer.writeheader()
             writer.writerows(rows)
-        empty_chr_rows = [row for row in rows if not row["chr"]]
+        #empty_chr_rows = [row for row in rows if not row["chr"]]
 
-        if csv_file and csv_file.endswith(".csv") and not empty_chr_rows:
+        if csv_file and csv_file.endswith(".csv"): # and not empty_chr_rows:
             app_datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
             random_uuid = uuid.uuid4()
             session['primer_input'] = rows
             order_primer = GeneratePrimer(app_datetimestr)
-            output = order_primer.parse_input(csv_file)
+            output, error = order_primer.parse_input(csv_file)
+            if error:
+                app.logger.error(f"Primer design error: {error}")
+                del_file([csv_file])
+                return render_template("invalid_input.html", error=error)
             app.logger.info("Primer design done")
             session['primer_output'] = output.to_dict(orient='records')
             session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{app_datetimestr}.csv'

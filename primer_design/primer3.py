@@ -626,6 +626,8 @@ class GeneratePrimer:
         Input: input csv file
         """
         input_param = parse_csv(input_file)
+        if "error" in input_param:
+            return pd.DataFrame(), input_param["error"]
         dfs = []
         for i in range(len(input_param["chrom"])):
             param_i = {k: v[i] for k, v in input_param.items() if k in InputParam.__annotations__}
@@ -641,5 +643,5 @@ class GeneratePrimer:
         else:
             df_all = pd.DataFrame()
 
-        return df_all
+        return df_all, None
 

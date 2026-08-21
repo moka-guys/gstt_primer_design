@@ -40,9 +40,10 @@ class PrimerRecord(BaseModel):
                      "min_gc", "max_gc", "opt_gc", "min_product_size",
                      "max_product_size", "opt_primer_size",
                      "min_primer_size", "max_primer_size")
-    def non_negative(cls, v, field):
+    @classmethod
+    def non_negative(cls, v, info):
         if v < 0:
-            raise ValueError(f"{field.name} must not be negative")
+            raise ValueError(f"{info.field_name} must not be negative")
         return v
 
     @field_validator("chr")
@@ -89,20 +90,21 @@ def get_log(file_dir, datetimestr) -> logging.Logger:
 
     logger = logging.getLogger(f"primer_log_{datetimestr}")
     logger.setLevel(logging.DEBUG)
-    logger.propagate = False  # prevent logging to root/app logger
+    logger.propagate = False
+
     if not logger.hasHandlers():
-        # Console handler
-        console_handler = logging.StreamHandler()
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
-        # File handler
         outdir = os.path.join(file_dir, "primer_log")
-        if not os.path.exists(outdir):
-            os.makedirs(outdir)
+        os.makedirs(outdir, exist_ok=True)
 
-        log_file = os.path.join(outdir, f"primer_design_{datetimestr}.log")
+        log_file = os.path.join(
+            outdir,
+            f"primer_design_{datetimestr}.log"
+        )
+
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -156,15 +158,17 @@ def parse_csv(file):
     """
     df = pd.read_csv(file)
     # drop empty rows
-    cols = ["chr", "pos_start", "pos_end", "build", "tag"]
-    df = df[df[cols].notna().all(axis=1)]
+    #cols = ["chr", "pos_start", "pos_end", "build", "tag"]
+    #df = df[df[cols].notna().all(axis=1)]
     for c in ["pos_start", "pos_end", "build"]:
         df[c] = df[c].astype("Int64")
     df["chr"] = df["chr"].apply(chr_to_int64)
 
     if df.empty:
         print("At least one valid region is required to design primers")
-        raise SystemExit
+        return {
+                "error": "At least one valid region is required to design primers"
+                }
     errors = validate_primer_csv(df)
     if not errors:
         chrom = df["chr"].to_list()
@@ -205,7 +209,9 @@ def parse_csv(file):
         }
     else:
         print(errors)
-        raise SystemExit
+        return {
+                "error": errors
+                }
 
 
 def get_value(param_value, default):
@@ -307,9 +313,9 @@ def del_file(files_to_remove=None, base_dir="/app"):
             path = os.path.join(root, f)
             if os.path.exists(path):
                 os.remove(path)
-                print("Deleted:", path)
-            else:
-                print("None to delete")
+            #     print("Deleted:", path)
+            # else:
+            #     print("None to delete")
 
 
 def get_postgres_connection(db_name, db_user, db_password, db_host):

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Error</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .error-card {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            padding: 35px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0 0 15px;
+            color: #c0392b;
+            font-size: 28px;
+        }
+
+        .error-message {
+            background-color: #fdf0ef;
+            border: 1px solid #f5c6c2;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0 25px;
+            text-align: left;
+            color: #8a2d24;
+            white-space: pre-line;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 11px 22px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="error-card">
+
+            <div class="error-icon">⚠️</div>
+
+            <h1>Invalid Input</h1>
+
+            <div class="error-message">
+                {{ error }}
+            </div>
+
+            <a href="{{ url_for('design_primer') }}" class="back-button">
+                Go Back
+            </a>
+
+        </div>
+    </div>
+</body>
+</html>
