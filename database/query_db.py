@@ -321,8 +321,8 @@ def search_postgres(dbname, user, password, host,
     query += sql.SQL(" ORDER BY insert_time ASC, primer_id ASC LIMIT 10000")
     conn = get_postgres_connection(dbname, user, password, host)
     cursor = conn.cursor()
-    print(query)
-    print(select_values + values)
+    #print(query)
+    #print(select_values + values)
     cursor.execute(query, select_values + values)
 
     rows = cursor.fetchall()

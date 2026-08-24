@@ -356,9 +356,8 @@ def design_primer():
             )
             writer.writeheader()
             writer.writerows(rows)
-        #empty_chr_rows = [row for row in rows if not row["chr"]]
 
-        if csv_file and csv_file.endswith(".csv"): # and not empty_chr_rows:
+        if csv_file and csv_file.endswith(".csv"):
             app_datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
             random_uuid = uuid.uuid4()
             session['primer_input'] = rows
@@ -368,7 +367,6 @@ def design_primer():
                 app.logger.error(f"Primer design error: {error}")
                 del_file([csv_file])
                 return render_template("invalid_input.html", error=error)
-            app.logger.info("Primer design done")
             session['primer_output'] = output.to_dict(orient='records')
             session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{app_datetimestr}.csv'
             del_file([csv_file])
@@ -764,8 +762,6 @@ def download(source):
     if not os.path.exists(full_path):
         app.logger.error("download file not found")
         return render_template("download_not_found.html")
-    else:
-        app.logger.info("attempt to download")
 
     response = send_from_directory(
         directory=directory,
@@ -1126,6 +1122,25 @@ def manual_insert():
             return render_template("insert_error.html", error_message=str(e))
 
     return render_template("manual_insert.html")
+
+
+@app.route("/app_logs")
+@login_required
+def app_logs():
+    try:
+        with open("/app/logs/primer_app.log", "r") as f:
+            logs = f.read()
+
+        return jsonify({"logs": logs})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/view_log")
+@login_required
+def view_log():
+    return render_template("view_log.html")
 
 
 @app.route("/logout")

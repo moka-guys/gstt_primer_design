@@ -86,14 +86,31 @@ body{
     text-align:center;
 }
 
-.logout a{
+.view-logs{
+    display:inline-block;
+    padding:6px 12px;
+    margin-right:20px;
+    background:#e9eef7;
+    color:#2575fc;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:13px;
+    border-radius:5px;
+    border:1px solid #cbd5e1;
+}
+
+.view-logs:hover{
+    background:#dbe5f5;
+}
+
+.logout-link{
     color:#c62828;
     text-decoration:none;
     font-weight:bold;
     font-size:16px;
 }
 
-.logout a:hover{
+.logout-link:hover{
     text-decoration:underline;
 }
 
@@ -139,10 +156,14 @@ body{
 
     <div class="logout">
 
-        <a href="{{ url_for('logout') }}">
+        <a href="{{ url_for('view_log') }}" class="view-logs">
+            View Logs
+        </a>
+    
+        <a href="{{ url_for('logout') }}" class="logout-link">
             Log Out
         </a>
-
+    
     </div>
 
 </div>

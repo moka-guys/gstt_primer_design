@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Application Logs</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6fa;
+        }
+    
+        .container {
+            width: calc(100% - 40px);
+            height: calc(100vh - 40px);
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-sizing: border-box;
+            box-shadow: 0 8px 20px rgba(0,0,0,.15);
+    
+            display: flex;
+            flex-direction: column;
+        }
+    
+        h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+    
+        .logs {
+            background: #1e1e1e;
+            color: #00ff88;
+            padding: 20px;
+            border-radius: 8px;
+    
+            /* Fill the available screen */
+            flex: 1;
+    
+            overflow-y: auto;
+            overflow-x: auto;
+    
+            white-space: pre-wrap;
+            word-wrap: break-word;
+    
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+    
+            box-sizing: border-box;
+        }
+    
+        .back {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 18px;
+            background: #2575fc;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            align-self: flex-start;
+        }
+    
+        .back:hover {
+            background: #125fd0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Application Logs</h1>
+
+    <pre id="logs" class="logs">Loading logs...</pre>
+
+    <a href="{{ url_for('index') }}" class="back">
+        Back to Home
+    </a>
+
+</div>
+
+<script>
+async function loadLogs() {
+    const logsElement = document.getElementById("logs");
+
+    try {
+        const response = await fetch("/app_logs");
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to load logs");
+        }
+
+        logsElement.textContent = data.logs || "No logs found.";
+
+        // Scroll to the newest log
+        logsElement.scrollTop = logsElement.scrollHeight;
+
+    } catch (error) {
+        logsElement.textContent =
+            "Error loading logs: " + error.message;
+    }
+}
+
+// Load logs when view_log.html opens
+loadLogs();
+</script>
+
+</body>
+</html>
