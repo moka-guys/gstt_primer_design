@@ -1,0 +1,10 @@
+static/temp/*
+flask_session
+output
+logs
+.env
+.git
+pg_setup
+INFO.docx
+database/add_app_user.py
+database/multiple_filters.json

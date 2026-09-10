@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GSTT Primer Database</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f4f6fa;
+}
+
+/* Header */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#ffffff;
+    padding:15px 30px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.header h2{
+    margin:0;
+    color:#333;
+}
+
+/* Change password link */
+.change-password{
+    color:#0066cc;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.change-password:hover{
+    text-decoration:underline;
+}
+
+/* Main white box */
+.container{
+    width:700px;
+    margin:60px auto;
+    background:white;
+    border-radius:12px;
+    padding:40px;
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
+
+.container h1{
+    text-align:center;
+    color:#444;
+    margin-bottom:40px;
+}
+
+/* Main buttons */
+.menu{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+}
+
+.menu a{
+    width:320px;
+    padding:18px;
+    text-align:center;
+    text-decoration:none;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    background:#2575fc;
+    border-radius:10px;
+    transition:.3s;
+}
+
+.menu a:hover{
+    background:#125fd0;
+    transform:translateY(-3px);
+}
+
+/* Logout */
+.logout{
+    margin-top:50px;
+    text-align:center;
+}
+
+.view-logs{
+    display:inline-block;
+    padding:6px 12px;
+    margin-right:20px;
+    background:#e9eef7;
+    color:#2575fc;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:13px;
+    border-radius:5px;
+    border:1px solid #cbd5e1;
+}
+
+.view-logs:hover{
+    background:#dbe5f5;
+}
+
+.logout-link{
+    color:#c62828;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:16px;
+}
+
+.logout-link:hover{
+    text-decoration:underline;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+    <h2>Welcome, {{ username }}!</h2>
+
+    <a href="{{ url_for('change_password') }}" class="change-password">
+        Change Password
+    </a>
+
+</div>
+
+<div class="container">
+
+    <h1>PRADA (PRimer and Amplicon Design Application)</h1>
+
+    <div class="menu">
+
+        <a href="{{ url_for('design_primer') }}">
+            Design Primer
+        </a>
+
+        <a href="{{ url_for('query_data') }}">
+            Query PRADA Data
+        </a>
+
+        <a href="{{ url_for('manual_insert') }}">
+            Insert Primer Manually into PRADA
+        </a>
+
+        <a href="{{ url_for('moka_index') }}">
+            Query Legacy MOKA  Data
+        </a>
+
+    </div>
+
+    <div class="logout">
+
+        <a href="{{ url_for('view_log') }}" class="view-logs">
+            View Logs
+        </a>
+    
+        <a href="{{ url_for('logout') }}" class="logout-link">
+            Log Out
+        </a>
+    
+    </div>
+
+</div>
+
+<script>
+window.addEventListener("beforeunload", function () {
+    navigator.sendBeacon("/logout");
+});
+</script>
+
+</body>
+</html>

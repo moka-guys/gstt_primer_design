@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Design Primer(s)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #d9e6f2);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 50px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            max-width: 95%;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1, h2 {
+            color: #2575fc;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 3px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            -moz-appearance: textfield;
+
+        }
+        /* Remove arrows in Chrome, Safari, Edge */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            table-layout: fixed; /* ensures columns respect width */
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 3px;
+            font-size: 12px;
+            text-align: left;
+            overflow: hidden;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        th {
+            line-height: 1.2;
+        }
+
+        /* Set specific column widths */
+        th.chr, td.chr { width: 5px; }
+        th.primer_name, td.primer_name { width: 30px; }
+        th.pos_start, td.pos_start { width: 20px; }
+        th.pos_end, td.pos_end { width: 20px; }
+        th.build, td.build { width: 5px; }
+        th.tag, td.tag { width: 10px; }
+        th.opt_tm, td.opt_tm { width: 10px; }
+        th.min_tm, td.min_tm { width: 10px; }
+        th.max_tm, td.max_tm { width: 10px; }
+        th.opt_gc, td.opt_gc { width: 10px; }
+        th.min_gc, td.min_gc { width: 10px; }
+        th.max_gc, td.max_gc { width: 10px; }
+        th.min_product_size, td.min_product_size { width: 15px; }
+        th.max_product_size, td.max_product_size { width: 15px; }
+        th.opt_primer_size, td.opt_primer_size { width: 15px; }
+        th.min_primer_size, td.min_primer_size { width: 15px; }
+        th.max_primer_size, td.max_primer_size { width: 15px; }
+        button {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .back-link {
+            margin-top: 15px;
+            display: inline-block;
+            color: #2575fc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover { color: #6a11cb; }
+    </style>
+
+<script>
+    function addRow() {
+        const table = document.getElementById("inputTable");
+        const rowCount = table.rows.length;
+        const row = table.insertRow(rowCount);
+
+        const fields = [
+            "chr","primer_name", "pos_start","pos_end","build","tag",
+            "opt_tm","min_tm","max_tm","opt_gc","min_gc","max_gc",
+            "min_product_size","max_product_size",
+            "opt_primer_size","min_primer_size","max_primer_size"
+        ];
+
+        const types = [
+            "text","text", "number","number","number","text",
+            "number","number","number","number","number","number",
+            "number","number","number","number","number"
+        ];
+
+        // default values for new rows
+        const defaults = {
+            build: 37,
+            primer_name: "primer_name",
+            tag: "T1",
+            opt_tm: 60,
+            min_tm: 58,
+            max_tm: 63,
+            opt_gc: 50,
+            min_gc: 40,
+            max_gc: 60,
+            min_product_size: 100,
+            max_product_size: 600,
+            opt_primer_size: 22,
+            min_primer_size: 19,
+            max_primer_size: 28
+        };
+
+        for (let i = 0; i < fields.length; i++) {
+            const cell = row.insertCell(i);
+            cell.className = fields[i];
+
+            const input = document.createElement("input");
+            input.type = types[i];
+            input.name = fields[i] + "[]";
+
+            // apply default value if it exists
+            if (defaults.hasOwnProperty(fields[i])) {
+                input.value = defaults[fields[i]];
+            }
+             // allow decimal for temp and gc
+             if (["opt_tm", "min_tm", "max_tc", 
+                  "opt_gc", "min_gc", "max_gc"].includes(fields[i])) {
+                    input.step = "any";
+                }
+
+            cell.appendChild(input);
+        }
+    }
+</script>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: red;">This is Test Server. Do not use for Production/Clinical Service</h1>
+        <h1>Design Primer</h1>
+        <h2>Key in primer parameters</h2>
+        
+
+        <form method="POST">
+            <div class="table-wrapper">
+                <table id="inputTable">
+
+                    <tr>
+                        <th class="chr">chr</th>
+                        <th class="primer_name">primer_name</th>
+                        <th class="pos_start">pos_start</th>
+                        <th class="pos_end">pos_end</th>
+                        <th class="build">build</th>
+                        <th class="tag">tag</th>
+                        <th class="opt_tm">opt_tm</th>
+                        <th class="min_tm">min_tm</th>
+                        <th class="max_tm">max_tm</th>
+                        <th class="opt_gc">opt_gc</th>
+                        <th class="min_gc">min_gc</th>
+                        <th class="max_gc">max_gc</th>
+                        <th class="min_product_size">min_product_size</th>
+                        <th class="max_product_size">max_product_size</th>
+                        <th class="opt_primer_size">opt_primer_size</th>
+                        <th class="min_primer_size">min_primer_size</th>
+                        <th class="max_primer_size">max_primer_size</th>
+                    </tr>
+
+                    {% if saved_rows %}
+
+                        {% for row in saved_rows %}
+                        <tr>
+
+                            <td class="chr">
+                                <input type="text" name="chr[]" value="{{ row.chr }}">
+                            </td>
+
+                            <td class="primer_name">
+                                <input type="text" name="primer_name[]" value="{{ row.primer_name }}">
+                            </td>
+
+                            <td class="pos_start">
+                                <input type="number" name="pos_start[]" value="{{ row.pos_start }}">
+                            </td>
+
+                            <td class="pos_end">
+                                <input type="number" name="pos_end[]" value="{{ row.pos_end }}">
+                            </td>
+
+                            <td class="build">
+                                <input type="number" name="build[]" value="{{ row.build }}">
+                            </td>
+
+                            <td class="tag">
+                                <input type="text" name="tag[]" value="{{ row.tag }}">
+                            </td>
+
+                            <td class="opt_tm">
+                                <input type="number" step="any" name="opt_tm[]" value="{{ row.opt_tm }}">
+                            </td>
+
+                            <td class="min_tm">
+                                <input type="number" step="any" name="min_tm[]" value="{{ row.min_tm }}">
+                            </td>
+
+                            <td class="max_tm">
+                                <input type="number" step="any" name="max_tm[]" value="{{ row.max_tm }}">
+                            </td>
+
+                            <td class="opt_gc">
+                                <input type="number" step="any" name="opt_gc[]" value="{{ row.opt_gc }}">
+                            </td>
+
+                            <td class="min_gc">
+                                <input type="number" step="any" name="min_gc[]" value="{{ row.min_gc }}">
+                            </td>
+
+                            <td class="max_gc">
+                                <input type="number" step="any" name="max_gc[]" value="{{ row.max_gc }}">
+                            </td>
+
+                            <td class="min_product_size">
+                                <input type="number" name="min_product_size[]" value="{{ row.min_product_size }}">
+                            </td>
+
+                            <td class="max_product_size">
+                                <input type="number" name="max_product_size[]" value="{{ row.max_product_size }}">
+                            </td>
+
+                            <td class="opt_primer_size">
+                                <input type="number" name="opt_primer_size[]" value="{{ row.opt_primer_size }}">
+                            </td>
+
+                            <td class="min_primer_size">
+                                <input type="number" name="min_primer_size[]" value="{{ row.min_primer_size }}">
+                            </td>
+
+                            <td class="max_primer_size">
+                                <input type="number" name="max_primer_size[]" value="{{ row.max_primer_size }}">
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                    {% else %}
+
+                        <tr>
+                            <td class="chr"><input type="text" name="chr[]"></td>
+                            <td class="primer_name"><input type="text" name="primer_name[]" value="primer_name"></td>
+                            <td class="pos_start"><input type="number" name="pos_start[]"></td>
+                            <td class="pos_end"><input type="number" name="pos_end[]"></td>
+                            <td class="build"><input type="number" name="build[]" value="37"></td>
+                            <td class="tag"><input type="text" name="tag[]" value="T1"></td>
+                            <td class="opt_tm"><input type="number" name="opt_tm[]" value="60" step="any"></td>
+                            <td class="min_tm"><input type="number" name="min_tm[]" value="58" step="any"></td>
+                            <td class="max_tm"><input type="number" name="max_tm[]" value="63" step="any"></td>
+                            <td class="opt_gc"><input type="number" name="opt_gc[]" value="50" step="any"></td>
+                            <td class="min_gc"><input type="number" name="min_gc[]" value="40" step="any"></td>
+                            <td class="max_gc"><input type="number" name="max_gc[]" value="60" step="any"></td>
+                            <td class="min_product_size"><input type="number" name="min_product_size[]" value="100"></td>
+                            <td class="max_product_size"><input type="number" name="max_product_size[]" value="600"></td>
+                            <td class="opt_primer_size"><input type="number" name="opt_primer_size[]" value="22"></td>
+                            <td class="min_primer_size"><input type="number" name="min_primer_size[]" value="19"></td>
+                            <td class="max_primer_size"><input type="number" name="max_primer_size[]" value="28"></td>
+                        </tr>
+
+                    {% endif %}
+                </table>
+            </div>
+            <button type="button" onclick="addRow()">Add Row</button>
+            <button type="submit">Submit All</button>
+        </form>
+
+        <style>
+            .back-link {
+                display: block;     /* makes the link take the full row */
+                margin: 10px 0;     /* spacing between links */
+            }
+            </style>
+            
+            <a href="{{ url_for('index') }}" class="back-link">Back to Home</a>
+            <a href="{{ url_for('logout') }}" class="back-link">Log Out</a>
+    </div>
+</body>
+</html>

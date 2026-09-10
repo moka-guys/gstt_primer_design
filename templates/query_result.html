@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Query Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .container.mt-5 {
+            max-width: 95%;
+        }
+        #dataTable {
+            width: max-content;
+            min-width: 100%;
+        }
+        #dataTable th:nth-child(6),
+        #dataTable td:nth-child(6) {
+            min-width: 100px;
+        }
+        td .editable-cell {
+            background-color: #ffee8c;
+            padding: 5px;
+            border-radius: 4px;
+            min-height: 20px;
+        }
+
+        td .editable-cell:focus {
+            background-color: #ffffff;
+        }
+
+        select.editable-select {
+            background-color: #ffee8c;
+        }
+        .highlight-green {
+        background-color: #d4edda !important;
+        }
+        /* Make table scrollable */
+        .table-responsive {
+            max-height: 80vh;
+            overflow-y: auto;
+            overflow-x: auto;
+            border: 1px solid #dee2e6;
+        }
+
+        .table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #cfe2ff;
+        color: #000;
+        }
+
+        .table td:first-child,
+        .table th:first-child {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 3;
+        }
+
+        .table thead th:first-child {
+            z-index: 4;
+            background: #cfe2ff;
+            color:#000
+        }
+
+        /* Selected row highlight */
+        .table tbody tr.selected-row td {
+            background-color: #b8c1d1 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+
+    <h3 class="mb-4">Query Result</h3>
+
+    <p style="color: green;">Editable columns are highlighted in yellow.</p>
+    <p style="color: green;">Click "Save" button after edit. Green highlight confirms successful editing.</p>
+    <p style="color: green;">If start and end POS are given, the primer that falls within is highlighted in green.</p>
+    <p style="color: green;">Maximum row to return is limited to 10000.</p>
+
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+
+    {% elif results and results|length > 0 %}
+
+    <div class="table-responsive">
+
+        <table class="table table-bordered table-hover" id="dataTable">
+
+                <thead class="table-dark">
+                    <tr>
+                        {% for key in results[0].keys() if key not in ['lt_in_range', 'rt_in_range'] %}
+                            <th>{{ key }}</th>
+                        {% endfor %}
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in results %}
+
+                        {% set is_batch = 'primer_id' in row %}
+                        {% set row_id = row['primer_id'] if is_batch else row['primer_id'] %}
+                        {% set row_type = 'batches' %}
+
+                        <tr data-id="{{ row_id }}" data-type="{{ row_type }}"
+                            >
+
+                            {% for key, value in row.items() if key not in ['lt_in_range', 'rt_in_range'] %}
+
+                            <td data-col="{{ key }}"
+                            class="
+                            {% if key in ['left_primer_start', 'left_primer_end'] and row.lt_in_range %}
+                                highlight-green
+                            {% elif key in ['right_primer_start', 'right_primer_end'] and row.rt_in_range %}
+                                highlight-green
+                            {% endif %}
+                            ">
+
+                                    {% if key == "archive" %}
+
+                                        <select class="form-select form-select-sm editable-select">
+                                            <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>
+                                            <option value="No" {% if value == "No" %}selected{% endif %}>No</option>
+                                        </select>
+                                    
+                                    {% elif key == "passed_validation" %}
+
+                                        <select class="form-select form-select-sm editable-select">
+                                            <option value="Pass" {% if value == "Pass" %}selected{% endif %}>Pass</option>
+                                            <option value="Fail" {% if value == "Fail" %}selected{% endif %}>Fail</option>
+                                            <option value="Not_Done" {% if value == "Not_Done" %}selected{% endif %}>Not_Done</option>
+                                        </select>
+
+                                    {% elif key in editable_columns %}
+
+                                        <div contenteditable="true" class="editable-cell">
+                                            {{ value }}
+                                        </div>
+
+                                    {% else %}
+
+                                        {{ value }}
+
+                                    {% endif %}
+
+                                </td>
+
+                            {% endfor %}
+
+                            <td>
+                                <button class="btn btn-sm btn-primary save-btn">Save</button>
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+                </tbody>
+
+            </table>
+            <div class="alert alert-warning">{{ msg }}</div>
+        </div>
+    </div>
+
+    {% else %}
+        <div class="alert alert-warning">No results found.</div>
+    {% endif %}
+
+    <div class="mt-4 d-flex gap-2">
+        <a href="{{ url_for('export_csv') }}" class="btn btn-secondary">Export table as csv file</a>        
+        <a href="{{ url_for('query_data') }}" class="btn btn-secondary">New Query</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Home</a>
+    </div>
+
+    <script>
+    document.querySelectorAll('.save-btn').forEach(button => {
+        button.addEventListener('click', function() {
+
+            const row = this.closest('tr');
+            const id = row.dataset.id;
+            const tableType = row.dataset.type;
+
+            const cells = row.querySelectorAll('[data-col]');
+
+            let updatedData = {};
+
+            cells.forEach(cell => {
+                const col = cell.dataset.col;
+
+                // Handle dropdown (passed_validation)
+                const select = cell.querySelector('select');
+                if (select) {
+                    updatedData[col] = select.value;
+                    return;
+                }
+
+                // Handle editable text
+                const editableDiv = cell.querySelector('.editable-cell');
+                if (editableDiv) {
+                    updatedData[col] = editableDiv.innerText.trim();
+                }
+            });
+
+            fetch("{{ url_for('update_row') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id,
+                    table_type: tableType,
+                    data: updatedData
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    row.classList.add('table-success');
+                    setTimeout(() => row.classList.remove('table-success'), 1000);
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Update failed');
+            });
+
+        });
+    });
+    // Row selection highlight
+    document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll("#dataTable tbody tr").forEach(row => {
+        row.addEventListener("click", function(event) {
+
+            // Do not trigger row selection when clicking Save button
+            if (event.target.classList.contains("save-btn")) {
+                return;
+            }
+
+            // Remove previous selection
+            document.querySelectorAll("#dataTable tbody tr")
+                .forEach(r => r.classList.remove("selected-row"));
+
+            // Highlight current row
+            this.classList.add("selected-row");
+        });
+    });
+
+    });
+
+    </script>
+</body>
+</html>

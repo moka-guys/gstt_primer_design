@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Success</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            padding: 50px;
+        }
+        .box {
+            display: inline-block;
+            padding: 30px;
+            background: #e6ffe6;
+            border-radius: 10px;
+        }
+        a, button {
+            margin: 10px;
+            padding: 10px 20px;
+            text-decoration: none;
+            border: none;
+            border-radius: 6px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        .download-btn {
+            background: #007bff;
+        }
+
+        .home-btn {
+            background: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>✅ Insert Successful!</h2>
+        <!-- INSERT MORE -->
+        <a href="{{ url_for('manual_insert') }}"
+           onclick="return confirmLeave();">
+            Insert More
+        </a>
+        <p style="margin-top:15px; color:#555;">
+            Complete all primer insertions before downloading the order sheet
+            so all primers are in a single order sheet.
+        </p>
+
+        <!-- DOWNLOAD -->
+        <p>
+            <a href="{{ url_for('download', source='manual') }}"
+               class="download-btn"
+               onclick="orderDownloaded = true;"
+               style="margin-top: 15px; display: inline-block;">
+                Download Order Sheet
+            </a>
+        </p>
+        <!-- HOME -->
+        <a href="{{ url_for('index') }}"
+           class="home-btn"
+           onclick="return confirmLeave();">
+            Go to Home
+        </a>
+    </div>
+
+
+    <script>
+
+        let orderDownloaded = false;
+
+        function confirmLeave() {
+
+            // If the user has already clicked Download,
+            // allow them to leave without asking.
+            if (orderDownloaded) {
+                return true;
+            }
+
+            // Otherwise ask for confirmation.
+            return confirm(
+                "⚠️ The current order sheet has not been downloaded yet.\n\n" +
+                "Are you sure you want to leave this page without " +
+                "downloading it?"
+            );
+        }
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IGV Viewer with Primers</title>
+    <script src="https://cdn.jsdelivr.net/npm/igv/dist/igv.min.js"></script>
+</head>
+<body>
+    <h2>IGV Viewer with Primers</h2>
+    <h3 style="color: red;">This is Test Server. Do not use for Production/Clinical Service</h3>
+    <div id="igv-div" style="width: 100%; height: 500px;"></div>
+    <script>
+        const genome = "{{ initial_query.genome }}";
+        const initialQuery = {{ initial_query | tojson | safe }};    
+        const primersBedUrl = "{{ url_for('static', filename='temp/' + primer_bed) }}";
+        const snpsbedUrl    = "{{ url_for('static', filename='temp/' + snp_bed) }}";
+    
+    
+        console.log("Genome:", genome);
+        console.log("Primers BED URL:", primersBedUrl);
+        console.log("SNPs BED URL:", snpsbedUrl);
+    </script>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <style>
+        .back-link {
+            display: block;     /* makes the link take the full row */
+            margin: 10px 0;     /* spacing between links */
+        }
+    </style>
+
+    <a href="{{ url_for('success_primer_design') }}" class="back-link">Back to primer outputs</a>
+    <a href="{{ url_for('logout') }}" class="back-link">Log Out</a>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Missing Input</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+
+    <div class="alert alert-warning">
+        <h4 class="alert-heading">Missing Input</h4>
+        <p>
+            Missing valid input(s) to design primers.
+            Please check your input and try again.
+        </p>
+    </div>
+
+    <p>
+        Go to
+        <a href="{{ url_for('index') }}">Home Page</a> or
+        <a href="{{ url_for('design_primer') }}">Design Primer</a>
+    </p>
+
+</body>
+</html>
