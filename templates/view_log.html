@@ -88,12 +88,12 @@ async function loadLogs() {
     const logsElement = document.getElementById("logs");
 
     try {
-        const response = await fetch("/app_logs");
-        const data = await response.json();
+        const response = await fetch("{{ url_for('app_logs') }}");
 
         if (!response.ok) {
-            throw new Error(data.error || "Failed to load logs");
+            throw new Error("Server returned HTTP " + response.status);
         }
+        const data = await response.json();
 
         logsElement.textContent = data.logs || "No logs found.";
 
@@ -101,6 +101,7 @@ async function loadLogs() {
         logsElement.scrollTop = logsElement.scrollHeight;
 
     } catch (error) {
+        console.error("Error loading logs:", error);
         logsElement.textContent =
             "Error loading logs: " + error.message;
     }

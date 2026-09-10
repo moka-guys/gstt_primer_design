@@ -20,3 +20,4 @@ test
 .coverage
 database/__pycache__/
 primer_design/__pycache__/
+moka_status_code

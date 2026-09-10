@@ -181,29 +181,45 @@
         <a href="{{ url_for('index') }}" class="home-btn">Home Page</a>
     </form>
     <script>
-        document.querySelector("form").addEventListener("submit", function(event) {
-        
-            const variantPos = document.querySelector('input[name="variant_pos"]').value.trim();
-            const startPos = document.querySelector('input[name="start"]').value.trim();
-            const endPos = document.querySelector('input[name="end"]').value.trim();
-            const grch = document.querySelector('select[name="grch"]').value;
-        
-            const hasCoordinate =
-                variantPos !== "" ||
-                startPos !== "" ||
-                endPos !== "";
-        
-            if (hasCoordinate && grch === "") {
-                event.preventDefault();
-        
-                alert(
-                    "Please select GRCh 37 or GRCh 38 when entering Variant POS, Start Position, or End Position."
-                );
-        
-                document.querySelector('select[name="grch"]').focus();
-            }
-        });
-        </script>
+    document.querySelector("form").addEventListener("submit", function(event) {
+
+        const variantPos = document.querySelector('input[name="variant_pos"]').value.trim();
+        const startPos = document.querySelector('input[name="start"]').value.trim();
+        const endPos = document.querySelector('input[name="end"]').value.trim();
+        const grch = document.querySelector('select[name="grch"]').value;
+        const chromosome = document.querySelector('input[name="chr"]').value.trim();
+
+        const hasCoordinate =
+            variantPos !== "" ||
+            startPos !== "" ||
+            endPos !== "";
+
+        // Check GRCh
+        if (hasCoordinate && grch === "") {
+            event.preventDefault();
+
+            alert(
+                "Please select GRCh 37 or GRCh 38 when entering Variant POS, Start Position, or End Position."
+            );
+
+            document.querySelector('select[name="grch"]').focus();
+            return;
+        }
+
+        // Check chromosome
+        if (hasCoordinate && chromosome === "") {
+            event.preventDefault();
+
+            alert(
+                "Please enter a chromosome when entering Variant POS, Start Position, or End Position."
+            );
+
+            document.querySelector('input[name="chr"]').focus();
+            return;
+        }
+    });
+    </script>
+
 </div>
 </body>
 </html>

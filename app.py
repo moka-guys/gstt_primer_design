@@ -431,6 +431,17 @@ def query_data():
                     "Variant POS, Start Position, or End Position."
                 )
             )
+        # If any genomic coordinate is provided, chr is required
+        if (variant_pos or start or end) and not chr_val:
+            return render_template(
+                "query_result.html",
+                results=None,
+                editable_columns=None,
+                error=(
+                    "Please select a chromosome when using "
+                    "Variant POS, Start Position, or End Position."
+                )
+            )
         # ensure at least one filter exists
         if not any([chr_val, gene_val, primer_name, primer_id, passed_validation,
                     grch, tray, start, end, archive, notes, start_date, end_date,
