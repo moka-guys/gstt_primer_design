@@ -172,8 +172,8 @@
 
     <div class="mt-4 d-flex gap-2">
         <a href="{{ url_for('export_csv') }}" class="btn btn-secondary">Export table as csv file</a>        
-        <a href="{{ url_for('query_data') }}" class="btn btn-secondary">New Query</a>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Home</a>
+        <a href="{{ url_for('query_data', db_schema=db_schema) }}" class="btn btn-secondary">New Query</a>
+        <a href="{{ url_for('home_page') }}" class="btn btn-secondary">Home</a>
     </div>
 
     <script>
@@ -205,7 +205,7 @@
                 }
             });
 
-            fetch("{{ url_for('update_row') }}", {
+            fetch("{{ url_for('update_row', db_schema=db_schema) }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

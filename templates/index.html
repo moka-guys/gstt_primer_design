@@ -1,178 +1,1246 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>GSTT Primer Database</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
+    <title>GSTT Primer Database | PRADA</title>
 
-body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:#f4f6fa;
-}
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
 
-/* Header */
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:#ffffff;
-    padding:15px 30px;
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
-}
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-.header h2{
-    margin:0;
-    color:#333;
-}
+    <style>
 
-/* Change password link */
-.change-password{
-    color:#0066cc;
-    text-decoration:none;
-    font-weight:bold;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-.change-password:hover{
-    text-decoration:underline;
-}
+        body {
+            font-family: 'Inter', Arial, Helvetica, sans-serif;
 
-/* Main white box */
-.container{
-    width:700px;
-    margin:60px auto;
-    background:white;
-    border-radius:12px;
-    padding:40px;
-    box-shadow:0 8px 20px rgba(0,0,0,.15);
-}
+            min-height: 100vh;
 
-.container h1{
-    text-align:center;
-    color:#444;
-    margin-bottom:40px;
-}
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(0, 212, 255, 0.16),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 90% 90%,
+                    rgba(112, 63, 210, 0.18),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #061923,
+                    #073f50,
+                    #082432
+                );
 
-/* Main buttons */
-.menu{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:20px;
-}
+            color: #1e293b;
 
-.menu a{
-    width:320px;
-    padding:18px;
-    text-align:center;
-    text-decoration:none;
-    color:white;
-    font-size:18px;
-    font-weight:bold;
-    background:#2575fc;
-    border-radius:10px;
-    transition:.3s;
-}
+            position: relative;
+            overflow-x: hidden;
+        }
 
-.menu a:hover{
-    background:#125fd0;
-    transform:translateY(-3px);
-}
 
-/* Logout */
-.logout{
-    margin-top:50px;
-    text-align:center;
-}
+        /* =========================================
+           BACKGROUND DECORATIONS
+        ========================================= */
 
-.view-logs{
-    display:inline-block;
-    padding:6px 12px;
-    margin-right:20px;
-    background:#e9eef7;
-    color:#2575fc;
-    text-decoration:none;
-    font-weight:bold;
-    font-size:13px;
-    border-radius:5px;
-    border:1px solid #cbd5e1;
-}
+        body::before {
+            content: "";
 
-.view-logs:hover{
-    background:#dbe5f5;
-}
+            position: fixed;
 
-.logout-link{
-    color:#c62828;
-    text-decoration:none;
-    font-weight:bold;
-    font-size:16px;
-}
+            width: 450px;
+            height: 450px;
 
-.logout-link:hover{
-    text-decoration:underline;
-}
+            border-radius: 50%;
 
-</style>
+            background: rgba(0, 180, 210, 0.08);
+
+            top: -220px;
+            left: -180px;
+
+            filter: blur(4px);
+
+            pointer-events: none;
+        }
+
+        body::after {
+            content: "";
+
+            position: fixed;
+
+            width: 550px;
+            height: 550px;
+
+            border-radius: 50%;
+
+            background: rgba(111, 66, 193, 0.10);
+
+            bottom: -300px;
+            right: -200px;
+
+            filter: blur(5px);
+
+            pointer-events: none;
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header {
+
+            position: relative;
+            z-index: 2;
+
+            height: 76px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 38px;
+
+            background: rgba(255, 255, 255, 0.96);
+
+            border-bottom: 1px solid rgba(255,255,255,.4);
+
+            box-shadow:
+                0 5px 20px rgba(0,0,0,.15);
+        }
+
+
+        .header-left {
+
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+
+        .header-logo {
+
+            width: 44px;
+            height: 44px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #046780,
+                    #08a6c2
+                );
+
+            color: white;
+
+            font-size: 20px;
+
+            box-shadow:
+                0 7px 15px rgba(4,103,128,.25);
+        }
+
+
+        .header-title {
+
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        .header-title strong {
+
+            font-size: 18px;
+
+            color: #063b4a;
+
+            font-weight: 800;
+
+            letter-spacing: .5px;
+        }
+
+
+        .header-title span {
+
+            font-size: 10px;
+
+            color: #94a3b8;
+
+            margin-top: 2px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+        }
+
+
+        /* User section */
+
+        .header-right {
+
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+
+        .user-info {
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            color: #475569;
+
+            font-size: 13px;
+        }
+
+
+        .user-avatar {
+
+            width: 36px;
+            height: 36px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #e6f6fa;
+
+            color: #046780;
+
+            font-size: 14px;
+        }
+
+
+        .change-password {
+
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 9px 14px;
+
+            border-radius: 9px;
+
+            color: #046780;
+
+            background: #effbfc;
+
+            border: 1px solid #cceff3;
+
+            text-decoration: none;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            transition: .25s ease;
+        }
+
+
+        .change-password:hover {
+
+            background: #046780;
+
+            color: white;
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 7px 15px rgba(4,103,128,.20);
+        }
+
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        .main {
+
+            position: relative;
+            z-index: 1;
+
+            width: min(850px, calc(100% - 40px));
+
+            margin: 55px auto;
+
+            padding: 45px;
+
+            background: rgba(255,255,255,.96);
+
+            border-radius: 25px;
+
+            border: 1px solid rgba(255,255,255,.5);
+
+            box-shadow:
+                0 30px 70px rgba(0,0,0,.30),
+                0 10px 25px rgba(0,0,0,.12);
+
+            animation: appear .65s ease-out;
+        }
+
+
+        @keyframes appear {
+
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+
+        /* =========================================
+           TITLE
+        ========================================= */
+
+        .page-heading {
+
+            text-align: center;
+
+            margin-bottom: 25px;
+        }
+
+
+        .page-icon {
+
+            width: 65px;
+            height: 65px;
+
+            margin: 0 auto 17px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 18px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #046780,
+                    #08a6c2
+                );
+
+            color: white;
+
+            font-size: 27px;
+
+            box-shadow:
+                0 12px 25px rgba(4,103,128,.25);
+        }
+
+
+        .page-heading h1 {
+
+            font-size: 30px;
+
+            color: #063b4a;
+
+            font-weight: 800;
+
+            letter-spacing: -.7px;
+
+            margin-bottom: 7px;
+        }
+
+
+        .page-heading p {
+
+            color: #64748b;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =========================================
+           DATABASE MODE BANNER
+        ========================================= */
+
+        .mode-banner {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            padding: 15px 18px;
+
+            margin: 0 auto 30px;
+
+            border-radius: 12px;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+
+            font-weight: 600;
+
+            text-align: left;
+
+            max-width: 700px;
+
+            animation: modeAppear .45s ease-out;
+        }
+
+
+        @keyframes modeAppear {
+
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+
+        .mode-banner i {
+
+            font-size: 19px;
+
+            flex-shrink: 0;
+        }
+
+
+        /* Production */
+
+        .production-mode {
+
+            color: #991b1b;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff1f2,
+                    #fff7ed
+                );
+
+            border: 1px solid #fecaca;
+
+            border-left: 5px solid #dc2626;
+
+            box-shadow:
+                0 6px 16px rgba(220,38,38,.08);
+        }
+
+
+        .production-mode i {
+
+            color: #dc2626;
+        }
+
+
+        .production-mode strong {
+
+            display: block;
+
+            color: #991b1b;
+
+            font-size: 13px;
+
+            margin-bottom: 2px;
+        }
+
+
+        /* Training */
+
+        .training-mode {
+
+            color: #7c2d12;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff7ed,
+                    #fffbeb
+                );
+
+            border: 1px solid #fed7aa;
+
+            border-left: 5px solid #c2410c;
+
+            box-shadow:
+                0 6px 16px rgba(194,65,12,.08);
+        }
+
+
+        .training-mode i {
+
+            color: #c2410c;
+        }
+
+
+        .training-mode strong {
+
+            display: block;
+
+            color: #9a3412;
+
+            font-size: 13px;
+
+            margin-bottom: 2px;
+        }
+
+
+        /* =========================================
+           DATABASE MENU
+        ========================================= */
+
+        .menu {
+
+            display: grid;
+
+            grid-template-columns: repeat(2, 1fr);
+
+            gap: 18px;
+        }
+
+
+        .menu-card {
+
+            position: relative;
+
+            display: flex;
+            align-items: center;
+
+            min-height: 110px;
+
+            padding: 22px;
+
+            text-decoration: none;
+
+            border-radius: 16px;
+
+            overflow: hidden;
+
+            color: white;
+
+            transition:
+                transform .25s ease,
+                box-shadow .25s ease,
+                filter .25s ease;
+        }
+
+
+        .menu-card::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 120px;
+            height: 120px;
+
+            border-radius: 50%;
+
+            background: rgba(255,255,255,.08);
+
+            right: -35px;
+            bottom: -50px;
+        }
+
+
+        .menu-card:hover {
+
+            transform: translateY(-5px);
+
+            filter: brightness(1.06);
+        }
+
+
+        .menu-card:hover .card-arrow {
+
+            transform: translateX(5px);
+        }
+
+
+        /* Card colours */
+
+        .design {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #046780,
+                    #078da6
+                );
+
+            box-shadow:
+                0 12px 25px rgba(4,103,128,.25);
+        }
+
+
+        .query {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #551bc0,
+                    #783ee0
+                );
+
+            box-shadow:
+                0 12px 25px rgba(85,27,192,.23);
+        }
+
+
+        .manual {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f766e,
+                    #0d9488
+                );
+
+            box-shadow:
+                0 12px 25px rgba(15,118,110,.23);
+        }
+
+
+        .legacy {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #475569,
+                    #64748b
+                );
+
+            box-shadow:
+                0 12px 25px rgba(71,85,105,.23);
+        }
+
+
+        /* Card icon */
+
+        .card-icon {
+
+            width: 54px;
+            height: 54px;
+
+            flex-shrink: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+
+            background: rgba(255,255,255,.17);
+
+            font-size: 21px;
+
+            margin-right: 17px;
+        }
+
+
+        .card-content {
+
+            flex: 1;
+
+            position: relative;
+            z-index: 1;
+        }
+
+
+        .card-content h3 {
+
+            font-size: 16px;
+
+            font-weight: 700;
+
+            margin-bottom: 5px;
+        }
+
+
+        .card-content p {
+
+            font-size: 11px;
+
+            line-height: 1.5;
+
+            color: rgba(255,255,255,.75);
+        }
+
+
+        .card-arrow {
+
+            position: relative;
+            z-index: 2;
+
+            font-size: 15px;
+
+            margin-left: 10px;
+
+            transition: transform .25s ease;
+        }
+
+
+        /* =========================================
+           BOTTOM ACTIONS
+        ========================================= */
+
+        .bottom-section {
+
+            margin-top: 38px;
+
+            padding-top: 25px;
+
+            border-top: 1px solid #e2e8f0;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            gap: 12px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .bottom-link {
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
+
+            padding: 10px 16px;
+
+            border-radius: 9px;
+
+            text-decoration: none;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            transition: .25s ease;
+        }
+
+
+        .logs {
+
+            color: #475569;
+
+            background: #f1f5f9;
+
+            border: 1px solid #e2e8f0;
+        }
+
+
+        .logs:hover {
+
+            background: #e2e8f0;
+
+            transform: translateY(-2px);
+        }
+
+
+        .home {
+
+            color: #046780;
+
+            background: #effbfc;
+
+            border: 1px solid #cceff3;
+        }
+
+
+        .home:hover {
+
+            color: white;
+
+            background: #046780;
+
+            transform: translateY(-2px);
+        }
+
+
+        .logout {
+
+            color: #dc2626;
+
+            background: #fff1f2;
+
+            border: 1px solid #fecdd3;
+        }
+
+
+        .logout:hover {
+
+            color: white;
+
+            background: #dc2626;
+
+            border-color: #dc2626;
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 18px rgba(220,38,38,.20);
+        }
+
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        .footer {
+
+            text-align: center;
+
+            margin-top: 24px;
+
+            color: #94a3b8;
+
+            font-size: 10px;
+
+            line-height: 1.6;
+        }
+
+
+        .footer strong {
+
+            color: #64748b;
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================= */
+
+        @media (max-width: 700px) {
+
+            .header {
+
+                height: auto;
+
+                padding: 15px 20px;
+
+                gap: 15px;
+            }
+
+
+            .header-right {
+
+                gap: 8px;
+            }
+
+
+            .user-info {
+
+                display: none;
+            }
+
+
+            .change-password {
+
+                padding: 8px 10px;
+
+                font-size: 11px;
+            }
+
+
+            .main {
+
+                width: calc(100% - 28px);
+
+                margin: 25px auto;
+
+                padding: 30px 20px;
+            }
+
+
+            .menu {
+
+                grid-template-columns: 1fr;
+            }
+
+
+            .page-heading h1 {
+
+                font-size: 27px;
+            }
+
+        }
+
+
+        @media (max-width: 420px) {
+
+            .header-title span {
+
+                display: none;
+            }
+
+
+            .header-title strong {
+
+                font-size: 16px;
+            }
+
+
+            .header-logo {
+
+                width: 39px;
+                height: 39px;
+            }
+
+
+            .bottom-section {
+
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+
+            .bottom-link {
+
+                width: 100%;
+            }
+
+        }
+
+    </style>
 
 </head>
 
+
 <body>
 
-<div class="header">
 
-    <h2>Welcome, {{ username }}!</h2>
+<!-- =========================================
+     HEADER
+========================================= -->
 
-    <a href="{{ url_for('change_password') }}" class="change-password">
-        Change Password
-    </a>
+<header class="header">
 
-</div>
+    <div class="header-left">
 
-<div class="container">
+        <div class="header-logo">
+            <i class="fa-solid fa-dna"></i>
+        </div>
 
-    <h1>PRADA (PRimer and Amplicon Design Application)</h1>
+        <div class="header-title">
+
+            <strong>PRADA</strong>
+
+            <span>
+                Primer &amp; Amplicon Design Application
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="header-right">
+
+        <div class="user-info">
+
+            <div class="user-avatar">
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <span>
+                Welcome, <strong>{{ username }}</strong>
+            </span>
+
+        </div>
+
+
+        <a href="{{ url_for('change_password') }}"
+           class="change-password">
+
+            <i class="fa-solid fa-key"></i>
+
+            Change Password
+
+        </a>
+
+    </div>
+
+</header>
+
+
+
+<!-- =========================================
+     MAIN CONTENT
+========================================= -->
+
+<main class="main">
+
+    <div class="page-heading">
+
+        <div class="page-icon">
+            <i class="fa-solid fa-database"></i>
+        </div>
+
+        <h1>
+            GSTT Primer Database
+        </h1>
+
+        <p>
+            Design and query primer data through the PRADA platform.
+        </p>
+
+    </div>
+
+
+
+    <!-- =========================================
+         DATABASE MODE
+    ========================================= -->
+
+    {% if db_schema == "primer_tool" %}
+
+        <div class="mode-banner production-mode">
+
+            <i class="fa-solid fa-triangle-exclamation"></i>
+
+            <div>
+
+                <strong>
+                    Production Mode — Validation in Process
+                </strong>
+
+                Please be aware that you are in
+                <strong>Production environment</strong>
+
+            </div>
+
+        </div>
+
+
+    {% elif db_schema == "prada_training" %}
+
+        <div class="mode-banner training-mode">
+
+            <i class="fa-solid fa-graduation-cap"></i>
+
+            <div>
+
+                <strong>
+                    Training Mode
+                </strong>
+
+                Please be aware that you are in
+                <strong>Training environment</strong>
+                
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
 
     <div class="menu">
 
-        <a href="{{ url_for('design_primer') }}">
-            Design Primer
+
+        <!-- Design Primer -->
+
+        <a href="{{ url_for('design_primer', db_schema=db_schema) }}"
+           class="menu-card design">
+
+            <div class="card-icon">
+                <i class="fa-solid fa-flask"></i>
+            </div>
+
+            <div class="card-content">
+
+                <h3>
+                    Design Primer
+                </h3>
+
+                <p>
+                    Design primers for your target sequences.
+                </p>
+
+            </div>
+
+            <div class="card-arrow">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+
         </a>
 
-        <a href="{{ url_for('query_data') }}">
-            Query PRADA Data
+        <!-- Query Data -->
+
+        <a href="{{ url_for('query_data', db_schema=db_schema) }}"
+           class="menu-card query">
+
+            <div class="card-icon">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <div class="card-content">
+
+                <h3>
+                    Query PRADA Data
+                </h3>
+
+                <p>
+                    Search existing primer records.
+                </p>
+
+            </div>
+
+            <div class="card-arrow">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+
         </a>
 
-        <a href="{{ url_for('manual_insert') }}">
-            Insert Primer Manually into PRADA
+        <!-- Manual Insert -->
+
+        <a href="{{ url_for('manual_insert', db_schema=db_schema) }}"
+           class="menu-card manual">
+
+            <div class="card-icon">
+                <i class="fa-solid fa-database"></i>
+            </div>
+
+            <div class="card-content">
+
+                <h3>
+                    Insert Primer Manually
+                </h3>
+
+                <p>
+                    Add primer information directly into the PRADA database.
+                </p>
+
+            </div>
+
+            <div class="card-arrow">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+
         </a>
 
-        <a href="{{ url_for('moka_index') }}">
-            Query Legacy MOKA  Data
+        <!-- Legacy MOKA -->
+
+        <a href="{{ url_for('moka_index') }}"
+           class="menu-card legacy">
+
+            <div class="card-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+
+            <div class="card-content">
+
+                <h3>
+                    Query Legacy MOKA Data
+                </h3>
+
+                <p>
+                    Access and query legacy MOKA primer records.
+                </p>
+
+            </div>
+
+            <div class="card-arrow">
+                <i class="fa-solid fa-arrow-right"></i>
+            </div>
+
         </a>
+
 
     </div>
 
-    <div class="logout">
+    <div class="bottom-section">
 
-        <a href="{{ url_for('view_log') }}" class="view-logs">
+
+        <a href="{{ url_for('view_log') }}"
+           class="bottom-link logs">
+
+            <i class="fa-solid fa-file-lines"></i>
+
             View Logs
+
         </a>
-    
-        <a href="{{ url_for('logout') }}" class="logout-link">
+
+
+        <a href="{{ url_for('home_page') }}"
+           class="bottom-link home">
+
+            <i class="fa-solid fa-house"></i>
+
+            Go to Home
+
+        </a>
+
+
+        <a href="{{ url_for('logout') }}"
+           class="bottom-link logout">
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+
             Log Out
+
         </a>
-    
+
     </div>
 
-</div>
+    <!-- Footer -->
 
-<script>
-window.addEventListener("beforeunload", function () {
-    navigator.sendBeacon("/logout");
-});
-</script>
+    <div class="footer">
+
+        <strong>PRADA</strong>
+        &nbsp;•&nbsp;
+        Primer &amp; Amplicon Design Application
+
+        <br>
+
+        GSTT Primer Database
+
+    </div>
+
+</main>
 
 </body>
+
 </html>

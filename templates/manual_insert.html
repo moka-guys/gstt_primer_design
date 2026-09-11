@@ -2,6 +2,17 @@
 <html>
 <head>
     <title>Manual Insert - Primer</title>
+    {% if db_schema == "primer_tool" %}
+    <h1 style="color: red;">
+        Please be aware that you are in Production mode (Validation in process)
+    </h1>
+
+    {% elif db_schema == "prada_training" %}
+        <h1 style="color: rgb(128, 28, 0);">
+            Please be aware that you are in Training mode
+        </h1>
+
+    {% endif %}
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -148,7 +159,7 @@
 
             <div class="buttons">
                 <input type="submit" value="Insert">
-                <a href="{{ url_for('index') }}" class="home-btn">Home Page</a>
+                <a href="{{ url_for('home_page') }}" class="home-btn">Home Page</a>
                 
             </div>
         </form>

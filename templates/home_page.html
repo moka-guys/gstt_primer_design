@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRADA | Primer and Amplicon Design Application</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+
+            background:
+                radial-gradient(circle at top left, rgba(0, 212, 255, 0.25), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(111, 66, 193, 0.30), transparent 35%),
+                linear-gradient(135deg, #071c2c, #0b5269, #071c2c);
+
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative background circles */
+        body::before,
+        body::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            z-index: 0;
+        }
+
+        body::before {
+            width: 350px;
+            height: 350px;
+            background: rgba(0, 212, 255, 0.10);
+            top: -120px;
+            left: -100px;
+        }
+
+        body::after {
+            width: 450px;
+            height: 450px;
+            background: rgba(123, 63, 228, 0.12);
+            bottom: -200px;
+            right: -150px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+
+            width: min(700px, 100%);
+            padding: 50px 45px;
+
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+
+            text-align: center;
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.30),
+                0 8px 20px rgba(0, 0, 0, 0.10);
+
+            animation: fadeIn 0.7s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            width: 78px;
+            height: 78px;
+            margin: 0 auto 22px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 22px;
+
+            background: linear-gradient(135deg, #046780, #08a6c2);
+            color: white;
+
+            font-size: 32px;
+            font-weight: 800;
+
+            box-shadow: 0 12px 25px rgba(4, 103, 128, 0.30);
+        }
+
+        h1 {
+            font-size: clamp(28px, 5vw, 40px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #063b4a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 38px;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .tab {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+
+            min-height: 90px;
+            padding: 20px;
+
+            text-decoration: none;
+            color: white;
+
+            border-radius: 16px;
+
+            font-size: 17px;
+            font-weight: 700;
+
+            overflow: hidden;
+
+            transition:
+                transform 0.25s ease,
+                box-shadow 0.25s ease,
+                filter 0.25s ease;
+        }
+
+        .tab::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+
+            background: linear-gradient(
+                120deg,
+                transparent 20%,
+                rgba(255,255,255,0.20),
+                transparent 80%
+            );
+
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .tab:hover::before {
+            transform: translateX(100%);
+        }
+
+        .tab:hover {
+            transform: translateY(-5px);
+            filter: brightness(1.08);
+        }
+
+        .tab:active {
+            transform: translateY(-1px);
+        }
+
+        .production {
+            background: linear-gradient(135deg, #046780, #078da6);
+            box-shadow: 0 12px 25px rgba(4, 103, 128, 0.28);
+        }
+
+        .production:hover {
+            box-shadow: 0 18px 35px rgba(4, 103, 128, 0.38);
+        }
+
+        .training {
+            background: linear-gradient(135deg, #551bc0, #783ee0);
+            box-shadow: 0 12px 25px rgba(85, 27, 192, 0.28);
+        }
+
+        .training:hover {
+            box-shadow: 0 18px 35px rgba(85, 27, 192, 0.38);
+        }
+
+        .tab i {
+            font-size: 24px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 35px 0 25px;
+        }
+
+        .logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+
+            padding: 12px 24px;
+
+            color: #dc2626;
+            background: #fff1f2;
+
+            border: 1px solid #fecdd3;
+            border-radius: 10px;
+
+            text-decoration: none;
+
+            font-size: 14px;
+            font-weight: 600;
+
+            transition: all 0.25s ease;
+        }
+
+        .logout:hover {
+            color: white;
+            background: #dc2626;
+            border-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(220, 38, 38, 0.25);
+        }
+
+        .footer {
+            margin-top: 22px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            body {
+                padding: 20px;
+            }
+
+            .container {
+                padding: 38px 22px;
+                border-radius: 20px;
+            }
+
+            .tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .tab {
+                min-height: 75px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Logo -->
+    <div class="logo">
+        <i class="fa-solid fa-dna"></i>
+    </div>
+
+    <!-- Header -->
+    <h1>PRADA</h1>
+
+    <p class="subtitle">
+        <strong>PRimer and Amplicon Design Application</strong><br>
+        Select an environment to continue.
+    </p>
+
+    <!-- Application Options -->
+    <div class="tabs">
+
+        <a class="tab production"
+           href="{{ url_for('index', db_schema='primer_tool') }}">
+            <i class="fa-solid fa-flask"></i>
+            <span>Production</span>
+        </a>
+
+        <a class="tab training"
+           href="{{ url_for('index', db_schema='prada_training') }}">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Training Suite</span>
+        </a>
+
+    </div>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Logout -->
+    <a class="logout" href="{{ url_for('logout') }}">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Logout
+    </a>
+
+    <div class="footer">
+        PRADA &nbsp;•&nbsp; Primer &amp; Amplicon Design Application
+    </div>
+
+</div>
+
+</body>
+</html>
+

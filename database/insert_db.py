@@ -2,7 +2,7 @@ import pandas as pd
 from primer_design.helper_function import get_postgres_connection
 
 
-def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
+def insert_DB(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
               password, db_name, db_host, notes="NA", passval="Not_Done",
               archive="No"):
 
@@ -34,8 +34,8 @@ def insert_DB(order_primer, tagged_FW, tagged_RV, tag, username,
 
     connection = get_postgres_connection(db_name, username, password, db_host)
     cursor = connection.cursor()
-    query = """
-    SELECT * FROM primer_tool.insert_primer_with_batch(
+    query = f"""
+    SELECT * FROM {db_schema}.insert_primer_with_batch(
         %s::varchar,
         %s::int,
         %s::int,

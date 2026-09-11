@@ -25,7 +25,7 @@
     <div class="box">
         <h2>❌ Insert Failed</h2>
         <p>{{ error_message }}</p>
-        <a href="{{ url_for('manual_insert') }}">Try Again</a>
+        <a href="{{ url_for('manual_insert', db_schema=db_schema) }}">Try Again</a>
     </div>
 </body>
 </html>

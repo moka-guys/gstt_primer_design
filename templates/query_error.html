@@ -20,8 +20,8 @@
 
     <p>
         Go to
-        <a href="{{ url_for('index') }}">Home Page</a> or
-        <a href="{{ url_for('query_data') }}">Query Page</a>
+        <a href="{{ url_for('home_page') }}">Home Page</a> or
+        <a href="{{ url_for('query_data', db_schema=db_schema) }}">Query Page</a>
     </p>
 
 </body>

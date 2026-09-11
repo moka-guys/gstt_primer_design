@@ -7,7 +7,6 @@
 </head>
 <body>
     <h2>IGV Viewer with Primers</h2>
-    <h3 style="color: red;">This is Test Server. Do not use for Production/Clinical Service</h3>
     <div id="igv-div" style="width: 100%; height: 500px;"></div>
     <script>
         const genome = "{{ initial_query.genome }}";
@@ -29,7 +28,7 @@
         }
     </style>
 
-    <a href="{{ url_for('success_primer_design') }}" class="back-link">Back to primer outputs</a>
+    <a href="{{ url_for('success_primer_design', db_schema=db_schema) }}" class="back-link">Back to primer outputs</a>
     <a href="{{ url_for('logout') }}" class="back-link">Log Out</a>
 </body>
 </html>

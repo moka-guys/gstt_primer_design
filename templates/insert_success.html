@@ -37,7 +37,7 @@
     <div class="box">
         <h2>✅ Insert Successful!</h2>
         <!-- INSERT MORE -->
-        <a href="{{ url_for('manual_insert') }}"
+        <a href="{{ url_for('manual_insert', db_schema=db_schema) }}"
            onclick="return confirmLeave();">
             Insert More
         </a>
@@ -48,7 +48,7 @@
 
         <!-- DOWNLOAD -->
         <p>
-            <a href="{{ url_for('download', source='manual') }}"
+            <a href="{{ url_for('download', source='manual', db_schema=db_schema) }}"
                class="download-btn"
                onclick="orderDownloaded = true;"
                style="margin-top: 15px; display: inline-block;">
@@ -56,7 +56,7 @@
             </a>
         </p>
         <!-- HOME -->
-        <a href="{{ url_for('index') }}"
+        <a href="{{ url_for('home_page') }}"
            class="home-btn"
            onclick="return confirmLeave();">
             Go to Home

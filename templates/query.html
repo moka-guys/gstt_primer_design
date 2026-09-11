@@ -62,6 +62,17 @@
 <div class="container">
 
     <h1>Query Data</h1>
+    {% if db_schema == "primer_tool" %}
+    <h1 style="color: red;">
+        Please be aware that you are in Production mode (Validation in process)
+    </h1>
+
+    {% elif db_schema == "prada_training" %}
+        <h1 style="color: rgb(128, 28, 0);">
+            Please be aware that you are in Training mode
+        </h1>
+
+    {% endif %}
 
     {% if error %}
         <div class="error">{{ error }}</div>
@@ -178,7 +189,7 @@
 
         <br><br>
         <button type="submit">Run Query</button>
-        <a href="{{ url_for('index') }}" class="home-btn">Home Page</a>
+        <a href="{{ url_for('home_page') }}" class="home-btn">Home Page</a>
     </form>
     <script>
     document.querySelector("form").addEventListener("submit", function(event) {

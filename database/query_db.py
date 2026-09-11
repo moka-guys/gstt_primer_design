@@ -28,7 +28,7 @@ def safe_liftover(chrom, pos, build):
         return None, str(e)
 
 
-def search_postgres(dbname, user, password, host,
+def search_postgres(db_schema, dbname, user, password, host,
                     chr_val, gene_val, primer_name, primer_id,
                     validation_val, grch_val, tray, archive_val,
                     notes, variant_pos=None, pos_start=None, pos_end=None,
@@ -93,10 +93,13 @@ def search_postgres(dbname, user, password, host,
                 )
             ) AS rt_in_range
 
-        FROM primer_tool.primers p
-        LEFT JOIN primer_tool.primer_batches b
-        ON p.upi = b.upi
-    """)
+        FROM {}.primers p
+        LEFT JOIN {}.primer_batches b
+            ON p.upi = b.upi
+    """).format(
+        sql.Identifier(db_schema),
+        sql.Identifier(db_schema)
+    )
     try:
         pos_start = int(pos_start) if pos_start is not None else None
         pos_end = int(pos_end) if pos_end is not None else None

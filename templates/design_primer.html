@@ -183,7 +183,18 @@
 </head>
 <body>
     <div class="container">
-        <h1 style="color: red;">This is Test Server. Do not use for Production/Clinical Service</h1>
+        {% if db_schema == "primer_tool" %}
+        <h1 style="color: red;">
+            Please be aware that you are in Production mode (Validation in process)
+        </h1>
+    
+        {% elif db_schema == "prada_training" %}
+            <h1 style="color: rgb(128, 28, 0);">
+                Please be aware that you are in Training mode
+            </h1>
+    
+        {% endif %}
+
         <h1>Design Primer</h1>
         <h2>Key in primer parameters</h2>
         
@@ -326,7 +337,7 @@
             }
             </style>
             
-            <a href="{{ url_for('index') }}" class="back-link">Back to Home</a>
+            <a href="{{ url_for('home_page') }}" class="back-link">Back to Home</a>
             <a href="{{ url_for('logout') }}" class="back-link">Log Out</a>
     </div>
 </body>

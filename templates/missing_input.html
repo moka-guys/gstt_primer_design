@@ -17,8 +17,8 @@
 
     <p>
         Go to
-        <a href="{{ url_for('index') }}">Home Page</a> or
-        <a href="{{ url_for('design_primer') }}">Design Primer</a>
+        <a href="{{ url_for('home_page') }}">Home Page</a> or
+        <a href="{{ url_for('design_primer', db_schema=db_schema) }}">Design Primer</a>
     </p>
 
 </body>

@@ -37,7 +37,6 @@ batch_editable_columns = ['notes', 'passed_validation', 'mix', 'arrival_date',
                           'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive', 'manufacturer']
 primer_table = "primers"
 batch_table = "primer_batches"
-schema = "primer_tool"
 
 
 def wait_for_db():
@@ -111,7 +110,7 @@ def gstt_primer_design():
         if result and check_password_hash(result[0], password):
             session["username"] = user
             app.logger.info(f"User logged in: {user}")
-            return redirect(url_for('index'))
+            return redirect(url_for('home_page'))
         else:
             return render_template('gstt_primer_design.html', error="Invalid username or password!")
     return render_template('gstt_primer_design.html')
@@ -129,13 +128,22 @@ def login_required(f):
     return decorated_function
 
 
-@app.route('/index')
+@app.route('/home_page')
 @login_required
-def index():
+def home_page():
     """
-    load index page if log in is successful
+    load home page if log in is successful
     """
-    return render_template('index.html', username=g.user)
+    return render_template('home_page.html', username=g.user)
+
+
+@app.route('/index/<db_schema>')
+@login_required
+def index(db_schema):
+    """
+    load index page
+    """
+    return render_template('index.html', username=g.user, db_schema=db_schema)
 
 
 @app.route('/moka_index')
@@ -220,9 +228,9 @@ def change_password():
     return render_template("change_password.html")
 
 
-@app.route('/igv_view/<genome>')
+@app.route('/igv_view/<genome>/<db_schema>')
 @login_required
-def igv_view(genome):
+def igv_view(genome, db_schema):
     """
     Load igv_view to visualize primers and common snp
     Generated primers are saved in bed file
@@ -269,12 +277,13 @@ def igv_view(genome):
 
     return render_template('igv_view.html', initial_query=initial_query,
                            primer_bed=session["primer_bed"],
-                           snp_bed=session["snp_bed"])
+                           snp_bed=session["snp_bed"],
+                           db_schema=db_schema)
 
 
-@app.route('/design_primer', methods=['GET', 'POST'])
+@app.route('/design_primer/<db_schema>', methods=['GET', 'POST'])
 @login_required
-def design_primer():
+def design_primer(db_schema):
     """
     Design primers using GenerateOrder from primer_design.primer3.py
     Input params are obtained from UI
@@ -336,7 +345,7 @@ def design_primer():
             if all(str(value).strip() for value in row.values())
         ]
         if not rows:
-            return render_template("missing_input.html")
+            return render_template("missing_input.html", db_schema=db_schema)
         # Get the fieldnames from the first dictionary
         fieldnames = rows[0].keys()
         # save into temp csv
@@ -364,38 +373,41 @@ def design_primer():
             order_primer = GeneratePrimer(app_datetimestr)
             output, error = order_primer.parse_input(csv_file)
             if error:
-                app.logger.error(f"Primer design error: {error}")
+                #app.logger.error(f"Primer design error: {error}")
                 del_file([csv_file])
-                return render_template("invalid_input.html", error=error)
+                return render_template("invalid_input.html", error=error,
+                                       db_schema=db_schema)
             session['primer_output'] = output.to_dict(orient='records')
             session["order_sheet_name_auto"] = f'primer_order_sheet_TEST_VERSION_{random_uuid}_{app_datetimestr}.csv'
             del_file([csv_file])
             app.logger.info(
-                            f"User '{g.user}' designed primer for {rows}"
+                            f"User '{g.user}' designed primer for {rows} in {db_schema}"
                         )
-            return redirect(url_for('success_primer_design'))
+            return redirect(url_for('success_primer_design',
+                                    db_schema=db_schema))
 
         else:
-            return render_template("missing_input.html")
+            return render_template("missing_input.html", db_schema=db_schema)
 
-    return render_template('design_primer.html', saved_rows=[])
+    return render_template('design_primer.html', saved_rows=[], db_schema=db_schema)
 
 
-@app.route("/modify_primer", methods=["GET", "POST"])
+@app.route("/modify_primer/<db_schema>", methods=["GET", "POST"])
 @login_required
-def modify_primer():
+def modify_primer(db_schema):
     if request.method == "POST":
-        return design_primer()
+        return design_primer(db_schema)
 
     return render_template(
         "design_primer.html",
-        saved_rows=session.get("primer_input", [])
+        saved_rows=session.get("primer_input", []),
+        db_schema=db_schema
     )
 
 
-@app.route('/query', methods=['GET', 'POST'])
+@app.route('/query/<db_schema>', methods=['GET', 'POST'])
 @login_required
-def query_data():
+def query_data(db_schema):
     if request.method == 'POST':
         chr_val = request.form.get('chr')
         gene_val = request.form.get('gene')
@@ -417,7 +429,8 @@ def query_data():
                 "query_result.html",
                 results=None,
                 editable_columns=None,
-                error="Please provide both Start Position and End Position."
+                error="Please provide both Start Position and End Position.",
+                db_schema=db_schema
             )
 
         # If any genomic coordinate is provided, GRCh is required
@@ -429,7 +442,8 @@ def query_data():
                 error=(
                     "Please select GRCh 37 or GRCh 38 when using "
                     "Variant POS, Start Position, or End Position."
-                )
+                ),
+                db_schema=db_schema
             )
         # If any genomic coordinate is provided, chr is required
         if (variant_pos or start or end) and not chr_val:
@@ -440,7 +454,8 @@ def query_data():
                 error=(
                     "Please select a chromosome when using "
                     "Variant POS, Start Position, or End Position."
-                )
+                ),
+                db_schema=db_schema
             )
         # ensure at least one filter exists
         if not any([chr_val, gene_val, primer_name, primer_id, passed_validation,
@@ -450,11 +465,12 @@ def query_data():
                 "query_result.html",
                 results=None,
                 editable_columns=None,
-                error="Please provide at least one filter."
+                error="Please provide at least one filter.",
+                db_schema=db_schema
             )
         try:
             result_list, msg = search_postgres(
-                DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
+                db_schema, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
                 chr_val, gene_val, primer_name, primer_id, passed_validation, grch,
                 tray, archive, notes, variant_pos, start, end, start_date, end_date
             )
@@ -464,13 +480,15 @@ def query_data():
                 results=result_list,
                 msg=msg,
                 editable_columns=batch_editable_columns,
-                error=None
+                error=None,
+                db_schema=db_schema
             )
         except Exception as e:
             traceback.print_exc()
-            return render_template("query_result.html", error=str(e))
+            return render_template("query_result.html", error=str(e),
+                                   db_schema=db_schema)
 
-    return render_template('query.html')
+    return render_template('query.html', db_schema=db_schema)
 
 
 @app.route('/query_moka_id', methods=['GET', 'POST'])
@@ -520,7 +538,7 @@ def query_moka_id():
         )
 
     except Exception:
-        app.logger.exception("Error while querying the MOKA database.")
+        #app.logger.exception("Error while querying the MOKA database.")
         return render_template(
             'query_moka_id_result.html',
             results=[],
@@ -585,7 +603,7 @@ def query_moka_position():
         )
 
     except Exception:
-        app.logger.exception("Error while querying the MOKA database.")
+        #app.logger.exception("Error while querying the MOKA database.")
         return render_template(
             'query_moka_position_result.html',
             results=[],
@@ -658,9 +676,9 @@ def query_moka_all_approved():
         )
 
 
-@app.route('/success_primer_design')
+@app.route('/success_primer_design/<db_schema>')
 @login_required
-def success_primer_design():
+def success_primer_design(db_schema):
     """
     Success page for primer design. Generated primers are shown as table if any.
     Option to visualize primers on igv_view is provided.
@@ -682,16 +700,17 @@ def success_primer_design():
         return render_template(
             "success_primer_design.html",
             table_data=table_data,
-            builds=builds
+            builds=builds,
+            db_schema=db_schema
         )
 
     else:
-        return render_template("no_primers.html")
+        return render_template("no_primers.html", db_schema=db_schema)
 
 
-@app.route('/save_selected', methods=['POST'])
+@app.route('/save_selected/<db_schema>', methods=['POST'])
 @login_required
-def save_selected():
+def save_selected(db_schema):
     output_dict = session.get('primer_output')
     if not output_dict:
         return "No data found in session."
@@ -712,12 +731,12 @@ def save_selected():
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_R) = prepare_order_sheet(temp_df)
 
-            inserted_ids = insert_DB(temp_df, tagged_FW,
+            inserted_ids = insert_DB(db_schema, temp_df, tagged_FW,
                                      tagged_RV,temp_df["order_tag"][0],
                                      DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
             primer_id = inserted_ids[0][1]
             app.logger.info(
-                            f"User '{g.user}' selected designed primers to insert DB for upi {inserted_ids}"
+                            f"User '{g.user}' selected designed primers to insert DB for upi {inserted_ids} for {db_schema}"
                             )
             # Append FW
             rows.append({
@@ -745,7 +764,7 @@ def save_selected():
         session.setdefault("order_files", [])
         session["order_files"].append(session["order_sheet_name_auto"])
 
-        return render_template("save_complete.html")
+        return render_template("save_complete.html", db_schema=db_schema)
 
     return "No rows selected."
 
@@ -756,23 +775,23 @@ def save_complete():
     return render_template("save_complete.html")
 
 
-@app.route("/download/<source>")
+@app.route("/download/<source>/<db_schema>")
 @login_required
-def download(source):
+def download(source, db_schema):
     if source == "manual":
         session_key = "order_sheet_name_manual"
     else:
         session_key = "order_sheet_name_auto"
     csv_to_download = session.get(session_key)
     if csv_to_download is None:
-        return render_template("download_not_found.html"), 400
+        return render_template("download_not_found.html", db_schema=db_schema), 400
 
     directory = app.config['DOWNLOAD_FOLDER']
     full_path = os.path.join(directory, csv_to_download)
 
     if not os.path.exists(full_path):
-        app.logger.error("download file not found")
-        return render_template("download_not_found.html")
+        #app.logger.error("download file not found")
+        return render_template("download_not_found.html", db_schema=db_schema)
 
     response = send_from_directory(
         directory=directory,
@@ -785,11 +804,11 @@ def download(source):
         try:
             if os.path.exists(full_path):
                 os.remove(full_path)
-                app.logger.info("Deleted file: %s", full_path)
+                #app.logger.info("Deleted file: %s", full_path)
 
             # Remove filename from session
             session.pop(session_key, None)
-            app.logger.info("Removed session key: %s", session_key)
+            #app.logger.info("Removed session key: %s", session_key)
 
         except Exception as e:
             app.logger.error("Error during download cleanup: %s", e)
@@ -797,9 +816,9 @@ def download(source):
     return response
 
 
-@app.route('/update_row', methods=['POST'])
+@app.route('/update_row/<db_schema>', methods=['POST'])
 @login_required
-def update_row():
+def update_row(db_schema):
     data = request.get_json()
     row_id = data['id']
     updated_fields = data['data']
@@ -819,7 +838,7 @@ def update_row():
         elif table_type == "batches":
             allowed_columns = batch_editable_columns
             pk = "primer_id"
-            table_name = f"{schema}.{batch_table}"
+            table_name = f"{db_schema}.{batch_table}"
 
         # keep only allowed columns
         updated_fields = {
@@ -893,7 +912,7 @@ def update_row():
         )
 
         app.logger.info(
-            f"User '{g.user}' updated primer_id {row_id}: {updated_str}"
+            f"User '{g.user}' updated primer_id {row_id}: {updated_str} in {db_schema}"
         )
 
         cur.close()
@@ -902,7 +921,7 @@ def update_row():
         return jsonify({"status": "success"})
 
     except Exception as e:
-        app.logger.error(f"Update error: {str(e)}")
+        #app.logger.error(f"Update error: {str(e)}")
         return jsonify({"status": "error", "message": str(e)})
 
 
@@ -1013,13 +1032,13 @@ def export_moka_csv():
         )
 
     except Exception:
-        app.logger.exception("Error exporting MOKA results")
+        #app.logger.exception("Error exporting MOKA results")
         return "Error generating CSV.", 500
 
 
-@app.route("/manual_insert", methods=["GET", "POST"])
+@app.route("/manual_insert/<db_schema>", methods=["GET", "POST"])
 @login_required
-def manual_insert():
+def manual_insert(db_schema):
     datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_uuid = uuid.uuid4()
 
@@ -1057,15 +1076,15 @@ def manual_insert():
                 "designer": "M"
             }])
 
-            inserted_ids = insert_DB(
-                                df_insert, None, None, tag,
-                                username=DB_USER,
-                                password=DB_PASSWORD,
-                                db_name=DB_NAME,
-                                db_host=DB_HOST,
-                                notes=notes
-                            )
-            app.logger.info(f"{g.user} inserted primer manually: upi {inserted_ids} ")
+            inserted_ids = insert_DB(db_schema,
+                                     df_insert, None, None, tag,
+                                     username=DB_USER,
+                                     password=DB_PASSWORD,
+                                     db_name=DB_NAME,
+                                     db_host=DB_HOST,
+                                     notes=notes
+                                     )
+            app.logger.info(f"{g.user} inserted primer manually: upi {inserted_ids} in {db_schema}")
             # generate order sheet for manual insert primer
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_RV) = prepare_order_sheet(df_insert)
@@ -1126,13 +1145,13 @@ def manual_insert():
                         index=False
                     )
             # Success
-            return render_template("insert_success.html")
+            return render_template("insert_success.html", db_schema=db_schema)
 
         except Exception as e:
             # Error
-            return render_template("insert_error.html", error_message=str(e))
+            return render_template("insert_error.html", error_message=str(e), db_schema=db_schema)
 
-    return render_template("manual_insert.html")
+    return render_template("manual_insert.html", db_schema=db_schema)
 
 
 @app.route("/app_logs")
@@ -1196,9 +1215,9 @@ def delete_session_files(directory, session_key):
         if file_path.exists():
             file_path.unlink()
 
-            app.logger.info(
-                f"Deleted temporary file: {file_path}"
-            )
+            #app.logger.info(
+                #f"Deleted temporary file: {file_path}"
+            #)
 
 
 def cleanup_old_files(directory, max_age_seconds):
@@ -1219,9 +1238,9 @@ def cleanup_old_files(directory, max_age_seconds):
             if age > max_age_seconds:
                 file.unlink()
 
-                app.logger.info(
-                    f"Deleted expired file: {file}"
-                )
+                #app.logger.info(
+                    #f"Deleted expired file: {file}"
+                #)
 
 
 if __name__ == '__main__':

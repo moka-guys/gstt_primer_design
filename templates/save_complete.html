@@ -11,7 +11,7 @@
     </h2>
 
     <p>
-        <a href="{{ url_for('download', source='auto') }}"
+        <a href="{{ url_for('download', source='auto', db_schema=db_schema) }}"
            id="downloadBtn"
            class="btn btn-primary btn-lg">
             Download Order Sheet
@@ -20,7 +20,7 @@
 
     <br><br>
 
-    <a href="{{ url_for('design_primer') }}"
+    <a href="{{ url_for('design_primer', db_schema=db_schema) }}"
        id="backBtn">
         Back to Design Page
     </a>

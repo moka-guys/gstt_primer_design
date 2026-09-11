@@ -69,7 +69,7 @@
     <li>"no common snp" means no snp with AF>=0.01 is present in designed primer region; but rare snp may still be present.</li>
 </ul>
 
-<form method="POST" action="{{ url_for('save_selected') }}" id="saveForm">
+<form method="POST" action="{{ url_for('save_selected', db_schema=db_schema) }}" id="saveForm">
 
     <div class="table-responsive shadow-sm rounded">
     
@@ -144,16 +144,16 @@
 
 <p>
     Go to
-    <a href="{{ url_for('index') }}">Home Page</a> Or
-    <a href="{{ url_for('design_primer') }}">Design New Primer</a> Or
-    <a href="{{ url_for('modify_primer') }}">Modify Parameters and Re-run</a>
+    <a href="{{ url_for('home_page') }}">Home Page</a> Or
+    <a href="{{ url_for('design_primer', db_schema=db_schema) }}">Design New Primer</a> Or
+    <a href="{{ url_for('modify_primer', db_schema=db_schema) }}">Modify Parameters and Re-run</a>
 
     {% if 37 in builds %}
-        Or <a href="{{ url_for('igv_view', genome='hg19') }}">igv_view build37</a>
+        Or <a href="{{ url_for('igv_view', genome='hg19', db_schema=db_schema) }}">igv_view build37</a>
     {% endif %}
 
     {% if 38 in builds %}
-        Or <a href="{{ url_for('igv_view', genome='hg38') }}">igv_view build38</a>
+        Or <a href="{{ url_for('igv_view', genome='hg38', db_schema=db_schema) }}">igv_view build38</a>
     {% endif %}
 </p>
 <script>
