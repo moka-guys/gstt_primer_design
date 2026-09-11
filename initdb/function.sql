@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION primer_tool.insert_primer_with_batch(
+CREATE OR REPLACE FUNCTION prada_production.insert_primer_with_batch(
     -- Primer fields
     p_chr VARCHAR,
     p_start_pos INTEGER,
@@ -52,7 +52,7 @@ BEGIN
 
 
     -- Primer info (no duplicate, no update allowed)
-    INSERT INTO primer_tool.primers (
+    INSERT INTO prada_production.primers (
         chr,
         start_pos,
         end_pos,
@@ -101,7 +101,7 @@ BEGIN
     -- If conflict happened, fetch existing primer_id
     IF v_upi IS NULL THEN
         SELECT p.upi INTO v_upi
-        FROM primer_tool.primers AS p
+        FROM prada_production.primers AS p
         WHERE p.chr = p_chr
           AND p.start_pos = p_start_pos
           AND p.end_pos = p_end_pos
@@ -120,7 +120,7 @@ BEGIN
     -- =========================
     -- Batch info (can duplicate, update allowed for some)
     -- =========================
-    INSERT INTO primer_tool.primer_batches (
+    INSERT INTO prada_production.primer_batches (
         upi,
         tagged_left,
         tagged_right,
