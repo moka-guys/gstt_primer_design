@@ -272,7 +272,7 @@ def igv_view(genome, db_schema):
         # define genome and initial focus for igv_view
         initial_query = {
                         "genome": genome,
-                        "locus": f"{prefix}{temp_df.iloc[0]['chr']}:{temp_df.iloc[0]['start']}"
+                        "locus": f"{prefix}{temp_df.iloc[0]['chr']}:{int(temp_df.iloc[0]['start'])}-{int(temp_df.iloc[0]['start']) + 800}"
                         }
 
     return render_template('igv_view.html', initial_query=initial_query,
