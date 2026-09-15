@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432" #- "5433:5432"
+    volumes:
+      - /var/local/gstt_primer_design/postgres_primer_db:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+
+  flask:
+    image: seglh/gstt_primer_design:f3f6e7d
+    container_name: flask_app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      # DATABASE_URL: postgresql://user:pass@postgres:5432/db
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      FLASK_ENV: development
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    env_file:
+      - .env
+    volumes:
+      - /var/local/gstt_primer_design/ref:/app/input
+      - /var/local/gstt_primer_design/output:/app/output
+      - /var/local/gstt_primer_design/logs:/app/logs
+      - /var/local/gstt_primer_design/static/temp:/app/static/temp
+
+    depends_on:
+      - db
+
+

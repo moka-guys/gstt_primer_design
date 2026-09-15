@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>MOKA All Approved Primers</title>
+
+<style>
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 30px;
+}
+
+.container {
+    max-width: 1800px;
+    margin: auto;
+}
+
+h2 {
+    color: #1f4e79;
+    margin-bottom: 20px;
+}
+
+
+/* Messages */
+
+.message {
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.error {
+    background: #ffe6e6;
+    color: #b00020;
+    border: 1px solid #ffb3b3;
+}
+
+.success {
+    background: #eaf7ea;
+    color: #1b5e20;
+    border: 1px solid #b9e6b9;
+}
+
+
+/* Filter controls */
+
+.filter-bar {
+    margin-bottom: 20px;
+}
+
+.filter-button {
+    padding: 10px 20px;
+    background: #1f4e79;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.filter-button:hover {
+    background: #163a5a;
+}
+
+.clear-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-left: 10px;
+    background: #777;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.clear-button:hover {
+    background: #555;
+}
+
+
+/* Table scrolling */
+
+.table-container {
+    max-height: 750px;
+    overflow: auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+
+/* Table */
+
+table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+
+/* Header */
+
+thead th {
+    position: sticky;
+    top: 0;
+    background: #1f4e79;
+    color: white;
+    z-index: 3;
+}
+
+
+/* Filter row */
+
+.filter-row th {
+    position: sticky;
+    top: 42px;
+    background: #dce6f1;
+    z-index: 3;
+    padding: 5px;
+}
+
+.filter-row input {
+    width: 110px;
+    box-sizing: border-box;
+    padding: 6px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+}
+
+.filter-row input:focus {
+    outline: 2px solid #6ea8d7;
+}
+
+
+/* Alternating rows */
+
+tbody tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+
+/* Selected row */
+
+tbody tr.selected {
+    background: #fff3cd !important;
+}
+
+
+/* Sticky first column */
+
+th:first-child,
+td:first-child {
+    position: sticky;
+    left: 0;
+    background: white;
+    font-weight: bold;
+    z-index: 2;
+}
+
+
+/* First header */
+
+thead tr:first-child th:first-child {
+    background: #1f4e79;
+    color: white;
+    z-index: 5;
+}
+
+
+/* First filter cell */
+
+.filter-row th:first-child {
+    background: #dce6f1;
+    z-index: 5;
+}
+
+
+/* Selected sticky first column */
+
+tbody tr.selected td:first-child {
+    background: #fff3cd;
+}
+
+
+/* Buttons */
+
+.buttons {
+    margin-top: 25px;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 18px;
+    margin-right: 12px;
+    text-decoration: none;
+    color: white;
+    background: #1f4e79;
+    border-radius: 5px;
+}
+
+.button:hover {
+    background: #163a5a;
+}
+
+.logout {
+    background: #b22222;
+}
+
+.logout:hover {
+    background: #8b1a1a;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+<h2>MOKA All Approved Primers</h2>
+
+
+{% if error %}
+
+<div class="message error">
+    {{ error }}
+</div>
+
+{% endif %}
+
+
+{% if msg %}
+
+<div class="message success">
+    {{ msg }}
+</div>
+
+{% endif %}
+
+
+<!-- FILTER FORM -->
+
+<form method="POST" action="{{ url_for('query_moka_all_approved') }}">
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr>
+    <th>Fragment ID</th>
+    <th>Chromosome</th>
+    <th>Start</th>
+    <th>Stop</th>
+    <th>Forward Seq</th>
+    <th>Reverse Seq</th>
+    <th>Reverse Tag</th>
+    <th>Forward Tag</th>
+    <th>Mix</th>
+    <th>Amplicon Name</th>
+    <th>Test Result Notes</th>
+    <th>F Freezer</th>
+    <th>F Tray</th>
+    <th>F Grid</th>    
+    <th>R Freezer</th>
+    <th>R Tray</th>
+    <th>R Grid</th>
+    <th>Date Ordered</th>
+    <th>Manufacturer</th>
+</tr>
+<!-- FILTER INPUTS -->
+
+<tr class="filter-row">
+
+    <th>
+        <input
+            type="text"
+            name="primer_name"
+            placeholder="ID"
+            value="{{ filters.get('primer_name', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="chromosome"
+            placeholder="= 1"
+            value="{{ filters.get('chromosome', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="start"
+            placeholder="Start"
+            value="{{ filters.get('start', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="stop"
+            placeholder="Stop"
+            value="{{ filters.get('stop', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="forward_seq"
+            placeholder="Contains..."
+            value="{{ filters.get('forward_seq', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="reverse_seq"
+            placeholder="Contains..."
+            value="{{ filters.get('reverse_seq', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="reverse_tag"
+            placeholder="Contains..."
+            value="{{ filters.get('reverse_tag', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="forward_tag"
+            placeholder="Contains..."
+            value="{{ filters.get('forward_tag', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="mix"
+            placeholder="Contains..."
+            value="{{ filters.get('mix', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="notes"
+            placeholder="Contains..."
+            value="{{ filters.get('notes', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="test_result_notes"
+            placeholder="Contains..."
+            value="{{ filters.get('test_result_notes', '') }}"
+        >
+    </th>
+    <th>
+        <input
+            type="text"
+            name="f_freezer"
+            placeholder="Contains..."
+            value="{{ filters.get('f_freezer', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="f_tray"
+            placeholder="Contains..."
+            value="{{ filters.get('f_tray', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="f_grid"
+            placeholder="Contains..."
+            value="{{ filters.get('f_grid', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_freezer"
+            placeholder="Contains..."
+            value="{{ filters.get('r_freezer', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_tray"
+            placeholder="Contains..."
+            value="{{ filters.get('r_tray', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="r_grid"
+            placeholder="Contains..."
+            value="{{ filters.get('r_grid', '') }}"
+        >
+    </th>
+
+
+    <th>
+        <input
+            type="text"
+            name="date_ordered"
+            placeholder="Contains..."
+            value="{{ filters.get('date_ordered', '') }}"
+        >
+    </th>
+
+    <th>
+        <input
+            type="text"
+            name="manufacturer"
+            placeholder="ID"
+            value="{{ filters.get('manufacturer', '') }}"
+        >
+    </th>
+
+</tr>
+</thead>
+
+
+<tbody>
+
+{% for row in results %}
+
+<tr>
+
+    <td>{{ row[0] }}</td>
+    <td>{{ row[1] }}</td>
+    <td>{{ row[2] }}</td>
+    <td>{{ row[3] }}</td>
+    <td>{{ row[4] }}</td>
+    <td>{{ row[5] }}</td>
+    <td>{{ row[6] }}</td>
+    <td>{{ row[7] }}</td>
+    <td>{{ row[8] }}</td>
+    <td>{{ row[9] }}</td>
+    <td>{{ row[10] }}</td>
+    <td>{{ row[11] }}</td>
+    <td>{{ row[12] }}</td>
+    <td>{{ row[13] }}</td>
+    <td>{{ row[14] }}</td>
+    <td>{{ row[15] }}</td>
+    <td>{{ row[16] }}</td>
+    <td>{{ row[17] }}</td>
+    <td>{{ row[18] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<div class="filter-bar">
+
+    <button type="submit" class="filter-button">
+        Apply Filters
+    </button>
+
+    <a
+        href="{{ url_for('query_moka_all_approved') }}"
+        class="clear-button"
+    >
+        Clear Filters
+    </a>
+
+</div>
+
+</form>
+
+{% if not results %}
+
+<p>
+    <strong>No records found.</strong>
+</p>
+
+{% endif %}
+
+
+<div class="buttons">
+
+<a
+    href="{{ url_for('moka_index') }}"
+    class="button"
+>
+    Back to MOKA Search Options
+</a>
+{% if results %}
+<a
+    href="{{ url_for('export_moka_csv') }}"
+    class="button"
+>
+    Export CSV
+</a>
+{% endif %}
+
+<a
+    href="{{ url_for('logout') }}"
+    class="button logout"
+>
+    Log Out
+</a>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+// Click row to select
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const rows = document.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+
+        row.addEventListener("click", function () {
+
+            rows.forEach(r => {
+                r.classList.remove("selected");
+            });
+
+            this.classList.add("selected");
+
+        });
+
+    });
+
+});
+
+</script>
+
+
+</body>
+
+</html>
