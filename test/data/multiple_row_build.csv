@@ -1,0 +1,3 @@
+chr,primer_name,pos_start,pos_end,build,tag,opt_tm,min_tm,max_tm,opt_gc,min_gc,max_gc,min_product_size,max_product_size,opt_primer_size,min_primer_size,max_primer_size
+12,test1,6534011,6534011,37,T1,60,58,63,50,40,60,100,600,22,19,28
+12,test2,6534011,6534011,38,T1,60,58,63,50,40,60,100,600,22,19,28
