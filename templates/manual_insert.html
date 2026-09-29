@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Manual Insert - Primer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Arial, sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(34, 211, 238, 0.14),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 85%,
+                    rgba(139, 92, 246, 0.18),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #071c2b 0%,
+                    #0b3144 45%,
+                    #18234a 100%
+                );
+
+            padding: 40px 20px;
+            color: #1f2937;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            margin: 0 auto;
+
+            background: rgba(255, 255, 255, 0.96);
+            padding: 35px;
+
+            border-radius: 22px;
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.25),
+                0 8px 20px rgba(0, 0, 0, 0.12);
+
+            border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+
+        h1 {
+            margin: 0 0 18px 0;
+            text-align: center;
+
+            color: #0b5269;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        /*
+         * Mode warning
+         */
+        .mode-warning {
+            margin: 0 0 24px 0;
+            padding: 14px 18px;
+
+            border-radius: 12px;
+
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .production-warning {
+            background: rgba(239, 68, 68, 0.10);
+            color: #b91c1c;
+            border: 1px solid rgba(239, 68, 68, 0.30);
+        }
+
+        .training-warning {
+            background: rgba(245, 158, 11, 0.13);
+            color: #92400e;
+            border: 1px solid rgba(245, 158, 11, 0.30);
+        }
+
+        h4 {
+            margin: 0 0 22px 0;
+
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-top: 14px;
+            margin-bottom: 6px;
+
+            font-weight: 600;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+
+            padding: 12px 14px;
+
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+
+            font-size: 14px;
+            color: #1e293b;
+
+            outline: none;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            background: #ffffff;
+            border-color: #0891b2;
+
+            box-shadow:
+                0 0 0 3px rgba(8, 145, 178, 0.14);
+        }
+
+        input[type="text"]::placeholder,
+        input[type="number"]::placeholder {
+            color: #94a3b8;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+
+            margin-top: 28px;
+        }
+
+        input[type="submit"],
+        .home-btn {
+            flex: 1;
+
+            padding: 13px 20px;
+
+            font-size: 15px;
+            font-weight: 700;
+
+            border: none;
+            border-radius: 10px;
+
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                opacity 0.2s ease;
+        }
+
+        input[type="submit"] {
+            background:
+                linear-gradient(
+                    135deg,
+                    #0891b2,
+                    #2563eb
+                );
+
+            color: white;
+
+            box-shadow:
+                0 8px 18px rgba(37, 99, 235, 0.25);
+        }
+
+        input[type="submit"]:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 24px rgba(37, 99, 235, 0.32);
+        }
+
+        .home-btn {
+            background: #e2e8f0;
+            color: #334155;
+
+            box-shadow:
+                0 5px 12px rgba(15, 23, 42, 0.08);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+
+            background: #cbd5e1;
+            color: #1e293b;
+        }
+
+        input[type="submit"]:active,
+        .home-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                border-radius: 18px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            input[type="submit"],
+            .home-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Insert Primer Manually</h1>
+
+        {% if db_schema == "prada_production" %}
+            <div class="mode-warning production-warning">
+                Please be aware that you are in Production mode (Validation in process)
+            </div>
+
+        {% elif db_schema == "prada_training" %}
+            <div class="mode-warning training-warning">
+                Please be aware that you are in Training mode
+            </div>
+        {% endif %}
+
+        <h4>Essential fields are marked with *</h4>
+
+        <form method="POST">
+
+            <label>chr* (only allow 1-22 or X or Y)</label>
+            <input type="text" name="chr">
+
+            <label>Primer Name</label>
+            <input type="text" name="primer_name">
+
+            <label>Left_Sequence</label>
+            <input type="text" name="Left_Sequence">
+
+            <label>Right_Sequence</label>
+            <input type="text" name="Right_Sequence">
+
+            <label>Left_Start</label>
+            <input type="number" name="Left_Start">
+
+            <label>Left_End</label>
+            <input type="number" name="Left_End">
+
+            <label>Right_Start</label>
+            <input type="number" name="Right_Start">
+
+            <label>Right_End</label>
+            <input type="number" name="Right_End">
+
+            <label>Pair_Product_Size (must be positive number)</label>
+            <input type="number" name="Pair_Product_Size">
+
+            <label>gene:</label>
+            <input type="text" name="gene">
+
+            <label for="grch">GRCh*</label>
+            <select name="GRCh" id="grch" required>
+                <option value="">-- Select GRCh --</option>
+                <option value="37">37</option>
+                <option value="38">38</option>
+            </select>
+
+            <label for="tag">tag*</label>
+            <select name="tag" id="tag" required>
+                <option value="">-- Select Tag --</option>
+                <option value="M13">M13</option>
+                <option value="T1">T1</option>
+                <option value="sT1">sT1</option>
+                <option value="T2">T2</option>
+                <option value="T3">T3</option>
+                <option value="T4">T4</option>
+                <option value="FAM">FAM</option>
+                <option value="VIC">VIC</option>
+                <option value="NED">NED</option>
+                <option value="PET">PET</option>
+                <option value="ATTO550">ATTO550</option>
+                <option value="CY5">CY5</option>
+                <option value="ABY">ABY</option>
+                <option value="HEX">HEX</option>
+                <option value="no_tag">no_tag</option>
+            </select>
+
+            <label>Notes</label>
+            <input type="text" name="Notes">
+
+            <div class="buttons">
+                <input type="submit" value="Insert">
+                <a href="{{ url_for('home_page') }}" class="home-btn">
+                    Home Page
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</body>
+</html>
+
