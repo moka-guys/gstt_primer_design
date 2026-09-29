@@ -18,6 +18,9 @@ with open(config_path, "r") as file:
 
 
 class PrimerRecord(BaseModel):
+    """
+    Check validity of input parameters to design primers
+    """
     chr: str | int
     primer_name: str
     pos_start: int
@@ -353,6 +356,9 @@ def prepare_df(df, side):
 
 
 def prepare_order_sheet(df):
+    """
+    get tagged primers and prepare for order sheet
+    """
     (FW_primer, RV_primer,
     tagged_FW, tagged_RV,
     tag_name_FW, tag_name_RV) = get_tag(df, df["order_tag"][0])
@@ -362,7 +368,7 @@ def prepare_order_sheet(df):
 
 def liftover(chrom, pos, build):
     """
-    LiftOver between GRCh37 and GRCh38 safely
+    LiftOver between GRCh37 and GRCh38 using LiftOver
     Returns:
         int position or None if not mappable
     """
@@ -392,6 +398,9 @@ def liftover(chrom, pos, build):
 
 
 def liftover_crossmap(chrom, start, end, grch):
+    """
+    Lift over function using Crossmap
+    """
 
     CROSSMAP = shutil.which("CrossMap")
     if int(grch) == 37:

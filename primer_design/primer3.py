@@ -328,6 +328,9 @@ class DesignPrimer:
         return f, df_filtered, primer_found
 
     def has_tandem_repeat(self, seq, unit_size, min_repeats):
+        """
+        Check if designed primer has repetitive regions
+        """
         seq = seq.upper()
 
         for i in range(len(seq) - unit_size * min_repeats + 1):
@@ -339,6 +342,9 @@ class DesignPrimer:
         return False
 
     def passes_repeat_filter(self, seq):
+        """
+        Function to reject primers if they have repetitive nucleotides
+        """
         # Reject dinucleotide repeats (e.g. ACACACAC), min_repeat num inclusive
         if self.has_tandem_repeat(seq, unit_size=2, min_repeats=4):
             return False
@@ -462,6 +468,9 @@ class DesignPrimer:
         return primer_df
 
     def classify_variant(self, ref, alt):
+        """
+        Check type of variant found in primer binding regions
+        """
         alts = alt.split(',')
         classifications = []
 
@@ -537,6 +546,13 @@ class DesignPrimer:
         return df
 
     def design_primer(self):
+        """
+        Function to design primer(s) using primer3 package
+        Given position is padded for primer binding site
+        If any primer cannot be designed within padded regions,
+        the padding size is increased with each loop until it
+        reaches the max padding size defined in the config
+        """
         # get nc number mapped with chr
         nc_number = self.map_chr()
         # get exon, gene and transcript info for given POS

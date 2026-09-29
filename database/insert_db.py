@@ -5,7 +5,10 @@ from primer_design.helper_function import get_postgres_connection
 def insert_DB(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
               password, db_name, db_host, notes="NA", passval="Not_Done",
               archive="No"):
-
+    """
+    Function to insert designed primers into PRADA database.
+    """
+    # select columns to insert into DB
     df_insert = order_primer[[
         "chr", "start_POS", "end_POS", "primer_name", "Left_Sequence",
         "Right_Sequence", "Left_Start", "Left_End",
@@ -31,9 +34,10 @@ def insert_DB(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
         df_insert[col] = df_insert[col].replace([None, ""], "Not_Done")
 
     df_insert = df_insert.where(pd.notnull(df_insert), None)
-
+    # psql connection
     connection = get_postgres_connection(db_name, username, password, db_host)
     cursor = connection.cursor()
+    # use insert_primer_with_batch function to insert
     query = f"""
     SELECT * FROM {db_schema}.insert_primer_with_batch(
         %s::varchar,

@@ -4,6 +4,11 @@ from primer_design.helper_function import get_postgres_connection, liftover, lif
 
 
 def safe_liftover(chrom, pos, build):
+    """
+    Function to lift over between GRCh37 and GRCh38.
+    Two different python packages are used to do liftover and the results are
+    compared and only the consistent results are taken
+    """
     try:
         print(chrom, pos, build)
         lifted = liftover(chrom, pos, build)
@@ -33,6 +38,14 @@ def search_postgres(db_schema, dbname, user, password, host,
                     validation_val, grch_val, tray, archive_val,
                     notes, variant_pos=None, pos_start=None, pos_end=None,
                     start_date=None, end_date=None):
+    """
+    Function to query PRADA database with given inputs
+    Various combinations could be provided to do query
+    If the variant position, start or end position are given,
+    the liftover is done to retrieve data from both GRCh37 and GRCh38.
+    If the start and end Pos are given to do query, the primers that fall
+    within start and end position are highlighted with green
+    """
 
     if variant_pos or pos_start or pos_end:
         if grch_val not in ("37", "38"):
@@ -100,6 +113,7 @@ def search_postgres(db_schema, dbname, user, password, host,
         sql.Identifier(db_schema),
         sql.Identifier(db_schema)
     )
+    # check if lift over is required or not
     try:
         pos_start = int(pos_start) if pos_start is not None else None
         pos_end = int(pos_end) if pos_end is not None else None
@@ -116,7 +130,7 @@ def search_postgres(db_schema, dbname, user, password, host,
     except (ValueError, TypeError):
         msg_to_return += "Variant lift over is not done"
         variant_pos = None
-
+    # check given input for query
     if chr_val:
         conditions.append(sql.SQL("p.chr ILIKE %s"))
         values.append(chr_val)
@@ -337,6 +351,9 @@ def search_postgres(db_schema, dbname, user, password, host,
 
 def query_moka_by_id(dbname, user, password, host,
                      primer_name):
+    """
+    Query MOKA legacy data with primer ID.
+    """
     conn = get_postgres_connection(dbname, user, password, host)
     query = """
     SELECT DISTINCT
@@ -377,6 +394,9 @@ def query_moka_by_id(dbname, user, password, host,
 
 def query_moka_by_position(dbname, user, password, host,
                            chromosome, position):
+    """
+    Query MOKA legacy data with variant position.
+    """
     conn = get_postgres_connection(dbname, user, password, host)
 
     query = """
@@ -420,6 +440,10 @@ def query_moka_by_position(dbname, user, password, host,
 
 
 def query_moka_approved(dbname, user, password, host, filters=None):
+    """
+    Query all approved primers from MOKA legacy data
+    Filters can be applied to select specific primers
+    """
     conn = get_postgres_connection(dbname, user, password, host)
 
     query = """

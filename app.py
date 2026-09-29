@@ -40,6 +40,9 @@ batch_table = "primer_batches"
 
 
 def wait_for_db():
+    """
+    Function to wait DB connection
+    """
     max_retries = 30
     retry_interval = 2
     for i in range(max_retries):
@@ -158,6 +161,9 @@ def moka_index():
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
+    """
+    Function to change password
+    """
 
     if request.method == "POST":
 
@@ -395,6 +401,9 @@ def design_primer(db_schema):
 @app.route("/modify_primer/<db_schema>", methods=["GET", "POST"])
 @login_required
 def modify_primer(db_schema):
+    """
+    Function to modify input to design primers
+    """
     if request.method == "POST":
         return design_primer(db_schema)
 
@@ -408,6 +417,9 @@ def modify_primer(db_schema):
 @app.route('/query/<db_schema>', methods=['GET', 'POST'])
 @login_required
 def query_data(db_schema):
+    """
+    Query PRADA database
+    """
     if request.method == 'POST':
         chr_val = request.form.get('chr')
         gene_val = request.form.get('gene')
@@ -494,6 +506,9 @@ def query_data(db_schema):
 @app.route('/query_moka_id', methods=['GET', 'POST'])
 @login_required
 def query_moka_id():
+    """
+    Query MOKA legacy with primer id
+    """
     # Display the search form
     if request.method == 'GET':
         return render_template('query_moka_id.html')
@@ -549,6 +564,9 @@ def query_moka_id():
 @app.route('/query_moka_position', methods=['GET', 'POST'])
 @login_required
 def query_moka_position():
+    """
+    Query MOKA legacy with variant position
+    """
     # Display the search form
     if request.method == 'GET':
         return render_template('query_moka_position.html')
@@ -614,6 +632,9 @@ def query_moka_position():
 @app.route("/query_moka_all_approved", methods=["GET", "POST"])
 @login_required
 def query_moka_all_approved():
+    """
+    Query all approved MOKA primers and apply filters
+    """
     # define filters
     filters = {}
     # Default result
@@ -711,6 +732,10 @@ def success_primer_design(db_schema):
 @app.route('/save_selected/<db_schema>', methods=['POST'])
 @login_required
 def save_selected(db_schema):
+    """
+    Function to insert selected primers into PRADA
+    and generate order sheet for those selected primers
+    """
     output_dict = session.get('primer_output')
     if not output_dict:
         return "No data found in session."
@@ -778,6 +803,9 @@ def save_complete():
 @app.route("/download/<source>/<db_schema>")
 @login_required
 def download(source, db_schema):
+    """
+    Download order sheet
+    """
     if source == "manual":
         session_key = "order_sheet_name_manual"
     else:
@@ -819,6 +847,9 @@ def download(source, db_schema):
 @app.route('/update_row/<db_schema>', methods=['POST'])
 @login_required
 def update_row(db_schema):
+    """
+    Update PRADA database
+    """
     data = request.get_json()
     row_id = data['id']
     updated_fields = data['data']
@@ -928,6 +959,9 @@ def update_row(db_schema):
 @app.route("/export_csv")
 @login_required
 def export_csv():
+    """
+    Export PRADA query results into csv file
+    """
     rows = session["query_results"]
     output = StringIO()
 
@@ -947,6 +981,9 @@ def export_csv():
 @app.route("/export_moka_csv")
 @login_required
 def export_moka_csv():
+    """
+    Export MOKA query results into csv file
+    """
 
     export_info = session.get("moka_export")
 
@@ -1039,6 +1076,9 @@ def export_moka_csv():
 @app.route("/manual_insert/<db_schema>", methods=["GET", "POST"])
 @login_required
 def manual_insert(db_schema):
+    """
+    Insert manually designed primers into PRADA
+    """
     datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_uuid = uuid.uuid4()
 
@@ -1157,6 +1197,9 @@ def manual_insert(db_schema):
 @app.route("/app_logs")
 @login_required
 def app_logs():
+    """
+    app log
+    """
     try:
         with open("/app/logs/primer_app.log", "r") as f:
             logs = f.read()
@@ -1170,6 +1213,9 @@ def app_logs():
 @app.route("/view_log")
 @login_required
 def view_log():
+    """
+    Viewing log
+    """
     return render_template("view_log.html")
 
 
@@ -1221,6 +1267,9 @@ def delete_session_files(directory, session_key):
 
 
 def cleanup_old_files(directory, max_age_seconds):
+    """
+    Clean old files that are older than given time
+    """
 
     folder = Path(directory)
 

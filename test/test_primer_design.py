@@ -13,7 +13,6 @@ def generator():
     )
 
 
-
 def test_run_multiple_row_build(generator):
     input_file = "test/data/multiple_row_build.csv"
 
@@ -52,8 +51,6 @@ def test_run_multiple_row_build(generator):
     assert (result["snp_validity"] == "valid").any()
     assert result["primer_name"].nunique() == 2
     assert set(result["primer_name"]) == {"test1", "test2"}
-
-
 
 
 def test_no_primer_output(generator):
@@ -191,6 +188,7 @@ def test_gene_not_defined(generator):
     assert result["gene"].iloc[0] == "not_defined"
     assert result["exon_num"].iloc[0] == "not_defined"
     assert result["transcript"].iloc[0] == "not_defined"
+
 
 @pytest.fixture(autouse=True)
 def cleanup_primer_files():
