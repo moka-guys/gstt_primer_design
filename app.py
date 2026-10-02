@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
 import psycopg2
 from database.query_db import *
-from database.insert_db import insert_DB
+from database.insert_db import insert_primer
 from primer_design.primer3 import *
 from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
 
@@ -756,9 +756,9 @@ def save_selected(db_schema):
             (FW_primer, RV_primer, tagged_FW,
              tagged_RV, tag_name_FW, tag_name_R) = prepare_order_sheet(temp_df)
 
-            inserted_ids = insert_DB(db_schema, temp_df, tagged_FW,
-                                     tagged_RV,temp_df["order_tag"][0],
-                                     DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
+            inserted_ids = insert_primer(db_schema, temp_df, tagged_FW,
+                                         tagged_RV, temp_df["order_tag"][0],
+                                         DB_USER, DB_PASSWORD, DB_NAME, DB_HOST)
             primer_id = inserted_ids[0][1]
             app.logger.info(
                             f"User '{g.user}' selected designed primers to insert DB for upi {inserted_ids} for {db_schema}"
@@ -1116,14 +1116,14 @@ def manual_insert(db_schema):
                 "designer": "M"
             }])
 
-            inserted_ids = insert_DB(db_schema,
-                                     df_insert, None, None, tag,
-                                     username=DB_USER,
-                                     password=DB_PASSWORD,
-                                     db_name=DB_NAME,
-                                     db_host=DB_HOST,
-                                     notes=notes
-                                     )
+            inserted_ids = insert_primer(db_schema,
+                                         df_insert, None, None, tag,
+                                         username=DB_USER,
+                                         password=DB_PASSWORD,
+                                         db_name=DB_NAME,
+                                         db_host=DB_HOST,
+                                         notes=notes
+                                         )
             app.logger.info(f"{g.user} inserted primer manually: upi {inserted_ids} in {db_schema}")
             # generate order sheet for manual insert primer
             (FW_primer, RV_primer, tagged_FW,
