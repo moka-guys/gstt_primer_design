@@ -1,4 +1,5 @@
 import os
+from typing import Any
 import logging
 import json
 import pandas as pd
@@ -6,6 +7,7 @@ import math
 import subprocess
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 import psycopg2
+from psycopg2.extensions import connection
 from pathlib import Path
 from pyliftover import LiftOver
 import tempfile
@@ -18,8 +20,9 @@ with open(config_path, "r") as file:
 
 
 class PrimerRecord(BaseModel):
-    """
-    Check validity of input parameters to design primers
+    """Validate primer design input parameters.
+    This model performs input validation for primer design
+    requests submitted through the application.
     """
     chr: str | int
     primer_name: str
@@ -44,13 +47,34 @@ class PrimerRecord(BaseModel):
                      "max_product_size", "opt_primer_size",
                      "min_primer_size", "max_primer_size")
     @classmethod
-    def non_negative(cls, v, info):
+    def non_negative(cls, v, info) -> int | float:
+        """Validate that numeric values are non-negative.
+        Args:
+            v: Value being validated.
+            info: Pydantic validation metadata containing the field name.
+
+        Returns:
+            The validated value.
+
+        Raises:
+            ValueError: If the value is less than zero.
+        """
         if v < 0:
             raise ValueError(f"{info.field_name} must not be negative")
         return v
 
     @field_validator("chr")
-    def validate_chr(cls, v):
+    def validate_chr(cls, v) -> str:
+        """Validate chromosome value.
+        Args:
+            v: Chromosome identifier.
+
+        Returns:
+            Chromosome as a normalized string.
+
+        Raises:
+            ValueError: If chromosome is not 1-22, X, or Y.
+        """
         allowed = {str(i) for i in range(1, 23)} | {"X", "Y"}
         v_str = str(v).strip()
         if v_str not in allowed:
@@ -58,13 +82,33 @@ class PrimerRecord(BaseModel):
         return v_str
 
     @field_validator("build")
-    def validate_build(cls, v):
+    def validate_build(cls, v) -> int:
+        """Validate genome build.
+        Args:
+            v: Genome build number.
+
+        Returns:
+            The validated genome build.
+
+        Raises:
+            ValueError: If build is not 37 or 38.
+        """
         if v not in (37, 38):
             raise ValueError("build must be 37 or 38")
         return v
 
     @field_validator("tag")
-    def validate_tag(cls, v):
+    def validate_tag(cls, v) -> str:
+        """Validate primer tag.
+        Args:
+            v: Primer tag name.
+
+        Returns:
+            The validated tag.
+
+        Raises:
+            ValueError: If an unsupported tag is provided.
+        """
         if v not in ("M13", "T1", "T2", "T3", "T4", "sT1", "FAM",
                      "VIC", "NED", "PET", "ATTO550", "CY5",
                      "ABY", "HEX", "no_tag"):
@@ -72,7 +116,20 @@ class PrimerRecord(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def check_opt_tm(cls, model):
+    def check_opt_tm(cls, model) -> "PrimerRecord":
+        """Validate relationships between primer design parameters.
+        Checks that optimal values fall within configured ranges and
+        verifies that position and product-size ranges are valid.
+
+        Args:
+            model: Primer design parameters after field validation.
+
+        Returns:
+            The validated model.
+
+        Raises:
+            ValueError: If any parameter relationship is invalid.
+        """
         if not (model.min_tm <= model.opt_tm <= model.max_tm):
             raise ValueError("opt_tm must be between min_tm and max_tm")
         if model.pos_end < model.pos_start:
@@ -87,8 +144,16 @@ class PrimerRecord(BaseModel):
 
 
 def get_log(file_dir, datetimestr) -> logging.Logger:
-    """
-    Setup for primer design log file and return the logger.
+    """Create and configure a logger for primer design jobs.
+    Creates a file-based logger that writes primer design messages to
+    a timestamped log file under the primer_log directory.
+    Args:
+        file_dir: Base directory for log output.
+        datetimestr: Timestamp string used in the log file name and
+        logger name.
+
+    Returns:
+        logging.Logger: Configured logger instance.
     """
 
     logger = logging.getLogger(f"primer_log_{datetimestr}")
@@ -115,9 +180,20 @@ def get_log(file_dir, datetimestr) -> logging.Logger:
     return logger
 
 
-def get_tag(df, tag):
-    """
-    get primer tag for primer order
+def get_tag(df, tag) -> tuple[str, str, str, str, str, str]:
+    """Generate tagged primer sequences for ordering.
+    Args:
+        df: DataFrame containing primer sequences.
+        tag: Tag configuration name.
+
+    Returns:
+        tuple[str, str, str, str, str, str]:
+            Forward primer sequence,
+            reverse primer sequence,
+            tagged forward primer,
+            tagged reverse primer,
+            forward tag name,
+            reverse tag name.
     """
     FW_primer = df["Left_Sequence"][0]
     RV_primer = df["Right_Sequence"][0]
@@ -131,33 +207,53 @@ def get_tag(df, tag):
     return FW_primer, RV_primer, tagged_FW, tagged_RV, tag_name_FW, tag_name_RV
 
 
-def chr_to_int64(x):
+def chr_to_int64(x) -> Any:
+    """Convert chromosome value to pandas Int64 when possible.
+    Args:
+        x: Chromosome value.
+
+    Returns:
+        pandas.Int64Dtype-compatible integer if conversion succeeds,
+        otherwise the original value.
+    """
     try:
         return pd.Int64Dtype().type(int(x))
     except ValueError:
         return x
 
 
-def validate_primer_csv(df: pd.DataFrame):
+def validate_primer_csv(df: pd.DataFrame) -> list[dict[str, Any]]:
+    """Validate primer design records from a DataFrame.
+    Each row is validated against the PrimerRecord model.
+    Args:
+        df: Input DataFrame containing primer design parameters.
+
+    Returns:
+        list[dict]: Validation errors. Empty list indicates all records
+        are valid.
     """
-    check input params are valid by Pydantic
-    """
-    valid_records = []
     errors = []
 
     for idx, row in df.iterrows():
         try:
             record = PrimerRecord(**row.to_dict())
-            valid_records.append(record.model_dump())
+
         except ValidationError as e:
             errors.append({"row": idx, "errors": e.errors()})
 
     return errors
 
 
-def parse_csv(file):
-    """
-    parse input csv
+def parse_csv(file) -> dict[str, Any]:
+    """Parse and validate a primer design input CSV file.
+    Reads the CSV file, validates all records, and returns primer
+    design parameters as lists suitable for batch processing.
+    Args:
+        file: Path to the CSV file.
+
+    Returns:
+        dict: Parsed parameter values on success, or an error
+        dictionary containing validation failures.
     """
     df = pd.read_csv(file)
     # drop empty rows
@@ -217,9 +313,17 @@ def parse_csv(file):
                 }
 
 
-def get_value(param_value, default):
-    """
-    Return param_value if it is valid; otherwise return default from config
+def get_value(param_value, default) -> Any:
+    """Return a parameter value or a default value.
+    Handles missing values from user input, including None and NaN,
+    and returns a configured default value when appropriate.
+    Args:
+        param_value: User-supplied parameter value.
+        default: Default value to use when the parameter is invalid.
+
+    Returns:
+        The supplied parameter value if valid; otherwise the default
+        value.
     """
     try:
         if isinstance(param_value, float) and math.isnan(param_value):
@@ -232,8 +336,15 @@ def get_value(param_value, default):
         return default
 
 
-def make_list(x):
-    """Convert string or None to empty list"""
+def make_list(x) -> list:
+    """Convert a value to a list.
+    Args:
+        x: Value to convert.
+
+    Returns:
+        list: Empty list for None or string values, the original list
+        if already a list, otherwise a single-item list.
+    """
     if x is None:
         return []
     if isinstance(x, list):
@@ -243,9 +354,15 @@ def make_list(x):
     return [x]
 
 
-def generate_bed(primers, build, job_id):
-    """
-    put generated primers into bed format to plot on IGV
+def generate_bed(primers, build, job_id) -> str:
+    """Create a BED file from primer coordinates.
+    Args:
+        primers: DataFrame containing primer coordinates.
+        build: Genome build identifier.
+        job_id: Unique job identifier.
+
+    Returns:
+        str: Generated BED file name.
     """
     temp_dir = Path(config["directory"]["temp_folder"])
     temp_dir.mkdir(parents=True, exist_ok=True)
@@ -254,9 +371,20 @@ def generate_bed(primers, build, job_id):
     return str(os.path.basename(bed_file))
 
 
-def vcf_to_bed(bed_file, build, job_id):
-    """
-    get common SNP within primers to plot on IGV
+def vcf_to_bed(bed_file, build, job_id) -> tuple[str, str]:
+    """Extract common variants overlapping primer regions.
+    Filters variants from a reference VCF using primer regions and
+    converts the matching records to BED format for IGV visualization.
+
+    Args:
+        bed_file: BED file containing primer coordinates.
+        build: Genome build identifier.
+        job_id: Unique job identifier.
+
+    Returns:
+        tuple[str, str]:
+        Generated BED-format variant file name and filtered VCF file
+        name.
     """
     vcf_dir = Path(config["directory"]["temp_folder"])
     vcf_dir.mkdir(parents=True, exist_ok=True)
@@ -304,9 +432,16 @@ def vcf_to_bed(bed_file, build, job_id):
     return str(os.path.basename(vcf_bed)), str(os.path.basename(intermediate_vcf))
 
 
-def del_file(files_to_remove=None, base_dir="/app"):
-    """
-    del intermediate files
+def del_file(files_to_remove=None, base_dir="/app") -> None:
+    """Delete intermediate files from a directory tree.
+    Recursively searches a directory and removes matching files.
+    Args:
+        files_to_remove: List of file names to delete. Defaults to
+        common primer-design intermediate files.
+        base_dir: Root directory to search.
+
+    Returns:
+        None.
     """
     if files_to_remove is None:
         files_to_remove = ["designed_primer.fa", "designed_primer.fa.sam"]
@@ -321,8 +456,18 @@ def del_file(files_to_remove=None, base_dir="/app"):
             #     print("None to delete")
 
 
-def get_postgres_connection(db_name, db_user, db_password, db_host):
-    """connect to PostgreSQL"""
+def get_postgres_connection(db_name, db_user,
+                            db_password, db_host) -> connection:
+    """Create a PostgreSQL database connection.
+    Args:
+        db_name: Database name.
+        db_user: Database username.
+        db_password: Database password.
+        db_host: Database host.
+
+    Returns:
+        psycopg2.extensions.connection: PostgreSQL connection object.
+    """
     return psycopg2.connect(
         dbname=db_name,
         user=db_user,
@@ -331,10 +476,18 @@ def get_postgres_connection(db_name, db_user, db_password, db_host):
     )
 
 
-def prepare_df(df, side):
-    """
-    prepare df for bed file for IGV
-    side: "Left" or "Right"
+def prepare_df(df, side) -> pd.DataFrame:
+    """Prepare primer coordinates for IGV BED file generation.
+    Extracts primer coordinates for a specified primer side and
+    creates a unique identifier for each primer.
+    Args:
+        df: DataFrame containing primer design results.
+        side: Primer side to process ("Left" or "Right").
+
+    Returns:
+        pd.DataFrame: Reformatted DataFrame containing chromosome,
+        start position, end position, genome build, primer pair,
+        and a unique identifier.
     """
     start_col = f"{side}_Start"
     end_col = f"{side}_End"
@@ -355,22 +508,39 @@ def prepare_df(df, side):
     return df_side
 
 
-def prepare_order_sheet(df):
-    """
-    get tagged primers and prepare for order sheet
+def prepare_order_sheet(df) -> tuple[str, str, str, str, str, str]:
+    """Prepare tagged primer information for ordering.
+    Args:
+        df: DataFrame containing primer information and order tag.
+
+    Returns:
+        tuple[str, str, str, str, str, str]:
+            Forward primer,
+            reverse primer,
+            tagged forward primer,
+            tagged reverse primer,
+            forward tag name,
+            reverse tag name.
     """
     (FW_primer, RV_primer,
-    tagged_FW, tagged_RV,
-    tag_name_FW, tag_name_RV) = get_tag(df, df["order_tag"][0])
+     tagged_FW, tagged_RV,
+     tag_name_FW, tag_name_RV) = get_tag(df, df["order_tag"][0])
 
-    return FW_primer, RV_primer, tagged_FW, tagged_RV,tag_name_FW, tag_name_RV
+    return FW_primer, RV_primer, tagged_FW, tagged_RV, tag_name_FW, tag_name_RV
 
 
-def liftover(chrom, pos, build):
-    """
-    LiftOver between GRCh37 and GRCh38 using LiftOver
+def liftover(chrom, pos, build) -> int | None:
+    """Convert a genomic coordinate between genome builds.
+    Uses pyliftover to map a coordinate between GRCh37 and GRCh38.
+
+    Args:
+        chrom: Chromosome name.
+        pos: Genomic position.
+        build: Source genome build (37 or 38).
+
     Returns:
-        int position or None if not mappable
+        int | None: Converted position if mapping succeeds,
+        otherwise None.
     """
 
     try:
@@ -397,12 +567,22 @@ def liftover(chrom, pos, build):
         return None
 
 
-def liftover_crossmap(chrom, start, end, grch):
-    """
-    Lift over function using Crossmap
+def liftover_crossmap(chrom, start, end, grch) -> int | None:
+    """Convert genomic coordinates using CrossMap.
+    Creates a temporary BED file, performs coordinate conversion
+    using CrossMap, and returns the converted end position.
+
+    Args:
+        chrom: Chromosome name.
+        start: Start coordinate.
+        end: End coordinate.
+        grch: Source genome build.
+
+    Returns:
+        int | None: Converted coordinate if successful, otherwise None.
     """
 
-    CROSSMAP = shutil.which("CrossMap")
+    crossmap_path = shutil.which("CrossMap")
     if int(grch) == 37:
         chain_file = config["ref_b37"]["crossmap_ref"]
     elif int(grch) == 38:
@@ -417,7 +597,7 @@ def liftover_crossmap(chrom, start, end, grch):
     try:
         # run CrossMap
         cmd = [
-            CROSSMAP,
+            crossmap_path,
             "bed",
             chain_file,
             input_path,
