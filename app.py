@@ -481,7 +481,7 @@ def query_data(db_schema):
                 db_schema=db_schema
             )
         try:
-            result_list, msg = search_postgres(
+            result_list, msg = search_prada_primer(
                 db_schema, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
                 chr_val, gene_val, primer_name, primer_id, passed_validation, grch,
                 tray, archive, notes, variant_pos, start, end, start_date, end_date
