@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 from flask import Flask, request, jsonify, g, render_template, redirect, url_for, Response, session, send_from_directory, after_this_request
 from flask_session import Session
+from flask.typing import ResponseReturnValue
 import logging
 import traceback
 import tempfile
@@ -39,9 +40,13 @@ primer_table = "primers"
 batch_table = "primer_batches"
 
 
-def wait_for_db():
-    """
-    Function to wait DB connection
+def wait_for_db() -> None:
+    """Wait for the PostgreSQL database to become available.
+    Attempts to connect to the database repeatedly until a connection
+        succeeds or the maximum number of retries is reached.
+
+    Raises:
+        Exception: If the database cannot be reached after all retries.
     """
     max_retries = 30
     retry_interval = 2
@@ -78,17 +83,22 @@ app.logger.addHandler(file_handler)
 
 # Print stdout/stderr to logger
 class StreamToLogger:
-    def __init__(self, logger, level=logging.INFO):
+    def __init__(self, logger, level=logging.INFO) -> None:
+        """Initialize a stream wrapper that redirects output to a logger."""
         self.logger = logger
         self.level = level
 
-    def write(self, message):
+    def write(self, message) -> None:
+        """Write a message to the configured logger."""
         message = message.strip()
         if message:
             self.logger.log(self.level, message)
 
-    def flush(self):
-        pass  # for compatibility
+    def flush(self) -> None:
+        """Flush the stream.
+        Required for file-like object compatibility.
+        """
+        pass
 
 
 sys.stdout = StreamToLogger(app.logger, logging.INFO)
@@ -96,9 +106,13 @@ sys.stderr = StreamToLogger(app.logger, logging.ERROR)
 
 
 @app.route('/', methods=['GET', 'POST'])
-def gstt_primer_design():
-    """
-    app log in with user name and password
+def gstt_primer_design() -> ResponseReturnValue:
+    """Authenticate a user and create a session.
+    Validates the supplied username and password against stored
+    credentials and redirects authenticated users to the home page.
+
+    Returns:
+        Response: Login page or redirect response.
     """
     if request.method == 'POST':
         # Get username and password from UI input
@@ -120,8 +134,17 @@ def gstt_primer_design():
 
 
 def login_required(f):
+    """Require an authenticated session before accessing a route.
+    Returns:
+        Callable: Wrapped view function.
+    """
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args, **kwargs) -> Response:
+        """Validate the current session before executing the wrapped view.
+
+        Returns:
+            Response: Redirect or wrapped view response.
+        """
         if "username" not in session:
             return redirect(url_for("gstt_primer_design"))
 
@@ -133,36 +156,44 @@ def login_required(f):
 
 @app.route('/home_page')
 @login_required
-def home_page():
-    """
-    load home page if log in is successful
+def home_page() -> ResponseReturnValue:
+    """Render the application home page.
+
+    Returns:
+        Response: Home page template.
     """
     return render_template('home_page.html', username=g.user)
 
 
 @app.route('/index/<db_schema>')
 @login_required
-def index(db_schema):
-    """
-    load index page
+def index(db_schema) -> ResponseReturnValue:
+    """Render the main application page.
+
+    Returns:
+        Response: Index page template.
     """
     return render_template('index.html', username=g.user, db_schema=db_schema)
 
 
 @app.route('/moka_index')
 @login_required
-def moka_index():
-    """
-    load index page for moka query
+def moka_index() -> ResponseReturnValue:
+    """Render the MOKA query page.
+
+    Returns:
+        Response: MOKA index template.
     """
     return render_template('moka_index.html')
 
 
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
-def change_password():
-    """
-    Function to change password
+def change_password() -> ResponseReturnValue:
+    """Update the password for the current user.
+
+    Returns:
+        Response: Password change page with success or error message.
     """
 
     if request.method == "POST":
@@ -236,13 +267,13 @@ def change_password():
 
 @app.route('/igv_view/<genome>/<db_schema>')
 @login_required
-def igv_view(genome, db_schema):
-    """
-    Load igv_view to visualize primers and common snp
-    Generated primers are saved in bed file
-    Common SNP are filtered using primer bed file
-    Both generated primers and common SNP are loaded onto igv_view
-    Genome can either be GRCh 37 or 38
+def igv_view(genome, db_schema) -> ResponseReturnValue:
+    """Prepare and display primer and SNP tracks in IGV.
+    Creates temporary BED files for primers and SNPs and configures
+    the IGV viewer to display the selected region.
+
+    Returns:
+        Response: IGV viewer page.
     """
     # get primer output from design_primer
     primer_output = session.get('primer_output')
@@ -289,15 +320,13 @@ def igv_view(genome, db_schema):
 
 @app.route('/design_primer/<db_schema>', methods=['GET', 'POST'])
 @login_required
-def design_primer(db_schema):
-    """
-    Design primers using GenerateOrder from primer_design.primer3.py
-    Input params are obtained from UI
-    User can key in params for multiple ROI
-    Keyed in values on UI are taken as list and saved in temp csv file 
-    Temp csv file is checked by pydantic to confirm validity of input values
-    Valid input is used to generate primers and temp csv file is deleted
-    All generated primers are printed out as table on UI
+def design_primer(db_schema) -> ResponseReturnValue:
+    """Design primers from user-supplied target regions.
+    Validates input data, generates primers, stores results in the
+    session, and redirects to the results page.
+
+    Returns:
+        Response: Design page, error page, or redirect response.
     """
     cleanup_old_files("/app/static/temp", 18000)
     cleanup_old_files("/app/output", 18000)
@@ -400,9 +429,11 @@ def design_primer(db_schema):
 
 @app.route("/modify_primer/<db_schema>", methods=["GET", "POST"])
 @login_required
-def modify_primer(db_schema):
-    """
-    Function to modify input to design primers
+def modify_primer(db_schema) -> ResponseReturnValue:
+    """Reload a previous primer design for editing.
+
+    Returns:
+        Response: Primer design page.
     """
     if request.method == "POST":
         return design_primer(db_schema)
@@ -416,9 +447,11 @@ def modify_primer(db_schema):
 
 @app.route('/query/<db_schema>', methods=['GET', 'POST'])
 @login_required
-def query_data(db_schema):
-    """
-    Query PRADA database
+def query_data(db_schema) -> ResponseReturnValue:
+    """Search the PRADA database using user-supplied filters.
+
+    Returns:
+        Response: Query page or query results page.
     """
     if request.method == 'POST':
         chr_val = request.form.get('chr')
@@ -505,9 +538,11 @@ def query_data(db_schema):
 
 @app.route('/query_moka_id', methods=['GET', 'POST'])
 @login_required
-def query_moka_id():
-    """
-    Query MOKA legacy with primer id
+def query_moka_id() -> ResponseReturnValue:
+    """Search the MOKA database using a primer identifier.
+
+    Returns:
+        Response: Search form or query results page.
     """
     # Display the search form
     if request.method == 'GET':
@@ -563,9 +598,11 @@ def query_moka_id():
 
 @app.route('/query_moka_position', methods=['GET', 'POST'])
 @login_required
-def query_moka_position():
-    """
-    Query MOKA legacy with variant position
+def query_moka_position() -> ResponseReturnValue:
+    """Search the MOKA database using a genomic position.
+
+    Returns:
+        Response: Search form or query results page.
     """
     # Display the search form
     if request.method == 'GET':
@@ -631,9 +668,11 @@ def query_moka_position():
 
 @app.route("/query_moka_all_approved", methods=["GET", "POST"])
 @login_required
-def query_moka_all_approved():
-    """
-    Query all approved MOKA primers and apply filters
+def query_moka_all_approved() -> ResponseReturnValue:
+    """Return approved MOKA primers matching optional filters.
+
+    Returns:
+        Response: MOKA results page.
     """
     # define filters
     filters = {}
@@ -699,11 +738,11 @@ def query_moka_all_approved():
 
 @app.route('/success_primer_design/<db_schema>')
 @login_required
-def success_primer_design(db_schema):
-    """
-    Success page for primer design. Generated primers are shown as table if any.
-    Option to visualize primers on igv_view is provided.
-    Primer not found message is shown if no primer is designed
+def success_primer_design(db_schema) -> ResponseReturnValue:
+    """Display successfully generated primer designs.
+
+    Returns:
+        Response: Results page or no-primers page.
     """
     output_dict = session.get('primer_output')
 
@@ -731,10 +770,11 @@ def success_primer_design(db_schema):
 
 @app.route('/save_selected/<db_schema>', methods=['POST'])
 @login_required
-def save_selected(db_schema):
-    """
-    Function to insert selected primers into PRADA
-    and generate order sheet for those selected primers
+def save_selected(db_schema) -> Response | str:
+    """Save selected primers to the database and create an order sheet.
+
+    Returns:
+        Response | str: Success page or error message.
     """
     output_dict = session.get('primer_output')
     if not output_dict:
@@ -796,15 +836,23 @@ def save_selected(db_schema):
 
 @app.route("/save_complete")
 @login_required
-def save_complete():
+def save_complete() -> ResponseReturnValue:
+    """Display confirmation that primers were saved.
+
+    Returns:
+        Response: Save confirmation page.
+    """
     return render_template("save_complete.html")
 
 
 @app.route("/download/<source>/<db_schema>")
 @login_required
-def download(source, db_schema):
-    """
-    Download order sheet
+def download(source, db_schema) -> ResponseReturnValue:
+    """Download a generated order sheet.
+    Removes the file after a successful download.
+
+    Returns:
+        Response: File download response.
     """
     if source == "manual":
         session_key = "order_sheet_name_manual"
@@ -828,7 +876,12 @@ def download(source, db_schema):
     )
 
     @after_this_request
-    def cleanup(resp):
+    def cleanup(resp) -> Response:
+        """Remove temporary files after download.
+
+        Returns:
+            Response: Original response object.
+        """
         try:
             if os.path.exists(full_path):
                 os.remove(full_path)
@@ -846,9 +899,11 @@ def download(source, db_schema):
 
 @app.route('/update_row/<db_schema>', methods=['POST'])
 @login_required
-def update_row(db_schema):
-    """
-    Update PRADA database
+def update_row(db_schema) -> ResponseReturnValue:
+    """Update editable fields in the PRADA database.
+
+    Returns:
+        Response: JSON response indicating success or failure.
     """
     data = request.get_json()
     row_id = data['id']
@@ -958,9 +1013,11 @@ def update_row(db_schema):
 
 @app.route("/export_csv")
 @login_required
-def export_csv():
-    """
-    Export PRADA query results into csv file
+def export_csv() -> ResponseReturnValue:
+    """Export PRADA query results as a CSV file.
+
+    Returns:
+        Response: CSV download response.
     """
     rows = session["query_results"]
     output = StringIO()
@@ -980,9 +1037,11 @@ def export_csv():
 
 @app.route("/export_moka_csv")
 @login_required
-def export_moka_csv():
-    """
-    Export MOKA query results into csv file
+def export_moka_csv() -> Response | tuple[str, int]:
+    """Export MOKA query results as a CSV file.
+
+    Returns:
+        Response | tuple[str, int]: CSV response or error response.
     """
 
     export_info = session.get("moka_export")
@@ -1075,9 +1134,12 @@ def export_moka_csv():
 
 @app.route("/manual_insert/<db_schema>", methods=["GET", "POST"])
 @login_required
-def manual_insert(db_schema):
-    """
-    Insert manually designed primers into PRADA
+def manual_insert(db_schema) -> ResponseReturnValue:
+    """Insert manually designed primers into the database.
+    Generates an order sheet for successfully inserted primers.
+
+    Returns:
+        Response: Insert form, success page, or error page.
     """
     datetimestr = datetime.now().strftime("%Y%m%d%H%M%S%f")
     random_uuid = uuid.uuid4()
@@ -1196,9 +1258,10 @@ def manual_insert(db_schema):
 
 @app.route("/app_logs")
 @login_required
-def app_logs():
-    """
-    app log
+def app_logs() -> ResponseReturnValue:
+    """Return application log contents.
+    Returns:
+        Response: JSON response containing logs or an error message.
     """
     try:
         with open("/app/logs/primer_app.log", "r") as f:
@@ -1212,17 +1275,21 @@ def app_logs():
 
 @app.route("/view_log")
 @login_required
-def view_log():
-    """
-    Viewing log
+def view_log() -> ResponseReturnValue:
+    """Render the application log viewer.
+
+    Returns:
+        Response: Log viewer page.
     """
     return render_template("view_log.html")
 
 
 @app.route("/logout")
-def logout():
-    """
-    Function to log out app
+def logout() -> ResponseReturnValue:
+    """End the current user session and remove temporary files.
+
+    Returns:
+        Response: Redirect to the login page.
     """
     username = session.get('username')
 
@@ -1248,7 +1315,7 @@ def logout():
     return redirect(url_for("gstt_primer_design"))
 
 
-def delete_session_files(directory, session_key):
+def delete_session_files(directory, session_key) -> None:
     """
     Delete files stored in session under session_key
     """
@@ -1266,7 +1333,7 @@ def delete_session_files(directory, session_key):
             #)
 
 
-def cleanup_old_files(directory, max_age_seconds):
+def cleanup_old_files(directory, max_age_seconds) -> None:
     """
     Clean old files that are older than given time
     """
