@@ -6,12 +6,16 @@ import json
 import primer3
 import pandas as pd
 import gffutils
-from primer_design.helper_function import *
+from primer_design.helper_function import (del_file, get_log,
+                                           get_value, make_list,
+                                           parse_csv,
+                                           )
 from dataclasses import dataclass
 
 
 @dataclass
 class InputParam:
+    """Input parameters used for primer design."""
     chrom: str
     primer_name: str
     pos_start: int
@@ -32,10 +36,15 @@ class InputParam:
 
 
 class DesignPrimer:
-    def __init__(self, config_file, datetimestr, input_param: InputParam):
-        """
-        Use params from config unless they are
-        specified in input file
+    """Design primers for genomic regions."""
+    def __init__(self, config_file, datetimestr,
+                 input_param: InputParam) -> None:
+        """Initialize primer design settings and reference resources.
+
+        Args:
+            config_file (str): Path to the configuration file.
+            datetimestr (str): Timestamp used for logging.
+            input_param (InputParam): Primer design parameters.
         """
         with open(config_file, "r") as file:
             self.config = json.load(file)
@@ -81,18 +90,27 @@ class DesignPrimer:
         self.logger.info(f"Design for Build {self.build} using {self.ref_genome}, "
                          f"{self.bowtie_ref}, {self.common_snp} and {self.exon_db}")
 
-    def map_chr(self):
-        """
-        Map NC_ number with chromosome
+    def map_chr(self) -> str:
+        """Map a chromosome name to its corresponding RefSeq NC accession.
+
+        Returns:
+            str: RefSeq NC accession number corresponding to the chromosome.
         """
         reverse_data = {v: k for k, v in self.nc_pair.items()}
         nc_number = reverse_data.get(self.chr)
         self.logger.info(f"nc_number for chr {self.chr} is {nc_number}")
         return nc_number
 
-    def get_seq(self, nc_number, upstream_start, downstream_end):
-        """
-        get seq required for primer design
+    def get_seq(self, nc_number, upstream_start, downstream_end) -> str:
+        """Retrieve genomic sequence from the reference genome.
+
+        Args:
+            nc_number (str): RefSeq chromosome accession number.
+            upstream_start (int): Start coordinate of the query region.
+            downstream_end (int): End coordinate of the query region.
+
+        Returns:
+            str: Genomic sequence for the specified region.
         """
         fasta = pysam.FastaFile(self.ref_genome)
         # pysam is inclusive for given start
@@ -100,9 +118,17 @@ class DesignPrimer:
         sequence = fasta.fetch(nc_number, upstream_start, downstream_end)
         return sequence
 
-    def get_unique_exon(self, nc_number, start, end):
-        """
-        get unique exon from exon db
+    def get_unique_exon(self, nc_number, start, end) -> tuple:
+        """Retrieve a unique exon overlapping the specified region.
+
+        Args:
+            nc_number (str): RefSeq chromosome accession number.
+            start (int): Start position of the query region.
+            end (int): End position of the query region.
+
+        Returns:
+            tuple: Exon object and a boolean indicating whether
+            exon was found.
         """
         db = gffutils.FeatureDB(self.exon_db, keep_order=True)
         exons = list(db.region(region=(nc_number, start, end),
@@ -125,13 +151,18 @@ class DesignPrimer:
             exon_found = False
         return exon, exon_found
 
-    def get_exon(self, nc_number):
-        """
-        get exon, gene and transcript info for given POS
-        if given POS is not located inside an exon, move POS
-        +/-15 and check again
-        if exon size is bigger than 450, the entire exon is not taken,
-        but take +/- 10 from pos start and end
+    def get_exon(self, nc_number) -> tuple:
+        """Retrieve exon, gene, and transcript information for the target region.
+        If the target position is not located within a unique exon, nearby
+        positions (+/-15bp) are checked. If no unique exon is found, a dummy
+        exon (i.e pos_start - 10, pos_end + 10) is returned.
+
+        Args:
+            nc_number (str): RefSeq chromosome accession number.
+
+        Returns:
+            tuple: Exon start position, exon end position, exon size, exon
+            number, gene ID, and transcript ID.
         """
         exon_found = False
         offsets = [0, -15, +15]
@@ -166,9 +197,15 @@ class DesignPrimer:
         return (exon_start, exon_end, exon_size, exon['exon_number'][0],
                 exon['gene_id'][0], exon['transcript_id'][0])
 
-    def get_snp(self, start, end):
-        """
-        get a list of snp from common snp vcf
+    def get_snp(self, start, end) -> list:
+        """Retrieve common SNPs from the ref SNP files.
+
+        Args:
+            start (int): Start position of the query region.
+            end (int): End position of the query region.
+
+        Returns:
+            list: SNP records found within the specified region.
         """
         if self.build == 38:
             chrom = f"chr{self.chr}"
@@ -180,9 +217,16 @@ class DesignPrimer:
 
         return snp_list
 
-    def get_primer_value(self, primers, start, end):
-        """
-        extract keys and values from primer dict
+    def get_primer_value(self, primers, start, end) -> dict:
+        """Extract primer-related key-value pairs from Primer3 output.
+
+        Args:
+            primers (dict): Dictionary of Primer3 results.
+            start (str): Prefix used to select keys.
+            end (str): Suffix used to select keys.
+
+        Returns:
+            dict: Filtered dictionary containing matching primer values.
         """
 
         key_value = {
@@ -191,12 +235,22 @@ class DesignPrimer:
         return key_value
 
     def run_primer3(self, sequence, gene_name, primer_space, exon_plus,
-                    upstream_start, job_id):
-        """
-        design primers with primer3
-        if no primer is designed, primer_found returns as False
-        that triggers to expand padding region and design again
-        until max_padding
+                    upstream_start, job_id) -> tuple:
+        """Design PCR primers using Primer3.
+        Primer candidates are generated and filtered to remove repetitive
+        primer sequences before being written to a FASTA file.
+
+        Args:
+            sequence (str): Template sequence used for primer design.
+            gene_name (str): Gene identifier
+            primer_space (int): Distance allowed for primer placement.
+            exon_plus (int): Target region size including flanking sequence.
+            upstream_start (int): Genomic start coordinate of the sequence.
+            job_id (str): Unique identifier for the design run.
+
+        Returns:
+            tuple: FASTA file handle, primer DataFrame, and a boolean
+            indicating whether primers were successfully designed.
         """
         seq = {
             "SEQUENCE_TEMPLATE": sequence,
@@ -327,9 +381,16 @@ class DesignPrimer:
 
         return f, df_filtered, primer_found
 
-    def has_tandem_repeat(self, seq, unit_size, min_repeats):
-        """
-        Check if designed primer has repetitive regions
+    def has_tandem_repeat(self, seq, unit_size, min_repeats) -> bool:
+        """Determine whether a sequence contains tandem repeats.
+
+        Args:
+            seq (str): Primer sequence.
+            unit_size (int): Size of the repeating motif.
+            min_repeats (int): Minimum number of repeat units required.
+
+        Returns:
+            bool: True if a tandem repeat is detected, otherwise False.
         """
         seq = seq.upper()
 
@@ -341,9 +402,15 @@ class DesignPrimer:
 
         return False
 
-    def passes_repeat_filter(self, seq):
-        """
-        Function to reject primers if they have repetitive nucleotides
+    def passes_repeat_filter(self, seq) -> bool:
+        """Check whether a primer sequence passes repeat filtering.
+
+        Args:
+            seq (str): Primer sequence.
+
+        Returns:
+            bool: True if the sequence passes all repeat filters, otherwise
+            False.
         """
         # Reject dinucleotide repeats (e.g. ACACACAC), min_repeat num inclusive
         if self.has_tandem_repeat(seq, unit_size=2, min_repeats=4):
@@ -359,16 +426,30 @@ class DesignPrimer:
 
         return True
 
-    def keep_primer_pair(self, row):
+    def keep_primer_pair(self, row) -> bool:
+        """Determine whether a primer pair passes repeat filtering.
+
+        Args:
+            row (pd.Series): Primer pair record.
+
+        Returns:
+            bool: True if both primers pass repeat filtering, otherwise
+            False.
+        """
         return (
             self.passes_repeat_filter(row["Left_Sequence"]) and
             self.passes_repeat_filter(row["Right_Sequence"])
         )
 
-    def bowtie_mapping(self, primer_fa):
-        """
-        check specificity of designed by mapping with bowtie2
-        put output into df
+    def bowtie_mapping(self, primer_fa) -> pd.DataFrame:
+        """Assess primer specificity using Bowtie2 alignments.
+
+        Args:
+            primer_fa (str): Path to the FASTA file containing designed
+            primers.
+
+        Returns:
+            pd.DataFrame: DataFrame containing Bowtie2 alignment results.
         """
         bowtie_output = primer_fa + ".sam"
 
@@ -405,9 +486,17 @@ class DesignPrimer:
 
         return df
 
-    def update_df(self, primer_df, bowtie_df, nc_number):
-        """
-        update primer df based on bowtie2 specificity check
+    def update_df(self, primer_df, bowtie_df, nc_number) -> pd.DataFrame:
+        """Update primer results with specificity information.
+
+        Args:
+            primer_df (pd.DataFrame): Designed primer information.
+            bowtie_df (pd.DataFrame): Bowtie2 alignment results.
+            nc_number (str): Expected chromosome accession number.
+
+        Returns:
+            pd.DataFrame: Updated primer DataFrame containing specificity
+            classifications.
         """
         primer_df = primer_df[["Primer_Pair", "Left_Sequence",
                                "Right_Sequence", "Pair_Product_Size",
@@ -467,9 +556,15 @@ class DesignPrimer:
 
         return primer_df
 
-    def classify_variant(self, ref, alt):
-        """
-        Check type of variant found in primer binding regions
+    def classify_variant(self, ref, alt) -> list:
+        """Classify variants as SNPs, INDELs, or complex variants.
+
+        Args:
+            ref (str): Reference allele.
+            alt (str): Alternate alleles.
+
+        Returns:
+            list: Classification for each alternate allele.
         """
         alts = alt.split(',')
         classifications = []
@@ -485,9 +580,19 @@ class DesignPrimer:
 
         return classifications
 
-    def has_snp(self, new_col, updated_df, p_start, p_end):
-        """
-        Check any snp with AF >= 0.01 in designed primer region
+    def has_snp(self, new_col, updated_df, p_start, p_end) -> pd.DataFrame:
+        """Identify common variants within primer binding regions.
+        Variants with allele frequency greater than or equal to 1% are
+        reported for each primer.
+
+        Args:
+            new_col (str): Output column name.
+            updated_df (pd.DataFrame): Primer DataFrame.
+            p_start (str): Start position column name.
+            p_end (str): End position column name.
+
+        Returns:
+            pd.DataFrame: Updated DataFrame containing SNP information.
         """
         updated_df[new_col] = None
         for i in range(updated_df.shape[0]):
@@ -523,10 +628,15 @@ class DesignPrimer:
 
         return updated_df
 
-    def classify_snp(self, df):
-        """
-        check if there is one or more than variant AF >=0.01
-        and if there is, mark as invalid primer
+    def classify_snp(self, df) -> pd.DataFrame:
+        """Determine primer validity based on detected variants.
+        Primer pairs containing common variants are marked as invalid.
+
+        Args:
+            df (pd.DataFrame): Primer DataFrame containing SNP annotations.
+
+        Returns:
+            pd.DataFrame: Updated DataFrame containing SNP validity status.
         """
         df["snp_validity"] = None
         for i in range(df.shape[0]):
@@ -545,13 +655,14 @@ class DesignPrimer:
 
         return df
 
-    def design_primer(self):
-        """
-        Function to design primer(s) using primer3 package
-        Given position is padded for primer binding site
-        If any primer cannot be designed within padded regions,
-        the padding size is increased with each loop until it
-        reaches the max padding size defined in the config
+    def design_primer(self) -> pd.DataFrame:
+        """Design primers for the specified genomic region.
+        Primer design is performed iteratively with increasing padding until
+        a valid primer pair is identified or the maximum padding limit is
+        reached.
+
+        Returns:
+            pd.DataFrame: DataFrame containing designed primer information.
         """
         # get nc number mapped with chr
         nc_number = self.map_chr()
@@ -627,7 +738,14 @@ class DesignPrimer:
 
 
 class GeneratePrimer:
-    def __init__(self, app_datetimestr, config_path=None):
+    """Generate primer designs from input files."""
+    def __init__(self, app_datetimestr, config_path=None) -> None:
+        """Initialize primer generation settings.
+
+        Args:
+            app_datetimestr (str): Timestamp used for logging.
+            config_path (str | None): Path to the configuration file.
+        """
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
         if config_path is None:
@@ -636,10 +754,18 @@ class GeneratePrimer:
         self.config_path = config_path
         self.datetimestr = app_datetimestr
 
-    def parse_input(self, input_file):
-        """
-        generate designed primer order sheet
-        Input: input csv file
+    def parse_input(self, input_file) -> tuple[pd.DataFrame, str | None]:
+        """Generate primer designs from an input CSV file.
+        Each row of the input file is processed independently and all
+        successful primer designs are combined into a single output
+        DataFrame.
+
+        Args:
+            input_file (str): Path to the input CSV file.
+
+        Returns:
+            tuple[pd.DataFrame, str | None]: Generated primer DataFrame and
+            an error message if processing fails, otherwise None.
         """
         input_param = parse_csv(input_file)
         if "error" in input_param:
@@ -660,4 +786,3 @@ class GeneratePrimer:
             df_all = pd.DataFrame()
 
         return df_all, None
-
