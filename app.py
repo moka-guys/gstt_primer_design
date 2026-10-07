@@ -22,7 +22,9 @@ import psycopg2
 from database.query_db import *
 from database.insert_db import insert_primer
 from primer_design.primer3 import *
-from primer_design.helper_function import generate_bed, vcf_to_bed, get_postgres_connection, prepare_df
+from primer_design.helper_function import (generate_bed, vcf_to_bed,
+                                           get_postgres_connection, prepare_df,
+                                           prepare_order_sheet)
 
 warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
 load_dotenv()

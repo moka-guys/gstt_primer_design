@@ -6,10 +6,7 @@ import json
 import primer3
 import pandas as pd
 import gffutils
-from primer_design.helper_function import (del_file, get_log,
-                                           get_value, make_list,
-                                           parse_csv,
-                                           )
+from primer_design.helper_function import *
 from dataclasses import dataclass
 
 
@@ -73,14 +70,16 @@ class DesignPrimer:
         if self.build == 37:
             self.bowtie_ref = self.config["ref_b37"]["bowtie_ref"]
             self.ref_genome = self.config["ref_b37"]["genome_ref"]
-            self.common_snp = self.config["ref_b37"]["snp_ref"]
+            self.common_snp_exome = self.config["ref_b37"]["snp_ref_exome"]
+            self.common_snp_genome = self.config["ref_b37"]["snp_ref_genome"]
             self.exon_db = self.config["ref_b37"]["exon_ref"]
             self.nc_pair = self.config["nc_data_b37"]
 
         elif self.build == 38:
             self.bowtie_ref = self.config["ref_b38"]["bowtie_ref"]
             self.ref_genome = self.config["ref_b38"]["genome_ref"]
-            self.common_snp = self.config["ref_b38"]["snp_ref"]
+            self.common_snp_exome = self.config["ref_b38"]["snp_ref_exome"]
+            self.common_snp_genome = self.config["ref_b38"]["snp_ref_genome"]
             self.exon_db = self.config["ref_b38"]["exon_ref"]
             self.nc_pair = self.config["nc_data_b38"]
 
@@ -88,7 +87,7 @@ class DesignPrimer:
             self.logger.info("Invalid build is used in input file")
         self.logger.info(f"Primer design for {self.chr} {self.pos_start}-{self.pos_end}")
         self.logger.info(f"Design for Build {self.build} using {self.ref_genome}, "
-                         f"{self.bowtie_ref}, {self.common_snp} and {self.exon_db}")
+                         f"{self.bowtie_ref}, and {self.exon_db}")
 
     def map_chr(self) -> str:
         """Map a chromosome name to its corresponding RefSeq NC accession.
@@ -211,9 +210,10 @@ class DesignPrimer:
             chrom = f"chr{self.chr}"
         else:
             chrom = self.chr
-        vcf = pysam.TabixFile(self.common_snp)
-        snps = vcf.fetch(chrom, start, end)
-        snp_list = list(snps)
+        snp_list = []
+        for snp_file in [self.common_snp_genome, self.common_snp_exome]:
+            with pysam.TabixFile(snp_file) as vcf:
+                snp_list.extend(vcf.fetch(chrom, start, end))
 
         return snp_list
 

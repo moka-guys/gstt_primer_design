@@ -31,7 +31,8 @@
     "ref_b37": {
         "bowtie_ref": "/var/local/gstt_primer_design/ref/hs37d5.bowtie",
         "genome_ref": "/var/local/gstt_primer_design/ref/hs37d5.fa", 
-        "snp_ref": "/var/local/gstt_primer_design/ref/gnomad.exomes.r2.1.1.sites_AFonly.vcf.gz",
+        "snp_ref_exome": "/var/local/gstt_primer_design/ref/gnomad.exomes.r2.1.1.sites_AFonly.vcf.gz",
+        "snp_ref_genome": "/var/local/gstt_primer_design/ref/gnomad.genomes.r2.1.1.sites.AF_only_withheader.vcf.gz",
         "exon_ref": "/var/local/gstt_primer_design/ref/GCF_000001405.25_GRCh37.p13_genomic.db",
         "liftover": "/var/local/gstt_primer_design/ref/hg19ToHg38.over.chain.gz",
         "crossmap_ref": "/var/local/gstt_primer_design/ref/GRCh37_to_GRCh38.chain.gz"
@@ -39,7 +40,8 @@
      "ref_b38": {
       "bowtie_ref": "/var/local/gstt_primer_design/ref/GCF_000001405.40_GRCh38.p14_genomic.bowtie",
       "genome_ref": "/var/local/gstt_primer_design/ref/GCF_000001405.40_GRCh38.p14_genomic.fna", 
-      "snp_ref": "/var/local/gstt_primer_design/ref/combined_common_snp_v410_gnomad_exome_AFonly.vcf.gz",
+      "snp_ref_exome": "/var/local/gstt_primer_design/ref/combined_common_snp_v410_gnomad_exome_AFonly.vcf.gz",
+      "snp_ref_genome": "/var/local/gstt_primer_design/ref/gnomad.genomes.v4.1.1.AF_only_combined.vcf.gz",
       "exon_ref": "/var/local/gstt_primer_design/ref/GCF_000001405.40_GRCh38.p14_genomic.db",
       "liftover": "/var/local/gstt_primer_design/ref/hg38ToHg19.over.chain.gz",
       "crossmap_ref": "/var/local/gstt_primer_design/ref/GRCh38_to_GRCh37.chain.gz"

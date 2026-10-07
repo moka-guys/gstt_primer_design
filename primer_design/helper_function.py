@@ -12,6 +12,8 @@ from pathlib import Path
 from pyliftover import LiftOver
 import tempfile
 import shutil
+import gzip
+from pathlib import Path
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(BASE_DIR, "config.json")
@@ -373,8 +375,9 @@ def generate_bed(primers, build, job_id) -> str:
 
 def vcf_to_bed(bed_file, build, job_id) -> tuple[str, str]:
     """Extract common variants overlapping primer regions.
-    Filters variants from a reference VCF using primer regions and
-    converts the matching records to BED format for IGV visualization.
+    Filters variants from both exome and genome reference VCFs using
+    primer regions, combines the results, removes exact duplicate
+    variants, and converts the matching records to BED format.
 
     Args:
         bed_file: BED file containing primer coordinates.
@@ -383,53 +386,150 @@ def vcf_to_bed(bed_file, build, job_id) -> tuple[str, str]:
 
     Returns:
         tuple[str, str]:
-        Generated BED-format variant file name and filtered VCF file
-        name.
+        Generated BED-format variant file name and filtered VCF
+        file name.
     """
     vcf_dir = Path(config["directory"]["temp_folder"])
     vcf_dir.mkdir(parents=True, exist_ok=True)
 
-    if int(build) == 19:
-        vcf_in = config["ref_b37"]["snp_ref"]
-        bed_file = f"{vcf_dir}/{bed_file}"
-        intermediate_vcf = f"{vcf_dir}/tmp_filtered_19_{job_id}.vcf"
-        vcf_bed = f"{vcf_dir}/vcf_bed_19_{job_id}.vcf"
-    else:
-        vcf_in = config["ref_b38"]["snp_ref"]
-        bed_file = f"{vcf_dir}/{bed_file}"
-        intermediate_vcf = f"{vcf_dir}/tmp_filtered_38_{job_id}.vcf"
-        vcf_bed = f"{vcf_dir}/vcf_bed_38_{job_id}.vcf"
+    bed_file = f"{vcf_dir}/{bed_file}"
 
-    # filter variant with bed file
+    if int(build) == 19:
+        exome_vcf = config["ref_b37"]["snp_ref_exome"]
+        genome_vcf = config["ref_b37"]["snp_ref_genome"]
+
+        intermediate_exome = (
+            f"{vcf_dir}/tmp_filtered_exome_19_{job_id}.vcf.gz"
+        )
+        intermediate_genome = (
+            f"{vcf_dir}/tmp_filtered_genome_19_{job_id}.vcf.gz"
+        )
+        intermediate_vcf = (
+            f"{vcf_dir}/tmp_filtered_19_{job_id}.vcf.gz"
+        )
+        vcf_bed = f"{vcf_dir}/vcf_bed_19_{job_id}.bed"
+
+    else:
+        exome_vcf = config["ref_b38"]["snp_ref_exome"]
+        genome_vcf = config["ref_b38"]["snp_ref_genome"]
+
+        intermediate_exome = (
+            f"{vcf_dir}/tmp_filtered_exome_38_{job_id}.vcf.gz"
+        )
+        intermediate_genome = (
+            f"{vcf_dir}/tmp_filtered_genome_38_{job_id}.vcf.gz"
+        )
+        intermediate_vcf = (
+            f"{vcf_dir}/tmp_filtered_38_{job_id}.vcf.gz"
+        )
+        vcf_bed = f"{vcf_dir}/vcf_bed_38_{job_id}.bed"
+
+    # Filter exome variants
     subprocess.run([
-            "bcftools", "view",
-            "-R", bed_file,
-            "-i", 'INFO/AF > 0.01',
-            "-o", intermediate_vcf,
-            vcf_in
-            ], check=True)
-    with open(intermediate_vcf, "r") as vcf, open(vcf_bed, "w") as bed:
+        "bcftools", "view",
+        "-R", bed_file,
+        "-i", "INFO/AF > 0.01",
+        "-O", "z",
+        "-o", intermediate_exome,
+        exome_vcf
+    ], check=True)
+
+    # Filter genome variants
+    subprocess.run([
+        "bcftools", "view",
+        "-R", bed_file,
+        "-i", "INFO/AF > 0.01",
+        "-O", "z",
+        "-o", intermediate_genome,
+        genome_vcf
+    ], check=True)
+
+    # Combine exome + genome and remove exact duplicates
+    seen = set()
+    header_written = False
+
+    with gzip.open(intermediate_vcf, "wt") as output_vcf:
+
+        for input_vcf in [intermediate_genome, intermediate_exome]:
+
+            with gzip.open(input_vcf, "rt") as vcf:
+
+                for line in vcf:
+
+                    if line.startswith("#"):
+                        if not header_written:
+                            output_vcf.write(line)
+                        continue
+
+                    fields = line.rstrip("\n").split("\t")
+
+                    chrom = fields[0]
+                    pos = fields[1]
+                    ref = fields[3]
+                    alt = fields[4]
+
+                    # Unique variant based on CHROM + POS + REF + ALT
+                    variant_key = (
+                        chrom,
+                        pos,
+                        ref,
+                        alt
+                    )
+
+                    if variant_key in seen:
+                        continue
+
+                    seen.add(variant_key)
+
+                    output_vcf.write(line)
+
+            header_written = True
+
+    # Convert combined VCF to BED
+    with gzip.open(intermediate_vcf, "rt") as vcf, \
+            open(vcf_bed, "w") as bed:
+
         for line in vcf:
+
             if line.startswith("#"):
-                continue  # skip header lines
-            fields = line.strip().split("\t")
+                continue
+
+            fields = line.rstrip("\n").split("\t")
+
             chrom = fields[0]
             pos = int(fields[1])
             vid = fields[2] if fields[2] != "." else "NA"
             ref = fields[3]
             alt = fields[4]
             info_field = fields[7]
-            info_dict = dict(item.split("=", 1) for item in info_field.split(";") if "=" in item)
+
+            info_dict = {
+                item.split("=", 1)[0]: item.split("=", 1)[1]
+                for item in info_field.split(";")
+                if "=" in item
+            }
+
             af = info_dict.get("AF")
+
             if af is not None:
                 af_value = float(af)
             else:
                 af_value = "NA"
+
             name = f"{vid}_{ref}_{alt}_{af_value}"
-            start = pos - 1  # BED is 0-based
-            end = start + len(ref)  # end position
-            bed.write(f"{chrom}\t{start}\t{end}\t{name}\n")
-    return str(os.path.basename(vcf_bed)), str(os.path.basename(intermediate_vcf))
+
+            # BED is 0-based
+            start = pos - 1
+            end = start + len(ref)
+
+            bed.write(
+                f"{chrom}\t{start}\t{end}\t{name}\n"
+            )
+
+    return (
+        str(os.path.basename(vcf_bed)),
+        str(os.path.basename(intermediate_vcf))
+    )
 
 
 def del_file(files_to_remove=None, base_dir="/app") -> None:
