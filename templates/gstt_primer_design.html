@@ -22,36 +22,37 @@
         }
 
         body {
-            font-family: 'Inter', Arial, sans-serif;
-            min-height: 100vh;
+    font-family: 'Inter', Arial, sans-serif;
+    min-height: 100vh;
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-            padding: 30px;
+    padding: 30px;
 
-            background:
-                radial-gradient(
-                    circle at 15% 20%,
-                    rgba(0, 212, 255, 0.18),
-                    transparent 32%
-                ),
-                radial-gradient(
-                    circle at 85% 80%,
-                    rgba(111, 66, 193, 0.22),
-                    transparent 35%
-                ),
-                linear-gradient(
-                    135deg,
-                    #061923,
-                    #073f50,
-                    #082432
-                );
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(0, 212, 255, 0.18),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 85% 80%,
+            rgba(111, 66, 193, 0.22),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #061923,
+            #073f50,
+            #082432
+        );
 
-            overflow: hidden;
-            position: relative;
-        }
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+}
 
         /* Decorative background elements */
         body::before {
@@ -429,27 +430,7 @@
             color: #64748b;
         }
 
-        /* Mobile */
-        @media (max-width: 520px) {
-            body {
-                padding: 18px;
-            }
 
-            .login-card {
-                padding: 35px 22px 28px;
-                border-radius: 20px;
-            }
-
-            .brand {
-                font-size: 30px;
-            }
-
-            .logo {
-                width: 68px;
-                height: 68px;
-                font-size: 27px;
-            }
-        }
     </style>
 </head>
 

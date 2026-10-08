@@ -244,7 +244,6 @@ def change_password() -> ResponseReturnValue:
 
         # Hash the new password
         new_hash = generate_password_hash(new_password)
-        print(new_hash)
 
         # Update password
         cur.execute(
