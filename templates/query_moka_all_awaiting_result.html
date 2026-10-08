@@ -5,7 +5,7 @@
 
 <meta charset="UTF-8">
 
-<title>MOKA All Validated and Approved Primers</title>
+<title>MOKA awaiting validation Primers</title>
 
 <style>
 
@@ -234,7 +234,7 @@ tbody tr.selected td:first-child {
 
 <div class="container">
 
-<h2>MOKA All Approved Primers</h2>
+<h2>MOKA All Awaiting Validation Primers</h2>
 
 
 {% if error %}
@@ -257,7 +257,7 @@ tbody tr.selected td:first-child {
 
 <!-- FILTER FORM -->
 
-<form method="POST" action="{{ url_for('query_moka_all_approved') }}">
+<form method="POST" action="{{ url_for('query_moka_all_awaiting') }}">
 
 <div class="table-container">
 
@@ -285,6 +285,7 @@ tbody tr.selected td:first-child {
     <th>R Grid</th>
     <th>Date Ordered</th>
     <th>Manufacturer</th>
+    <th>Status</th>
 </tr>
 <!-- FILTER INPUTS -->
 
@@ -456,6 +457,15 @@ tbody tr.selected td:first-child {
         >
     </th>
 
+    <th>
+        <input
+            type="text"
+            name="status"
+            placeholder="status"
+            value="{{ filters.get('status', '') }}"
+        >
+    </th>
+
 </tr>
 </thead>
 
@@ -485,6 +495,7 @@ tbody tr.selected td:first-child {
     <td>{{ row[16] }}</td>
     <td>{{ row[17] }}</td>
     <td>{{ row[18] }}</td>
+    <td>{{ row[19] }}</td>
 
 </tr>
 
@@ -504,7 +515,7 @@ tbody tr.selected td:first-child {
     </button>
 
     <a
-        href="{{ url_for('query_moka_all_approved') }}"
+        href="{{ url_for('query_moka_all_awaiting') }}"
         class="clear-button"
     >
         Clear Filters

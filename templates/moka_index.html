@@ -136,7 +136,11 @@ body{
         </a>
         
         <a href="{{ url_for('query_moka_all_approved') }}">
-            Get all approved primers and filter
+            Get all validated and approved primers
+        </a> 
+
+        <a href="{{ url_for('query_moka_all_awaiting') }}">
+            Get all awaiting validation primers
         </a> 
 
     </div>

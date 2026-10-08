@@ -783,3 +783,155 @@ def query_moka_approved(dbname, user, password,
         with conn.cursor() as cursor:
             cursor.execute(query, params)
             return cursor.fetchall()
+
+
+def query_moka_awaiting(dbname, user, password,
+                        host, filters=None) -> list[tuple[Any, ...]]:
+    """
+    Query all awaiting primers for validation from MOKA legacy data
+    Filters can be applied to select specific primers
+    Args:
+        dbname: database name
+        user: username for database
+        password: password for database
+        host: host of database
+        filters: filter applied in output table
+
+    Returns:
+        Query results if any
+    """
+
+    query = """
+    SELECT
+        pa."PrimerName",
+        c."Chr",
+        pa."Start19",
+        pa."Stop19",
+        pa."ForwardSeq",
+        pa."ReverseSeq",
+        rtag."Item" AS "ReverseTag",
+        ftag."Item" AS "ForwardTag",
+        pa."Mix",
+        pa."Notes",
+        pa."TestResultNotes",
+        pa."FFreezer",
+        pa."FTray",
+        pa."FGrid",
+        pa."RFreezer",
+        pa."RTray",
+        pa."RGrid",
+        pa."DateOrdered",
+        pa."Manufacturer",
+        pa."Status"
+
+    FROM "moka_legacy"."PrimerAmplicon" pa
+
+    INNER JOIN "moka_legacy"."Chromosome" c
+        ON pa."ChromosomeID" = c."ChrID"
+
+    INNER JOIN "moka_legacy"."Item" rtag
+        ON pa."RTagName" = rtag."ItemID"
+
+    INNER JOIN "moka_legacy"."Item" ftag
+        ON pa."FTagName" = ftag."ItemID"
+
+    WHERE pa."Status" = 1202218831
+    """
+
+    params = []
+
+    if filters is None:
+        filters = {}
+
+    # add filters
+    if filters.get("amplicon_id"):
+        query += ' AND pa."AmpliconID" = %s'
+        params.append(filters["amplicon_id"])
+
+    if filters.get("chromosome"):
+        query += ' AND c."Chr" = %s'
+        params.append(filters["chromosome"])
+
+    if filters.get("start"):
+        query += ' AND pa."Start19" = %s'
+        params.append(filters["start"])
+
+    if filters.get("stop"):
+        query += ' AND pa."Stop19" = %s'
+        params.append(filters["stop"])
+
+    if filters.get("primer_name"):
+        query += ' AND pa."PrimerName" = %s'
+        params.append(filters["primer_name"])
+
+    if filters.get("manufacturer"):
+        query += ' AND pa."Manufacturer" = %s'
+        params.append(filters["manufacturer"])
+
+    if filters.get("status"):
+        query += ' AND pa."Status" = %s'
+        params.append(filters["status"])
+
+    # non-specific filters
+
+    if filters.get("notes"):
+        query += ' AND pa."Notes" ILIKE %s'
+        params.append("%" + filters["notes"] + "%")
+
+    if filters.get("forward_seq"):
+        query += ' AND pa."ForwardSeq" ILIKE %s'
+        params.append("%" + filters["forward_seq"] + "%")
+
+    if filters.get("reverse_seq"):
+        query += ' AND pa."ReverseSeq" ILIKE %s'
+        params.append("%" + filters["reverse_seq"] + "%")
+
+    if filters.get("mix"):
+        query += ' AND pa."Mix" ILIKE %s'
+        params.append("%" + filters["mix"] + "%")
+
+    if filters.get("r_tray"):
+        query += ' AND pa."RTray" ILIKE %s'
+        params.append("%" + filters["r_tray"] + "%")
+
+    if filters.get("r_freezer"):
+        query += ' AND pa."RFreezer" ILIKE %s'
+        params.append("%" + filters["r_freezer"] + "%")
+
+    if filters.get("f_grid"):
+        query += ' AND pa."FGrid" ILIKE %s'
+        params.append("%" + filters["f_grid"] + "%")
+
+    if filters.get("f_tray"):
+        query += ' AND pa."FTray" ILIKE %s'
+        params.append("%" + filters["f_tray"] + "%")
+
+    if filters.get("f_freezer"):
+        query += ' AND pa."FFreezer" ILIKE %s'
+        params.append("%" + filters["f_freezer"] + "%")
+
+    if filters.get("test_result_notes"):
+        query += ' AND pa."TestResultNotes" ILIKE %s'
+        params.append("%" + filters["test_result_notes"] + "%")
+
+    if filters.get("r_grid"):
+        query += ' AND pa."RGrid" ILIKE %s'
+        params.append("%" + filters["r_grid"] + "%")
+
+    if filters.get("reverse_tag"):
+        query += ' AND rtag."Item" ILIKE %s'
+        params.append("%" + filters["reverse_tag"] + "%")
+
+    if filters.get("forward_tag"):
+        query += ' AND ftag."Item" ILIKE %s'
+        params.append("%" + filters["forward_tag"] + "%")
+
+    # date
+    if filters.get("date_ordered"):
+        query += ' AND CAST(pa."DateOrdered" AS TEXT) ILIKE %s'
+        params.append("%" + filters["date_ordered"] + "%")
+
+    with get_postgres_connection(dbname, user, password, host) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchall()
