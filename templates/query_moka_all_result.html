@@ -46,7 +46,44 @@ tbody tr.selected td:first-child { background:#fff3cd; }
 </head>
 <body>
 <div class="container">
-<h2>MOKA All Awaiting Validation Primers</h2>
+<h2>All MOKA Primers that are approved or awaiting for validation</h2>
+<!-- Page information -->
+<div class="page-info">
+    <div class="page-info-title">
+        &#9432; Information & Instructions
+    </div>
+
+    <ul>
+        <li>
+            This table contains MOKA primers that are approved
+            or awaiting validation.
+        </li>
+        <li>
+            By default, only <strong>Approved</strong> primers are shown. 
+            To view <strong>Awaiting</strong> primers, choose <strong>Awaiting</strong>
+            in dropdown under <strong>Validation Status</strong> column.
+        </li>
+        <li>
+            Editable columns:
+            <ul>
+                <li>
+                    <strong>Validation Status:</strong>
+                    Choose PASS, FAIL, or AWAITING.
+                </li>
+                <li>
+                    <strong>Test Result Notes:</strong>
+                    Enter or update any free text.
+                </li>
+                <li>
+                    Click <strong>Edit</strong> to modify the values.
+                </li>
+                <li>
+                    Click <strong>Update</strong> to save your changes.
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
     <div class="message {{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
@@ -56,22 +93,29 @@ tbody tr.selected td:first-child { background:#fff3cd; }
 {% if msg %}<div class="message success">{{ msg }}</div>{% endif %}
 
 <!-- Filter controls remain a separate form. -->
-<form id="filter-form" method="POST" action="{{ url_for('query_moka_all_awaiting') }}"></form>
+<form id="filter-form" method="POST" action="{{ url_for('query_moka_all') }}"></form>
 
 <div class="table-container">
 <table id="primer-table">
 <thead>
 <tr>
-    <th>Fragment ID</th><th>Chromosome</th><th>Start</th><th>Stop</th>
+    <th>Fragment ID</th><th>Validation Status</th><th>Chromosome</th><th>Start</th><th>Stop</th>
     <th>Forward Seq</th><th>Reverse Seq</th><th>Reverse Tag</th><th>Forward Tag</th>
     <th>Mix</th><th>Amplicon Name</th><th>Test Result Notes</th>
     <th>F Freezer</th><th>F Tray</th><th>F Grid</th>
     <th>R Freezer</th><th>R Tray</th><th>R Grid</th>
-    <th>Date Ordered</th><th>Manufacturer</th><th>Status / Action</th>
+    <th>Date Ordered</th><th>Manufacturer</th>
 </tr>
 <tr class="filter-row">
+<th><input type="text" name="primer_name" form="filter-form" placeholder="ID" value="{{ filters.get('primer_name', '') }}"></th>
+<th>
+    <select name="status" form="filter-form" class="status-select">
+        <option value="1202218832" {% if filters.get('status', '1202218832')|string == '1202218832' %}selected{% endif %}>PASS</option>
+        <option value="1202218831" {% if filters.get('status', '1202218832')|string == '1202218831' %}selected{% endif %}>AWAITING</option>
+    </select>
+</th>
 {% for name, placeholder in [
-    ('primer_name','ID'), ('chromosome','= 1'), ('start','Start'), ('stop','Stop'),
+    ('chromosome','= 1'), ('start','From'), ('stop','To'),
     ('forward_seq','Contains...'), ('reverse_seq','Contains...'),
     ('reverse_tag','Contains...'), ('forward_tag','Contains...'),
     ('mix','Contains...'), ('notes','Contains...'),
@@ -83,26 +127,23 @@ tbody tr.selected td:first-child { background:#fff3cd; }
 ] %}
 <th><input type="text" name="{{ name }}" form="filter-form" placeholder="{{ placeholder }}" value="{{ filters.get(name, '') }}"></th>
 {% endfor %}
-<th>
-    <select name="status" form="filter-form" class="status-select">
-        <option value="1202218832" {% if filters.get('status', '1202218832')|string == '1202218832' %}selected{% endif %}>1202218832</option>
-        <option value="1202218831" {% if filters.get('status', '1202218832')|string == '1202218831' %}selected{% endif %}>1202218831</option>
-    </select>
-</th>
+
 </tr>
 </thead>
 <tbody>
 {% for row in results %}
 <tr>
-    {% for index in range(10) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
-    <td class="notes-cell"><div class="notes-display">{{ row[10] if row[10] is not none else '' }}</div></td>
-    {% for index in range(11,19) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
+    <td>{{ row[0] if row[0] is not none else '' }}</td>
     <td class="status-cell">
-        <span class="status-display">{{ row[19] }}</span>
+        <span class="status-display">{% if row[19]|string == '1202218831' %}AWAITING{% elif row[19]|string == '1202218832' %}PASS{% elif row[19]|string == '1202218833' %}FAIL{% else %}{{ row[19] }}{% endif %}</span>
         <button type="button" class="edit-button" data-action="edit">Edit</button>
         <!-- Values are held as data attributes on the button, not extra form controls. -->
         <span class="primer-data" data-primer="{{ row[0] }}" data-status="{{ row[19] }}" hidden></span>
     </td>
+    {% for index in range(1,10) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
+    <td class="notes-cell"><div class="notes-display">{{ row[10] if row[10] is not none else '' }}</div></td>
+    {% for index in range(11,19) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
+
 </tr>
 {% endfor %}
 </tbody>
@@ -111,7 +152,7 @@ tbody tr.selected td:first-child { background:#fff3cd; }
 
 <div class="filter-bar">
     <button type="submit" form="filter-form" class="filter-button">Apply Filters</button>
-    <a href="{{ url_for('query_moka_all_awaiting') }}" class="clear-button">Clear Filters</a>
+    <a href="{{ url_for('query_moka_all') }}" class="clear-button">Clear Filters</a>
 </div>
 {% if not results %}<p><strong>No records found.</strong></p>{% endif %}
 <div class="buttons">
@@ -126,8 +167,9 @@ tbody tr.selected td:first-child { background:#fff3cd; }
 (() => {
     const tbody = document.querySelector('#primer-table tbody');
     if (!tbody) return;
-    const allowed = ['1202218831', '1202218832', '1202218833'];
-    const updateUrl = {{ url_for('update_moka_status_route')|tojson }};
+    const statusLabels = {'1202218831': 'AWAITING', '1202218832': 'PASS', '1202218833': 'FAIL'};
+    const allowed = Object.keys(statusLabels);
+    const updateUrl = {{ url_for('update_moka_row')|tojson }};
     const returnStatus = {{ filters.get('status', '1202218832')|string|tojson }};
     let activeRow = null;
     let selectedRow = null;
@@ -147,7 +189,7 @@ tbody tr.selected td:first-child { background:#fff3cd; }
         statusCell.replaceChildren();
         const statusText = document.createElement('span');
         statusText.className = 'status-display';
-        statusText.textContent = oldStatus;
+        statusText.textContent = statusLabels[oldStatus] || oldStatus;
         const editButton = document.createElement('button');
         editButton.type = 'button';
         editButton.className = 'edit-button';
@@ -191,7 +233,7 @@ tbody tr.selected td:first-child { background:#fff3cd; }
         select.name = 'status';
         select.className = 'status-select';
         for (const status of allowed) {
-            const option = new Option(status, status, false, status === row._originalStatus);
+            const option = new Option(statusLabels[status], status, false, status === row._originalStatus);
             select.add(option);
         }
         // Associate the textarea in the other table cell with this form.

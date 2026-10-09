@@ -232,7 +232,7 @@ body {
 
         <div class="search-box">
 
-            <h3>📋 Search All and Filter</h3>
+            <h3>📋 Search All, Filter and Update</h3>
 
             <p>
                 Browse All Approved and Awaiting For Validation primers.
@@ -240,11 +240,8 @@ body {
 
             <div class="menu">
 
-                <a href="{{ url_for('query_moka_all_approved') }}">
-                    Get all validated and approved primers
-                </a>
 
-                <a href="{{ url_for('query_moka_all_awaiting') }}">
+                <a href="{{ url_for('query_moka_all') }}">
                     Get all awaiting validation primers
                 </a>
 

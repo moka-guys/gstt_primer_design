@@ -739,9 +739,14 @@ def query_moka_all_approved() -> ResponseReturnValue:
         )
 
 
-@app.route("/query_moka_all_awaiting", methods=["GET", "POST"])
+@app.route("/query_moka_all", methods=["GET", "POST"])
 @login_required
-def query_moka_all_awaiting():
+def query_moka_all() -> ResponseReturnValue:
+    """Return all approved and awaiting primers matching optional filters.
+
+    Returns:
+        Response: MOKA results page.
+    """
     # GET uses the default status; POST reads all table filters.
     filters = (
         {key: value.strip() for key, value in request.form.items()}
@@ -749,42 +754,87 @@ def query_moka_all_awaiting():
     )
     filters["status"] = filters.get("status") or DEFAULT_MOKA_STATUS
     try:
-        results = query_moka_awaiting(
+        results = query_moka_all_primers(
             DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, filters
         )
         return render_template(
-            "query_moka_all_awaiting_result.html",
+            "query_moka_all_result.html",
             results=results, filters=filters
         )
     except Exception as exc:
         return render_template(
-            "query_moka_all_awaiting_result.html",
+            "query_moka_all_result.html",
             results=[], filters=filters, error=str(exc)
         ), 400
 
 
-@app.route('/update_moka_status_route', methods=['POST'])
+@app.route('/update_moka_row', methods=['POST'])
 @login_required
-def update_moka_status_route():
+def update_moka_row() -> ResponseReturnValue:
+    """Update MOKA Status and/or Test Result Notes.
+    Returns:
+        Response: MOKA results page.
+    """
     primer_name = request.form.get('primer_name', '').strip()
     new_status = request.form.get('status', '').strip()
-    return_status = request.form.get('return_status', DEFAULT_MOKA_STATUS).strip()
+    return_status = request.form.get(
+                                    'return_status', DEFAULT_MOKA_STATUS
+                                    ).strip()
     notes = request.form.get('test_result_notes')
 
-    if not primer_name or new_status not in ALLOWED_MOKA_STATUSES or notes is None:
-        return 'Invalid primer name, status, or missing notes field', 400
+    if (
+        not primer_name
+        or new_status not in ALLOWED_MOKA_STATUSES
+        or notes is None
+    ):
+        return (
+            'Invalid primer name, status, or missing notes field',
+            400
+        )
+
     if return_status not in ALLOWED_MOKA_STATUSES:
         return_status = DEFAULT_MOKA_STATUS
 
     try:
-        update_moka_status(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
-                           primer_name, new_status, notes)
-        flash('Update successfully.', 'success')
-    except Exception:
-        app.logger.exception('MOKA primer update failed for %s', primer_name)
-        flash('Update failed.', 'error')
+        result = update_moka(
+            DB_NAME,
+            DB_USER,
+            DB_PASSWORD,
+            DB_HOST,
+            primer_name,
+            new_status,
+            notes
+        )
 
-    return redirect(url_for('query_moka_all_awaiting', status=return_status))
+        primer_id = result["primer_id"]
+        changes = result["changes"]
+
+        if not result["updated"]:
+            flash("No changes detected.", "warning")
+
+        else:
+            for column, values in changes.items():
+                app.logger.info(
+                    "User '%s' updated MOKA primer_id %s: %s "
+                    "from %r to %r",
+                    g.user,
+                    primer_id,
+                    column,
+                    values["old"],
+                    values["new"]
+                )
+            flash("Updated successfully.", "success")
+
+    except Exception:
+        app.logger.exception(
+            "MOKA primer update failed for %s",
+            primer_name
+        )
+        flash("Update failed.", "error")
+
+    return redirect(
+        url_for('query_moka_all', status=return_status)
+    )
 
 
 @app.route('/success_primer_design/<db_schema>')

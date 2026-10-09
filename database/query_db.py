@@ -788,8 +788,21 @@ def query_moka_approved(dbname, user, password,
             return cursor.fetchall()
 
 
-def query_moka_awaiting(dbname, user, password, host, filters=None) -> list[tuple[Any, ...]]:
-    """Retrieve primers with status 1202218831 or 1202218832; default to 1202218832."""
+def query_moka_all_primers(dbname, user, password,
+                           host, filters=None) -> list[tuple[Any, ...]]:
+    """
+    Query all approved primers and awaiting primers from MOKA legacy data
+    Filters can be applied to select specific primers
+    Args:
+        dbname: database name
+        user: username for database
+        password: password for database
+        host: host of database
+        filters: filter applied in output table
+
+    Returns:
+        Query results if any
+    """
 
     filters = filters or {}
 
@@ -836,8 +849,6 @@ def query_moka_awaiting(dbname, user, password, host, filters=None) -> list[tupl
     # Exact match filters
     exact_filters = {
         "chromosome": 'c."Chr"',
-        "start": 'pa."Start19"',
-        "stop": 'pa."Stop19"',
         "primer_name": 'pa."PrimerName"',
         "manufacturer": 'pa."Manufacturer"',
     }
@@ -848,6 +859,25 @@ def query_moka_awaiting(dbname, user, password, host, filters=None) -> list[tupl
         if value:
             query += f' AND {column} = %s'
             params.append(value)
+
+    # Start and Stop range filters
+    start = str(filters.get("start") or "").strip()
+    stop = str(filters.get("stop") or "").strip()
+
+    if start and stop:
+        query += '''
+            AND pa."Start19" >= %s
+            AND pa."Stop19" <= %s
+        '''
+        params.extend([int(start), int(stop)])
+
+    elif start:
+        query += ' AND pa."Start19" >= %s'
+        params.append(int(start))
+
+    elif stop:
+        query += ' AND pa."Stop19" <= %s'
+        params.append(int(stop))
 
     # Contains / partial match filters
     contains_filters = {
@@ -890,25 +920,120 @@ def query_moka_awaiting(dbname, user, password, host, filters=None) -> list[tupl
             return cursor.fetchall()
 
 
-def update_moka_status(dbname, user, password, host, primer_name, new_status, test_result_notes):
+def update_moka(
+    dbname, user, password, host,
+    primer_name, new_status, test_result_notes
+) -> dict:
+    """
+    Update MOKA Status and/or TestResultNotes.
+
+    Returns:
+         a dictionary describing which fields changed.
+    """
+
     allowed_statuses = {1202218831, 1202218832, 1202218833}
+
     try:
         primer_id = int(primer_name)
         status = int(new_status)
     except (ValueError, TypeError) as exc:
-        raise ValueError('Invalid PrimerName or status') from exc
-    if status not in allowed_statuses:
-        raise ValueError('Invalid status')
-    if not isinstance(test_result_notes, str):
-        raise ValueError('Notes must be text')
+        raise ValueError("Invalid PrimerName or status") from exc
 
-    sql = '''
-        UPDATE "moka_legacy"."PrimerAmplicon"
-        SET "Status" = %s, "TestResultNotes" = %s
-        WHERE "PrimerName" = %s
-    '''
+    if status not in allowed_statuses:
+        raise ValueError("Invalid status")
+
+    if not isinstance(test_result_notes, str):
+        raise ValueError("Notes must be text")
+
     with get_postgres_connection(dbname, user, password, host) as conn:
         with conn.cursor() as cursor:
-            cursor.execute(sql, (status, test_result_notes, primer_id))
+
+            # Read existing values and lock this primer row
+            cursor.execute(
+                '''
+                SELECT "Status", "TestResultNotes"
+                FROM "moka_legacy"."PrimerAmplicon"
+                WHERE "PrimerName" = %s
+                FOR UPDATE
+                ''',
+                (primer_id,)
+            )
+
+            current_row = cursor.fetchone()
+
+            if current_row is None:
+                raise ValueError(
+                    f"Primer {primer_id} not found"
+                )
+
+            old_status, old_notes = current_row
+
+            # Detect actual changes
+            status_changed = old_status != status
+            notes_changed = old_notes != test_result_notes
+
+            changes = {}
+
+            if status_changed:
+                changes["Status"] = {
+                    "old": old_status,
+                    "new": status
+                }
+
+            if notes_changed:
+                changes["TestResultNotes"] = {
+                    "old": old_notes,
+                    "new": test_result_notes
+                }
+
+            # No actual changes: skip UPDATE
+            if not changes:
+                return {
+                    "primer_id": primer_id,
+                    "updated": False,
+                    "changes": {}
+                }
+
+            # Update only the columns that changed
+            if status_changed and notes_changed:
+                cursor.execute(
+                    '''
+                    UPDATE "moka_legacy"."PrimerAmplicon"
+                    SET "Status" = %s,
+                        "TestResultNotes" = %s
+                    WHERE "PrimerName" = %s
+                    ''',
+                    (status, test_result_notes, primer_id)
+                )
+
+            elif status_changed:
+                cursor.execute(
+                    '''
+                    UPDATE "moka_legacy"."PrimerAmplicon"
+                    SET "Status" = %s
+                    WHERE "PrimerName" = %s
+                    ''',
+                    (status, primer_id)
+                )
+
+            elif notes_changed:
+                cursor.execute(
+                    '''
+                    UPDATE "moka_legacy"."PrimerAmplicon"
+                    SET "TestResultNotes" = %s
+                    WHERE "PrimerName" = %s
+                    ''',
+                    (test_result_notes, primer_id)
+                )
+
             if cursor.rowcount != 1:
-                raise ValueError('Expected exactly one matching primer; update rolled back')
+                raise ValueError(
+                    "Expected exactly one matching primer; "
+                    "update rolled back"
+                )
+
+            return {
+                "primer_id": primer_id,
+                "updated": True,
+                "changes": changes
+            }
