@@ -1,596 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<title>MOKA awaiting validation Primers</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All MOKA Primers that are approved or awaiting for validation</title>
 <style>
-
-body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #f4f6f9;
-    margin: 0;
-    padding: 30px;
-}
-
-.container {
-    max-width: 1800px;
-    margin: auto;
-}
-
-h2 {
-    color: #1f4e79;
-    margin-bottom: 20px;
-}
-
-
-/* Messages */
-
-.message {
-    padding: 12px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-
-.error {
-    background: #ffe6e6;
-    color: #b00020;
-    border: 1px solid #ffb3b3;
-}
-
-.success {
-    background: #eaf7ea;
-    color: #1b5e20;
-    border: 1px solid #b9e6b9;
-}
-
-
-/* Filter controls */
-
-.filter-bar {
-    margin-bottom: 20px;
-}
-
-.filter-button {
-    padding: 10px 20px;
-    background: #1f4e79;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.filter-button:hover {
-    background: #163a5a;
-}
-
-.clear-button {
-    display: inline-block;
-    padding: 10px 20px;
-    margin-left: 10px;
-    background: #777;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-}
-
-.clear-button:hover {
-    background: #555;
-}
-
-
-/* Table scrolling */
-
-.table-container {
-    max-height: 750px;
-    overflow: auto;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 8px rgba(0,0,0,.15);
-}
-
-
-/* Table */
-
-table {
-    border-collapse: collapse;
-    width: max-content;
-    min-width: 100%;
-}
-
-th,
-td {
-    border: 1px solid #ddd;
-    padding: 8px 12px;
-    white-space: nowrap;
-}
-
-
-/* Header */
-
-thead th {
-    position: sticky;
-    top: 0;
-    background: #1f4e79;
-    color: white;
-    z-index: 3;
-}
-
-
-/* Filter row */
-
-.filter-row th {
-    position: sticky;
-    top: 42px;
-    background: #dce6f1;
-    z-index: 3;
-    padding: 5px;
-}
-
-.filter-row input {
-    width: 110px;
-    box-sizing: border-box;
-    padding: 6px;
-    border: 1px solid #aaa;
-    border-radius: 4px;
-    background: white;
-    color: #333;
-}
-
-.filter-row input:focus {
-    outline: 2px solid #6ea8d7;
-}
-
-
-/* Alternating rows */
-
-tbody tr:nth-child(even) {
-    background: #f8f8f8;
-}
-
-
-/* Selected row */
-
-tbody tr.selected {
-    background: #fff3cd !important;
-}
-
-
-/* Sticky first column */
-
-th:first-child,
-td:first-child {
-    position: sticky;
-    left: 0;
-    background: white;
-    font-weight: bold;
-    z-index: 2;
-}
-
-
-/* First header */
-
-thead tr:first-child th:first-child {
-    background: #1f4e79;
-    color: white;
-    z-index: 5;
-}
-
-
-/* First filter cell */
-
-.filter-row th:first-child {
-    background: #dce6f1;
-    z-index: 5;
-}
-
-
-/* Selected sticky first column */
-
-tbody tr.selected td:first-child {
-    background: #fff3cd;
-}
-
-
-/* Buttons */
-
-.buttons {
-    margin-top: 25px;
-}
-
-.button {
-    display: inline-block;
-    padding: 10px 18px;
-    margin-right: 12px;
-    text-decoration: none;
-    color: white;
-    background: #1f4e79;
-    border-radius: 5px;
-}
-
-.button:hover {
-    background: #163a5a;
-}
-
-.logout {
-    background: #b22222;
-}
-
-.logout:hover {
-    background: #8b1a1a;
-}
-
+* { box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f9; margin:0; padding:30px; }
+.container { max-width:1800px; margin:auto; }
+h2 { color:#1f4e79; margin-bottom:20px; }
+.message { padding:12px; border-radius:5px; margin-bottom:20px; }
+.error { background:#ffe6e6; color:#b00020; border:1px solid #ffb3b3; }
+.success { background:#eaf7ea; color:#1b5e20; border:1px solid #b9e6b9; }
+.table-container { max-height:750px; overflow:auto; border:1px solid #ccc; border-radius:8px; background:white; box-shadow:0 2px 8px #0002; }
+table { border-collapse:collapse; width:max-content; min-width:100%; }
+th, td { border:1px solid #ddd; padding:8px 12px; white-space:nowrap; }
+thead tr:first-child th { position:sticky; top:0; background:#1f4e79; color:white; z-index:3; }
+.filter-row th { position:sticky; top:42px; background:#dce6f1; z-index:3; padding:5px; }
+.filter-row input { width:110px; padding:6px; border:1px solid #aaa; border-radius:4px; }
+.filter-row select { min-width:120px; }
+tbody tr:nth-child(even) { background:#f8f8f8; }
+tbody tr.selected { background:#fff3cd !important; }
+th:first-child, td:first-child { position:sticky; left:0; background:white; font-weight:bold; z-index:2; }
+thead tr:first-child th:first-child { background:#1f4e79; z-index:5; }
+.filter-row th:first-child { background:#dce6f1; z-index:5; }
+tbody tr.selected td:first-child { background:#fff3cd; }
+.notes-cell { min-width:250px; max-width:400px; white-space:normal; }
+.notes-display { white-space:pre-wrap; overflow-wrap:anywhere; max-height:80px; overflow:hidden; }
+.status-cell { min-width:250px; }
+.status-select, .notes-input { padding:7px; border:1px solid #aaa; border-radius:4px; font:inherit; }
+.notes-input { width:300px; min-height:70px; resize:vertical; white-space:pre-wrap; }
+.status-select { min-width:120px; }
+.edit-button, .update-button, .cancel-button { padding:7px 11px; border:0; border-radius:4px; cursor:pointer; color:white; }
+.edit-button { background:#1f4e79; }
+.update-button { background:#28a745; }
+.cancel-button { background:#777; }
+.edit-actions { display:flex; align-items:center; gap:6px; }
+.filter-bar { margin:20px 0; }
+.filter-button { padding:10px 20px; background:#1f4e79; color:white; border:0; border-radius:5px; cursor:pointer; }
+.clear-button { display:inline-block; padding:10px 20px; margin-left:10px; background:#777; color:white; text-decoration:none; border-radius:5px; }
+.buttons { margin-top:25px; }
+.button { display:inline-block; padding:10px 18px; margin-right:12px; margin-bottom:10px; text-decoration:none; color:white; background:#1f4e79; border-radius:5px; }
+.logout { background:#b22222; }
 </style>
-
 </head>
-
-
 <body>
-
 <div class="container">
-
 <h2>MOKA All Awaiting Validation Primers</h2>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="message {{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+    {% endfor %}
+{% endwith %}
+{% if error %}<div class="message error">{{ error }}</div>{% endif %}
+{% if msg %}<div class="message success">{{ msg }}</div>{% endif %}
 
-
-{% if error %}
-
-<div class="message error">
-    {{ error }}
-</div>
-
-{% endif %}
-
-
-{% if msg %}
-
-<div class="message success">
-    {{ msg }}
-</div>
-
-{% endif %}
-
-
-<!-- FILTER FORM -->
-
-<form method="POST" action="{{ url_for('query_moka_all_awaiting') }}">
+<!-- Filter controls remain a separate form. -->
+<form id="filter-form" method="POST" action="{{ url_for('query_moka_all_awaiting') }}"></form>
 
 <div class="table-container">
-
-<table>
-
+<table id="primer-table">
 <thead>
-
 <tr>
-    <th>Fragment ID</th>
-    <th>Chromosome</th>
-    <th>Start</th>
-    <th>Stop</th>
-    <th>Forward Seq</th>
-    <th>Reverse Seq</th>
-    <th>Reverse Tag</th>
-    <th>Forward Tag</th>
-    <th>Mix</th>
-    <th>Amplicon Name</th>
-    <th>Test Result Notes</th>
-    <th>F Freezer</th>
-    <th>F Tray</th>
-    <th>F Grid</th>    
-    <th>R Freezer</th>
-    <th>R Tray</th>
-    <th>R Grid</th>
-    <th>Date Ordered</th>
-    <th>Manufacturer</th>
-    <th>Status</th>
+    <th>Fragment ID</th><th>Chromosome</th><th>Start</th><th>Stop</th>
+    <th>Forward Seq</th><th>Reverse Seq</th><th>Reverse Tag</th><th>Forward Tag</th>
+    <th>Mix</th><th>Amplicon Name</th><th>Test Result Notes</th>
+    <th>F Freezer</th><th>F Tray</th><th>F Grid</th>
+    <th>R Freezer</th><th>R Tray</th><th>R Grid</th>
+    <th>Date Ordered</th><th>Manufacturer</th><th>Status / Action</th>
 </tr>
-<!-- FILTER INPUTS -->
-
 <tr class="filter-row">
-
-    <th>
-        <input
-            type="text"
-            name="primer_name"
-            placeholder="ID"
-            value="{{ filters.get('primer_name', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="chromosome"
-            placeholder="= 1"
-            value="{{ filters.get('chromosome', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="start"
-            placeholder="Start"
-            value="{{ filters.get('start', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="stop"
-            placeholder="Stop"
-            value="{{ filters.get('stop', '') }}"
-        >
-    </th>
-    <th>
-        <input
-            type="text"
-            name="forward_seq"
-            placeholder="Contains..."
-            value="{{ filters.get('forward_seq', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="reverse_seq"
-            placeholder="Contains..."
-            value="{{ filters.get('reverse_seq', '') }}"
-        >
-    </th>
-    <th>
-        <input
-            type="text"
-            name="reverse_tag"
-            placeholder="Contains..."
-            value="{{ filters.get('reverse_tag', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="forward_tag"
-            placeholder="Contains..."
-            value="{{ filters.get('forward_tag', '') }}"
-        >
-    </th>
-    <th>
-        <input
-            type="text"
-            name="mix"
-            placeholder="Contains..."
-            value="{{ filters.get('mix', '') }}"
-        >
-    </th>
-    <th>
-        <input
-            type="text"
-            name="notes"
-            placeholder="Contains..."
-            value="{{ filters.get('notes', '') }}"
-        >
-    </th>
-    <th>
-        <input
-            type="text"
-            name="test_result_notes"
-            placeholder="Contains..."
-            value="{{ filters.get('test_result_notes', '') }}"
-        >
-    </th>
-    <th>
-        <input
-            type="text"
-            name="f_freezer"
-            placeholder="Contains..."
-            value="{{ filters.get('f_freezer', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="f_tray"
-            placeholder="Contains..."
-            value="{{ filters.get('f_tray', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="f_grid"
-            placeholder="Contains..."
-            value="{{ filters.get('f_grid', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="r_freezer"
-            placeholder="Contains..."
-            value="{{ filters.get('r_freezer', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="r_tray"
-            placeholder="Contains..."
-            value="{{ filters.get('r_tray', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="r_grid"
-            placeholder="Contains..."
-            value="{{ filters.get('r_grid', '') }}"
-        >
-    </th>
-
-
-    <th>
-        <input
-            type="text"
-            name="date_ordered"
-            placeholder="Contains..."
-            value="{{ filters.get('date_ordered', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="manufacturer"
-            placeholder="ID"
-            value="{{ filters.get('manufacturer', '') }}"
-        >
-    </th>
-
-    <th>
-        <input
-            type="text"
-            name="status"
-            placeholder="status"
-            value="{{ filters.get('status', '') }}"
-        >
-    </th>
-
+{% for name, placeholder in [
+    ('primer_name','ID'), ('chromosome','= 1'), ('start','Start'), ('stop','Stop'),
+    ('forward_seq','Contains...'), ('reverse_seq','Contains...'),
+    ('reverse_tag','Contains...'), ('forward_tag','Contains...'),
+    ('mix','Contains...'), ('notes','Contains...'),
+    ('test_result_notes','Contains...'), ('f_freezer','Contains...'),
+    ('f_tray','Contains...'), ('f_grid','Contains...'),
+    ('r_freezer','Contains...'), ('r_tray','Contains...'),
+    ('r_grid','Contains...'), ('date_ordered','Contains...'),
+    ('manufacturer','ID')
+] %}
+<th><input type="text" name="{{ name }}" form="filter-form" placeholder="{{ placeholder }}" value="{{ filters.get(name, '') }}"></th>
+{% endfor %}
+<th>
+    <select name="status" form="filter-form" class="status-select">
+        <option value="1202218832" {% if filters.get('status', '1202218832')|string == '1202218832' %}selected{% endif %}>1202218832</option>
+        <option value="1202218831" {% if filters.get('status', '1202218832')|string == '1202218831' %}selected{% endif %}>1202218831</option>
+    </select>
+</th>
 </tr>
 </thead>
-
-
 <tbody>
-
 {% for row in results %}
-
 <tr>
-
-    <td>{{ row[0] }}</td>
-    <td>{{ row[1] }}</td>
-    <td>{{ row[2] }}</td>
-    <td>{{ row[3] }}</td>
-    <td>{{ row[4] }}</td>
-    <td>{{ row[5] }}</td>
-    <td>{{ row[6] }}</td>
-    <td>{{ row[7] }}</td>
-    <td>{{ row[8] }}</td>
-    <td>{{ row[9] }}</td>
-    <td>{{ row[10] }}</td>
-    <td>{{ row[11] }}</td>
-    <td>{{ row[12] }}</td>
-    <td>{{ row[13] }}</td>
-    <td>{{ row[14] }}</td>
-    <td>{{ row[15] }}</td>
-    <td>{{ row[16] }}</td>
-    <td>{{ row[17] }}</td>
-    <td>{{ row[18] }}</td>
-    <td>{{ row[19] }}</td>
-
+    {% for index in range(10) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
+    <td class="notes-cell"><div class="notes-display">{{ row[10] if row[10] is not none else '' }}</div></td>
+    {% for index in range(11,19) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
+    <td class="status-cell">
+        <span class="status-display">{{ row[19] }}</span>
+        <button type="button" class="edit-button" data-action="edit">Edit</button>
+        <!-- Values are held as data attributes on the button, not extra form controls. -->
+        <span class="primer-data" data-primer="{{ row[0] }}" data-status="{{ row[19] }}" hidden></span>
+    </td>
 </tr>
-
 {% endfor %}
-
 </tbody>
-
 </table>
-
 </div>
-
 
 <div class="filter-bar">
-
-    <button type="submit" class="filter-button">
-        Apply Filters
-    </button>
-
-    <a
-        href="{{ url_for('query_moka_all_awaiting') }}"
-        class="clear-button"
-    >
-        Clear Filters
-    </a>
-
+    <button type="submit" form="filter-form" class="filter-button">Apply Filters</button>
+    <a href="{{ url_for('query_moka_all_awaiting') }}" class="clear-button">Clear Filters</a>
 </div>
-
-</form>
-
-{% if not results %}
-
-<p>
-    <strong>No records found.</strong>
-</p>
-
-{% endif %}
-
-
+{% if not results %}<p><strong>No records found.</strong></p>{% endif %}
 <div class="buttons">
-
-<a
-    href="{{ url_for('moka_index') }}"
-    class="button"
->
-    Back to MOKA Search Options
-</a>
-{% if results %}
-<a
-    href="{{ url_for('export_moka_csv') }}"
-    class="button"
->
-    Export CSV
-</a>
-{% endif %}
-
-<a
-    href="{{ url_for('logout') }}"
-    class="button logout"
->
-    Log Out
-</a>
-
+    <a href="{{ url_for('moka_index') }}" class="button">Back to MOKA Search Options</a>
+    {% if results %}<a href="{{ url_for('export_moka_csv') }}" class="button">Export CSV</a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="button logout">Log Out</a>
 </div>
-
-
 </div>
-
 
 <script>
+// One delegated listener for the entire table. Only the active row has editable controls.
+(() => {
+    const tbody = document.querySelector('#primer-table tbody');
+    if (!tbody) return;
+    const allowed = ['1202218831', '1202218832', '1202218833'];
+    const updateUrl = {{ url_for('update_moka_status_route')|tojson }};
+    const returnStatus = {{ filters.get('status', '1202218832')|string|tojson }};
+    let activeRow = null;
+    let selectedRow = null;
 
-// Click row to select
+    function closeEditor(row) {
+        if (!row) return;
+        const notesCell = row.querySelector('.notes-cell');
+        const statusCell = row.querySelector('.status-cell');
+        const data = row.querySelector('.primer-data');
+        const oldNotes = row._originalNotes;
+        const oldStatus = row._originalStatus;
+        notesCell.replaceChildren();
+        const display = document.createElement('div');
+        display.className = 'notes-display';
+        display.textContent = oldNotes;
+        notesCell.appendChild(display);
+        statusCell.replaceChildren();
+        const statusText = document.createElement('span');
+        statusText.className = 'status-display';
+        statusText.textContent = oldStatus;
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'edit-button';
+        editButton.dataset.action = 'edit';
+        editButton.textContent = 'Edit';
+        statusCell.append(statusText, document.createTextNode(' '), editButton, data);
+        delete row._originalNotes;
+        delete row._originalStatus;
+        activeRow = null;
+    }
 
-document.addEventListener("DOMContentLoaded", function () {
+    function openEditor(row) {
+        if (activeRow && activeRow !== row) closeEditor(activeRow);
+        if (activeRow === row) return;
+        const notesCell = row.querySelector('.notes-cell');
+        const statusCell = row.querySelector('.status-cell');
+        const data = row.querySelector('.primer-data');
+        row._originalNotes = notesCell.querySelector('.notes-display').textContent;
+        row._originalStatus = data.dataset.status;
+        const primer = data.dataset.primer;
+        notesCell.replaceChildren();
+        const textarea = document.createElement('textarea');
+        textarea.className = 'notes-input';
+        textarea.name = 'test_result_notes';
+        textarea.value = row._originalNotes;
+        textarea.setAttribute('aria-label', 'Test result notes for primer ' + primer);
+        notesCell.appendChild(textarea);
 
-    const rows = document.querySelectorAll("tbody tr");
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = updateUrl;
+        form.className = 'edit-actions';
+        for (const [name, value] of [['primer_name', primer], ['return_status', returnStatus]]) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = name;
+            hidden.value = value;
+            form.appendChild(hidden);
+        }
+        const select = document.createElement('select');
+        select.name = 'status';
+        select.className = 'status-select';
+        for (const status of allowed) {
+            const option = new Option(status, status, false, status === row._originalStatus);
+            select.add(option);
+        }
+        // Associate the textarea in the other table cell with this form.
+        form.id = 'active-primer-edit-form';
+        textarea.setAttribute('form', form.id);
+        const update = document.createElement('button');
+        update.type = 'submit';
+        update.className = 'update-button';
+        update.textContent = 'Update';
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'cancel-button';
+        cancel.dataset.action = 'cancel';
+        cancel.textContent = 'Cancel';
+        form.append(select, update, cancel);
+        statusCell.replaceChildren(form, data);
+        activeRow = row;
+        textarea.focus();
+    }
 
-    rows.forEach(row => {
-
-        row.addEventListener("click", function () {
-
-            rows.forEach(r => {
-                r.classList.remove("selected");
-            });
-
-            this.classList.add("selected");
-
-        });
-
+    tbody.addEventListener('click', event => {
+        const button = event.target.closest('button[data-action]');
+        if (button && tbody.contains(button)) {
+            const row = button.closest('tr');
+            if (button.dataset.action === 'edit') openEditor(row);
+            else if (button.dataset.action === 'cancel') closeEditor(row);
+            return;
+        }
+        if (event.target.closest('input, textarea, select, button, form')) return;
+        const row = event.target.closest('tr');
+        if (!row || !tbody.contains(row)) return;
+        if (selectedRow) selectedRow.classList.remove('selected');
+        row.classList.add('selected');
+        selectedRow = row;
     });
 
-});
-
+    tbody.addEventListener('submit', event => {
+        const form = event.target.closest('form.edit-actions');
+        if (!form) return;
+        const select = form.querySelector('select[name="status"]');
+        const textarea = document.querySelector('textarea[form="active-primer-edit-form"]');
+        const primer = form.querySelector('input[name="primer_name"]').value;
+        if (!select || !textarea || !allowed.includes(select.value)) {
+            event.preventDefault();
+            alert('Invalid status or missing notes.');
+            return;
+        }
+        if (!confirm('Save Status and Test Result Notes for primer ' + primer + '?')) {
+            event.preventDefault();
+        }
+    });
+})();
 </script>
-
-
 </body>
-
 </html>

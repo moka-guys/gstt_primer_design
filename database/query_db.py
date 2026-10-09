@@ -4,6 +4,9 @@ from psycopg2 import sql
 from primer_design.helper_function import (get_postgres_connection, liftover,
                                            liftover_crossmap)
 
+ALLOWED_MOKA_STATUSES = {"1202218831", "1202218832", "1202218833"}
+DEFAULT_MOKA_STATUS = "1202218832"
+
 
 def safe_liftover(chrom, pos, build) -> tuple[Optional[int], str]:
     """
@@ -785,23 +788,17 @@ def query_moka_approved(dbname, user, password,
             return cursor.fetchall()
 
 
-def query_moka_awaiting(dbname, user, password,
-                        host, filters=None) -> list[tuple[Any, ...]]:
-    """
-    Query all awaiting primers for validation from MOKA legacy data
-    Filters can be applied to select specific primers
-    Args:
-        dbname: database name
-        user: username for database
-        password: password for database
-        host: host of database
-        filters: filter applied in output table
+def query_moka_awaiting(dbname, user, password, host, filters=None) -> list[tuple[Any, ...]]:
+    """Retrieve primers with status 1202218831 or 1202218832; default to 1202218832."""
 
-    Returns:
-        Query results if any
-    """
+    filters = filters or {}
 
-    query = """
+    status = str(filters.get("status") or DEFAULT_MOKA_STATUS).strip()
+
+    if status not in ALLOWED_MOKA_STATUSES:
+        raise ValueError("Invalid MOKA status filter")
+
+    query = '''
     SELECT
         pa."PrimerName",
         c."Chr",
@@ -823,115 +820,95 @@ def query_moka_awaiting(dbname, user, password,
         pa."DateOrdered",
         pa."Manufacturer",
         pa."Status"
-
     FROM "moka_legacy"."PrimerAmplicon" pa
-
     INNER JOIN "moka_legacy"."Chromosome" c
         ON pa."ChromosomeID" = c."ChrID"
-
     INNER JOIN "moka_legacy"."Item" rtag
         ON pa."RTagName" = rtag."ItemID"
-
     INNER JOIN "moka_legacy"."Item" ftag
         ON pa."FTagName" = ftag."ItemID"
+    WHERE pa."Status" IN (1202218831, 1202218832)
+      AND pa."Status" = %s
+    '''
 
-    WHERE pa."Status" = 1202218831
-    """
+    params = [int(status)]
 
-    params = []
+    # Exact match filters
+    exact_filters = {
+        "chromosome": 'c."Chr"',
+        "start": 'pa."Start19"',
+        "stop": 'pa."Stop19"',
+        "primer_name": 'pa."PrimerName"',
+        "manufacturer": 'pa."Manufacturer"',
+    }
 
-    if filters is None:
-        filters = {}
+    for key, column in exact_filters.items():
+        value = str(filters.get(key) or "").strip()
 
-    # add filters
-    if filters.get("amplicon_id"):
-        query += ' AND pa."AmpliconID" = %s'
-        params.append(filters["amplicon_id"])
+        if value:
+            query += f' AND {column} = %s'
+            params.append(value)
 
-    if filters.get("chromosome"):
-        query += ' AND c."Chr" = %s'
-        params.append(filters["chromosome"])
+    # Contains / partial match filters
+    contains_filters = {
+        "notes": 'pa."Notes"',
+        "forward_seq": 'pa."ForwardSeq"',
+        "reverse_seq": 'pa."ReverseSeq"',
+        "mix": 'pa."Mix"',
+        "r_tray": 'pa."RTray"',
+        "r_freezer": 'pa."RFreezer"',
+        "f_grid": 'pa."FGrid"',
+        "f_tray": 'pa."FTray"',
+        "f_freezer": 'pa."FFreezer"',
+        "test_result_notes": 'pa."TestResultNotes"',
+        "r_grid": 'pa."RGrid"',
+        "reverse_tag": 'rtag."Item"',
+        "forward_tag": 'ftag."Item"',
+    }
 
-    if filters.get("start"):
-        query += ' AND pa."Start19" = %s'
-        params.append(filters["start"])
+    for key, column in contains_filters.items():
+        value = str(filters.get(key) or "").strip()
 
-    if filters.get("stop"):
-        query += ' AND pa."Stop19" = %s'
-        params.append(filters["stop"])
+        if value:
+            query += f' AND {column} ILIKE %s'
+            params.append(f'%{value}%')
 
-    if filters.get("primer_name"):
-        query += ' AND pa."PrimerName" = %s'
-        params.append(filters["primer_name"])
+    # Date ordered filter
+    date_ordered = str(filters.get("date_ordered") or "").strip()
 
-    if filters.get("manufacturer"):
-        query += ' AND pa."Manufacturer" = %s'
-        params.append(filters["manufacturer"])
-
-    if filters.get("status"):
-        query += ' AND pa."Status" = %s'
-        params.append(filters["status"])
-
-    # non-specific filters
-
-    if filters.get("notes"):
-        query += ' AND pa."Notes" ILIKE %s'
-        params.append("%" + filters["notes"] + "%")
-
-    if filters.get("forward_seq"):
-        query += ' AND pa."ForwardSeq" ILIKE %s'
-        params.append("%" + filters["forward_seq"] + "%")
-
-    if filters.get("reverse_seq"):
-        query += ' AND pa."ReverseSeq" ILIKE %s'
-        params.append("%" + filters["reverse_seq"] + "%")
-
-    if filters.get("mix"):
-        query += ' AND pa."Mix" ILIKE %s'
-        params.append("%" + filters["mix"] + "%")
-
-    if filters.get("r_tray"):
-        query += ' AND pa."RTray" ILIKE %s'
-        params.append("%" + filters["r_tray"] + "%")
-
-    if filters.get("r_freezer"):
-        query += ' AND pa."RFreezer" ILIKE %s'
-        params.append("%" + filters["r_freezer"] + "%")
-
-    if filters.get("f_grid"):
-        query += ' AND pa."FGrid" ILIKE %s'
-        params.append("%" + filters["f_grid"] + "%")
-
-    if filters.get("f_tray"):
-        query += ' AND pa."FTray" ILIKE %s'
-        params.append("%" + filters["f_tray"] + "%")
-
-    if filters.get("f_freezer"):
-        query += ' AND pa."FFreezer" ILIKE %s'
-        params.append("%" + filters["f_freezer"] + "%")
-
-    if filters.get("test_result_notes"):
-        query += ' AND pa."TestResultNotes" ILIKE %s'
-        params.append("%" + filters["test_result_notes"] + "%")
-
-    if filters.get("r_grid"):
-        query += ' AND pa."RGrid" ILIKE %s'
-        params.append("%" + filters["r_grid"] + "%")
-
-    if filters.get("reverse_tag"):
-        query += ' AND rtag."Item" ILIKE %s'
-        params.append("%" + filters["reverse_tag"] + "%")
-
-    if filters.get("forward_tag"):
-        query += ' AND ftag."Item" ILIKE %s'
-        params.append("%" + filters["forward_tag"] + "%")
-
-    # date
-    if filters.get("date_ordered"):
+    if date_ordered:
         query += ' AND CAST(pa."DateOrdered" AS TEXT) ILIKE %s'
-        params.append("%" + filters["date_ordered"] + "%")
+        params.append(f'%{date_ordered}%')
 
+    # IMPORTANT: ORDER BY must come AFTER all filters
+    query += ' ORDER BY pa."PrimerName" ASC'
+
+    # Execute query
     with get_postgres_connection(dbname, user, password, host) as conn:
         with conn.cursor() as cursor:
             cursor.execute(query, params)
             return cursor.fetchall()
+
+
+def update_moka_status(dbname, user, password, host, primer_name, new_status, test_result_notes):
+    allowed_statuses = {1202218831, 1202218832, 1202218833}
+    try:
+        primer_id = int(primer_name)
+        status = int(new_status)
+    except (ValueError, TypeError) as exc:
+        raise ValueError('Invalid PrimerName or status') from exc
+    if status not in allowed_statuses:
+        raise ValueError('Invalid status')
+    if not isinstance(test_result_notes, str):
+        raise ValueError('Notes must be text')
+
+    sql = '''
+        UPDATE "moka_legacy"."PrimerAmplicon"
+        SET "Status" = %s, "TestResultNotes" = %s
+        WHERE "PrimerName" = %s
+    '''
+    with get_postgres_connection(dbname, user, password, host) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (status, test_result_notes, primer_id))
+            if cursor.rowcount != 1:
+                raise ValueError('Expected exactly one matching primer; update rolled back')

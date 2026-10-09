@@ -2,156 +2,269 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GSTT Primer Database</title>
 
 <style>
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-body{
-    font-family:Arial, Helvetica, sans-serif;
-    background:#eef2f7;
-    min-height:100vh;
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #eef2f7;
+    min-height: 100vh;
 }
 
 /* Header */
 
-.header{
-    background:linear-gradient(90deg,#1f4e79,#2c7be5);
-    color:white;
-    padding:20px 40px;
-    box-shadow:0 3px 10px rgba(0,0,0,.2);
+.header {
+    background: linear-gradient(90deg, #1f4e79, #2c7be5);
+    color: white;
+    padding: 20px 40px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.2);
 }
 
-.header h1{
-    font-size:30px;
+.header h1 {
+    font-size: 30px;
 }
 
-.header p{
-    margin-top:5px;
-    opacity:.9;
+.header p {
+    margin-top: 5px;
+    opacity: .9;
 }
 
-/* Main card */
+/* Main container */
 
-.container{
-    width:700px;
-    max-width:90%;
-    margin:60px auto;
-    background:white;
-    border-radius:15px;
-    box-shadow:0 10px 25px rgba(0,0,0,.15);
-    padding:50px;
+.container {
+    width: 700px;
+    max-width: 90%;
+    margin: 60px auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.15);
+    padding: 40px;
 }
 
-/* Title */
+/* Main title */
 
-.container h2{
-    text-align:center;
-    color:#1f4e79;
-    margin-bottom:15px;
+.container h2 {
+    text-align: center;
+    color: #1f4e79;
+    margin-bottom: 15px;
 }
 
-.subtitle{
-    text-align:center;
-    color:#666;
-    margin-bottom:45px;
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 35px;
 }
 
-/* Menu */
+/* Search groups */
 
-.menu{
-    display:flex;
-    flex-direction:column;
-    gap:20px;
+.search-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
-.menu a{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-decoration:none;
-    font-size:18px;
-    font-weight:bold;
-    padding:18px;
-    border-radius:10px;
-    color:white;
-    background:linear-gradient(90deg,#2575fc,#1f4e79);
-    transition:.25s;
-    box-shadow:0 4px 10px rgba(0,0,0,.15);
+/* Individual search box */
+
+.search-box {
+    background: #f8fafc;
+    border: 1px solid #dbe4ef;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.05);
 }
 
-.menu a:hover{
-    transform:translateY(-3px);
-    box-shadow:0 8px 18px rgba(0,0,0,.25);
-}
-.index{
-    text-align:center;
-    margin-top:40px;
+/* Search box headings */
+
+.search-box h3 {
+    color: #1f4e79;
+    font-size: 21px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #2c7be5;
+    padding-bottom: 10px;
 }
 
-.index a{
-    display:inline-block;
-    padding:12px 30px;
-    text-decoration:none;
-    border-radius:8px;
-    background:#28a745;
-    color:white;
-    font-weight:bold;
-    transition:.25s;
+/* Search box descriptions */
+
+.search-box p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
 }
 
-.index a:hover{
-    background:#218838;
+/* Button menu */
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 16px;
+    border-radius: 10px;
+    color: white;
+    background: linear-gradient(90deg, #2575fc, #1f4e79);
+    transition: .25s;
+    box-shadow: 0 4px 10px rgba(0,0,0,.15);
+}
+
+.menu a:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0,0,0,.25);
+}
+
+/* Home button */
+
+.index {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.index a {
+    display: inline-block;
+    padding: 12px 30px;
+    text-decoration: none;
+    border-radius: 8px;
+    background: #28a745;
+    color: white;
+    font-weight: bold;
+    transition: .25s;
+}
+
+.index a:hover {
+    background: #218838;
+}
+
+/* Responsive design */
+
+@media (max-width: 600px) {
+
+    .header {
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+
+    .container {
+        margin: 30px auto;
+        padding: 20px;
+    }
+
+    .search-box {
+        padding: 18px;
+    }
+
+    .search-box h3 {
+        font-size: 19px;
+    }
+
+    .menu a {
+        font-size: 14px;
+        padding: 14px;
+    }
 }
 
 </style>
-
 </head>
 
 <body>
+
+<!-- Header -->
 
 <div class="header">
     <h1>🧬 Legacy MOKA Data</h1>
 </div>
 
+<!-- Main container -->
+
 <div class="container">
+
     <h2>Legacy MOKA Search</h2>
+
     <p class="subtitle">
         Select one of the search options.
     </p>
 
-    <div class="menu">
+    <div class="search-groups">
 
-        <a href="{{ url_for('query_moka_id') }}">
-            Search MOKA by Primer ID
-        </a>
+        <!-- QUICK SEARCH -->
 
-        <a href="{{ url_for('query_moka_position') }}">
-            Search MOKA by Coordinate
-        </a>
-        
-        <a href="{{ url_for('query_moka_all_approved') }}">
-            Get all validated and approved primers
-        </a> 
+        <div class="search-box">
 
-        <a href="{{ url_for('query_moka_all_awaiting') }}">
-            Get all awaiting validation primers
-        </a> 
+            <h3>🔍 Quick Search</h3>
+
+            <p>
+                Find primers using a specific ID or Genomic coordinate.
+            </p>
+
+            <div class="menu">
+
+                <a href="{{ url_for('query_moka_id') }}">
+                    Search MOKA by Primer ID
+                </a>
+
+                <a href="{{ url_for('query_moka_position') }}">
+                    Search MOKA by Coordinate
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- SEARCH ALL AND FILTER -->
+
+        <div class="search-box">
+
+            <h3>📋 Search All and Filter</h3>
+
+            <p>
+                Browse All Approved and Awaiting For Validation primers.
+            </p>
+
+            <div class="menu">
+
+                <a href="{{ url_for('query_moka_all_approved') }}">
+                    Get all validated and approved primers
+                </a>
+
+                <a href="{{ url_for('query_moka_all_awaiting') }}">
+                    Get all awaiting validation primers
+                </a>
+
+            </div>
+
+        </div>
 
     </div>
+
+    <!-- Home button -->
+
     <div class="index">
+
         <a href="{{ url_for('home_page') }}">
             Go back to Home
         </a>
+
     </div>
 
 </div>
-
 
 </body>
 </html>
