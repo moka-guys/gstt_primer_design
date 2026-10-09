@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Primer Design Completed</title>
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 35px 25px;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: #1e293b;
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(34, 211, 238, 0.14),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 85%,
+                    rgba(139, 92, 246, 0.18),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #071c2b 0%,
+                    #0b3144 45%,
+                    #18234a 100%
+                );
+        }
+
+        .page-container {
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+
+            background: rgba(255, 255, 255, 0.96);
+
+            padding: 35px;
+
+            border-radius: 22px;
+
+            border: 1px solid rgba(255, 255, 255, 0.4);
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.28),
+                0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        h2 {
+            margin: 0 0 25px 0;
+
+            color: #0b5269;
+
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        /* --------------------------------
+           Explanation section
+        -------------------------------- */
+
+        .information-box {
+            margin-bottom: 28px;
+
+            padding: 22px 24px;
+
+            background: #fff7f7;
+
+            border: 1px solid #fecaca;
+            border-left: 5px solid #dc2626;
+
+            border-radius: 14px;
+        }
+
+        .red-list {
+            margin-bottom: 0;
+            padding-left: 24px;
+        }
+
+        .red-list li {
+            margin-bottom: 9px;
+
+            color: #991b1b;
+
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .red-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .red-bold {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+
+        .green-bold {
+            color: #047857;
+            font-weight: 700;
+        }
+
+        /* --------------------------------
+           Table section
+        -------------------------------- */
+
+        .table-section {
+            margin-top: 25px;
+        }
+
+        .table-responsive {
+            max-height: 70vh;
+
+            overflow: auto;
+
+            border-radius: 14px;
+
+            border: 1px solid #cbd5e1;
+
+            box-shadow:
+                0 8px 20px rgba(15, 23, 42, 0.08);
+
+            background: white;
+        }
+
+        .table {
+            margin-bottom: 0;
+
+            width: max-content;
+            min-width: 100%;
+
+            font-size: 13px;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+
+            z-index: 2;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0b5269,
+                    #164e63
+                ) !important;
+
+            color: white !important;
+
+            border-color: #155e75;
+
+            padding: 12px 14px;
+
+            white-space: nowrap;
+
+            font-weight: 700;
+
+            box-shadow:
+                0 2px 5px rgba(0, 0, 0, 0.12);
+        }
+
+        .table td {
+            padding: 10px 14px;
+
+            vertical-align: middle;
+
+            white-space: nowrap;
+
+            border-color: #e2e8f0;
+        }
+
+        .table tbody tr:hover td {
+            background-color: #f0f9ff;
+        }
+
+        .table td:first-child,
+        .table th:first-child {
+            position: sticky;
+            left: 0;
+
+            z-index: 3;
+
+            min-width: 85px;
+
+            text-align: center;
+
+            background: white;
+        }
+
+        .table thead th:first-child {
+            z-index: 4;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0b5269,
+                    #164e63
+                ) !important;
+        }
+
+        /* --------------------------------
+           Invalid row
+        -------------------------------- */
+
+        .highlight-row {
+            background-color: #f8d7da !important;
+
+            color: #721c24 !important;
+
+            font-weight: bold;
+        }
+
+        .table tbody tr:hover .highlight-row {
+            background-color: #f5c2c7 !important;
+        }
+
+        /* --------------------------------
+           Checkboxes
+        -------------------------------- */
+
+        input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+
+            cursor: pointer;
+
+            accent-color: #0891b2;
+        }
+
+        /* --------------------------------
+           Save button
+        -------------------------------- */
+
+        .action-section {
+            margin-top: 22px;
+        }
+
+        .save-btn {
+            padding: 13px 24px;
+
+            border: none;
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #16a34a,
+                    #059669
+                );
+
+            color: white;
+
+            font-size: 15px;
+            font-weight: 700;
+
+            box-shadow:
+                0 8px 18px rgba(5, 150, 105, 0.22);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 12px 24px rgba(5, 150, 105, 0.30);
+        }
+
+        /* --------------------------------
+           Navigation tabs
+        -------------------------------- */
+
+        .navigation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+
+            margin-top: 35px;
+            margin-bottom: 28px;
+
+            padding: 10px;
+
+            background: #f1f5f9;
+
+            border: 1px solid #dbe4ea;
+
+            border-radius: 14px;
+
+            box-shadow:
+                0 4px 12px rgba(15, 23, 42, 0.06);
+        }
+
+        .navigation-tabs a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 11px 17px;
+
+            border-radius: 9px;
+
+            background: white;
+
+            color: #075985;
+
+            border: 1px solid #cbd5e1;
+
+            text-decoration: none;
+
+            font-size: 14px;
+            font-weight: 600;
+
+            transition:
+                all 0.2s ease;
+        }
+
+        .navigation-tabs a:hover {
+            transform: translateY(-2px);
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0891b2,
+                    #2563eb
+                );
+
+            border-color: transparent;
+
+            box-shadow:
+                0 7px 16px rgba(37, 99, 235, 0.22);
+        }
+
+        /* --------------------------------
+           Reference files
+        -------------------------------- */
+
+        .reference-section {
+            margin-top: 0;
+
+            padding: 22px 24px;
+
+            background: #f8fafc;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 14px;
+        }
+
+        .reference-section p {
+            margin-top: 0;
+        }
+
+        .reference-section ul {
+            margin-bottom: 20px;
+        }
+
+        .reference-section li {
+            margin-bottom: 7px;
+
+            font-size: 13px;
+            line-height: 1.5;
+
+            overflow-wrap: anywhere;
+        }
+
+        .reference-section li:last-child {
+            margin-bottom: 0;
+        }
+
+
+        .contact-message {
+            margin-top: 28px;
+            margin-bottom: 0;
+
+            padding: 14px 18px;
+
+            background: rgba(16, 185, 129, 0.09);
+
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-left: 5px solid #10b981;
+
+            border-radius: 10px;
+        }
+
+        /* --------------------------------
+           Responsive
+        -------------------------------- */
+
+        @media (max-width: 900px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .page-container {
+                padding: 25px 18px;
+
+                border-radius: 18px;
+            }
+
+            h2 {
+                font-size: 25px;
+            }
+
+            .table-responsive {
+                max-height: 65vh;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px 8px;
+            }
+
+            .page-container {
+                padding: 20px 14px;
+            }
+
+            h2 {
+                font-size: 23px;
+            }
+
+            .save-btn {
+                width: 100%;
+            }
+
+            .navigation-tabs {
+                flex-direction: column;
+            }
+
+            .navigation-tabs a {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page-container">
+
+    <h2>Primer design completed!</h2>
+
+    {% if db_schema == "prada_production" %}
+    <h2 style="color: red;">
+        Please be aware that you are in Production mode (Validation in process)
+    </h2>
+
+    {% elif db_schema == "prada_training" %}
+        <h2 style="color: red;">
+            Please be aware that you are in Training mode
+        </h2>
+
+    {% endif %}
+
+    <div class="information-box">
+
+        <ul class="red-list"> 
+            <li>"Invalid" in "Specificity" col means designed primer pair can bind to multiple regions on a single chromosome and those regions are also less than 2kb base pair distance; therefore, can generate amplicon for multiple regions.</li> 
+
+            <li>"Invalid" in “snp_validity” col means the designed primer pair has common variant with AF>=0.01.</li>
+
+            <li>The row highlighted with red contains invalid primer either due to "invalid" in "Specificity" or "snp_validity"</li>
+
+            <li>"no snp" means no snp is present in designed primer region.</li>
+
+            <li>"no common snp" means no snp with AF>=0.01 is present in designed primer region; but rare snp may still be present.</li>
+        </ul>
+
+    </div>
+
+
+    <!-- TABLE -->
+
+    <form method="POST" action="{{ url_for('save_selected', db_schema=db_schema) }}" id="saveForm">
+
+        <div class="table-section">
+
+            <div class="table-responsive">
+
+                <table class="table table-striped table-hover table-bordered table-sm align-middle">
+
+                    <thead class="table-primary">
+
+                        <tr>
+
+                            <th>Select</th>
+
+                            {% for col in table_data[0].keys() %}
+                                <th>{{ col }}</th>
+                            {% endfor %}
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in table_data %}
+
+                        <tr>
+
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    name="selected_rows"
+                                    value="{{ loop.index0 }}"
+                                >
+                            </td>
+
+                            {% set is_invalid = row['Specificity'] == 'invalid' or row['snp_validity'] == 'invalid' %}
+
+                            {% for key, value in row.items() %}
+
+                                <td class="{% if is_invalid %}highlight-row{% endif %}">
+                                    {{ value }}
+                                </td>
+
+                            {% endfor %}
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- SAVE -->
+
+        <div class="action-section">
+
+            <button type="submit" class="save-btn">
+                Save selected Rows for Order and Insert into DB
+            </button>
+
+        </div>
+
+    </form>
+
+
+    <!-- NAVIGATION TABS -->
+
+    <div class="navigation-tabs">
+
+        <a href="{{ url_for('home_page') }}">
+            Home Page
+        </a>
+
+        <a href="{{ url_for('design_primer', db_schema=db_schema) }}">
+            Design New Primer
+        </a>
+
+        <a href="{{ url_for('modify_primer', db_schema=db_schema) }}">
+            Modify Parameters and Re-run
+        </a>
+
+        {% if 37 in builds %}
+            <a href="{{ url_for('igv_view', genome='hg19', db_schema=db_schema) }}">
+                igv_view build37
+            </a>
+        {% endif %}
+
+        {% if 38 in builds %}
+            <a href="{{ url_for('igv_view', genome='hg38', db_schema=db_schema) }}">
+                igv_view build38
+            </a>
+        {% endif %}
+
+    </div>
+
+
+    <!-- REFERENCE FILES -->
+
+    <div class="reference-section">
+
+        <p class="red-bold">
+            Ref files for GRCh37
+        </p>
+
+        <ul class="red-list">
+
+            <li>ref genome: hs37d5.fasta-index.tar.gz from dnanexus (reference genome currently used for NGS pipelines)</li>
+
+            <li>exon ref: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.25_GRCh37.p13/GCF_000001405.25_GRCh37.p13_genomic.gtf.gz</li>
+
+            <li>common SNP: https://gnomad.broadinstitute.org/downloads#v2-variants</li>
+
+        </ul>
+
+
+        <p class="red-bold">
+            Ref files for GRCh38
+        </p>
+
+        <ul class="red-list">
+
+            <li>ref genome: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz</li>
+
+            <li>exon ref: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.gtf.gz</li>
+
+            <li>common SNP: https://gnomad.broadinstitute.org/downloads#v4</li>
+
+        </ul>
+
+    </div>
+    <p class="green-bold contact-message">
+        Please contact Bioinformatics if you want to update any ref file.
+    </p>
+
+</div>
+
+<script>
+
+    document.getElementById("saveForm").addEventListener("submit", function(event) {
+
+        const selectedRows = document.querySelectorAll(
+            'input[name="selected_rows"]:checked'
+        );
+
+        if (selectedRows.length === 0) {
+            event.preventDefault();
+
+            alert("You have not selected any row. Please select at least one row before saving.");
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
