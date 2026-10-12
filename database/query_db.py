@@ -4,8 +4,8 @@ from psycopg2 import sql
 from primer_design.helper_function import (get_postgres_connection, liftover,
                                            liftover_crossmap)
 
-ALLOWED_MOKA_STATUSES = {"1202218831", "1202218832", "1202218833"}
-DEFAULT_MOKA_STATUS = "1202218832"
+allowed_moka_statuses = {"1202218831", "1202218832", "1202218833"}
+default_moka_status = "1202218832"
 
 
 def safe_liftover(chrom, pos, build) -> tuple[Optional[int], str]:
@@ -568,15 +568,16 @@ def query_moka_by_id(dbname, user, password, host,
         pa."RGrid",
         pa."DateOrdered",
         pa."Manufacturer"
-    FROM "moka_legacy"."PrimerAmplicon" pa
-    INNER JOIN "moka_legacy"."Chromosome" c
+    FROM "moka_legacy_prod"."PrimerAmplicon" pa
+    INNER JOIN "moka_legacy_prod"."Chromosome" c
         ON pa."ChromosomeID" = c."ChrID"
-    INNER JOIN "moka_legacy"."Item" ftag
+    INNER JOIN "moka_legacy_prod"."Item" ftag
         ON pa."FTagName" = ftag."ItemID"
-    INNER JOIN "moka_legacy"."Item" rtag
+    INNER JOIN "moka_legacy_prod"."Item" rtag
         ON pa."RTagName" = rtag."ItemID"
     WHERE pa."PrimerName" = %s
-      AND pa."Status" = 1202218832;
+      AND pa."Status" = 1202218832
+      AND pa."Archive" = 'No';;
     """
 
     with get_postgres_connection(dbname, user, password, host) as conn:
@@ -621,170 +622,24 @@ def query_moka_by_position(dbname, user, password, host,
         pa."RGrid",
         pa."DateOrdered",
         pa."Manufacturer"
-    FROM "moka_legacy"."PrimerAmplicon" pa
-    INNER JOIN "moka_legacy"."Chromosome" c
+    FROM "moka_legacy_prod"."PrimerAmplicon" pa
+    INNER JOIN "moka_legacy_prod"."Chromosome" c
         ON pa."ChromosomeID" = c."ChrID"
-    INNER JOIN "moka_legacy"."Item" ftag
+    INNER JOIN "moka_legacy_prod"."Item" ftag
         ON pa."FTagName" = ftag."ItemID"
-    INNER JOIN "moka_legacy"."Item" rtag
+    INNER JOIN "moka_legacy_prod"."Item" rtag
         ON pa."RTagName" = rtag."ItemID"
     WHERE
         c."Chr" = %s
         AND (pa."Start19" + LENGTH(pa."ForwardSeq") + 25) < %s
         AND (pa."Stop19" - LENGTH(pa."ReverseSeq") - 25) > %s
-        AND pa."Status" = 1202218832;
+        AND pa."Status" = 1202218832
+        AND pa."Archive" = 'No';
     """
 
     with get_postgres_connection(dbname, user, password, host) as conn:
         with conn.cursor() as cursor:
             cursor.execute(query, (chromosome, position, position))
-            return cursor.fetchall()
-
-
-def query_moka_approved(dbname, user, password,
-                        host, filters=None) -> list[tuple[Any, ...]]:
-    """
-    Query all approved primers from MOKA legacy data
-    Filters can be applied to select specific primers
-    Args:
-        dbname: database name
-        user: username for database
-        password: password for database
-        host: host of database
-        filters: filter applied in output table
-
-    Returns:
-        Query results if any
-    """
-
-    query = """
-    SELECT
-        pa."PrimerName",
-        c."Chr",
-        pa."Start19",
-        pa."Stop19",
-        pa."ForwardSeq",
-        pa."ReverseSeq",
-        rtag."Item" AS "ReverseTag",
-        ftag."Item" AS "ForwardTag",
-        pa."Mix",
-        pa."Notes",
-        pa."TestResultNotes",
-        pa."FFreezer",
-        pa."FTray",
-        pa."FGrid",
-        pa."RFreezer",
-        pa."RTray",
-        pa."RGrid",
-        pa."DateOrdered",
-        pa."Manufacturer"
-
-    FROM "moka_legacy"."PrimerAmplicon" pa
-
-    INNER JOIN "moka_legacy"."Chromosome" c
-        ON pa."ChromosomeID" = c."ChrID"
-
-    INNER JOIN "moka_legacy"."Item" rtag
-        ON pa."RTagName" = rtag."ItemID"
-
-    INNER JOIN "moka_legacy"."Item" ftag
-        ON pa."FTagName" = ftag."ItemID"
-
-    WHERE pa."Status" = 1202218832
-    """
-
-    params = []
-
-    if filters is None:
-        filters = {}
-
-    # add filters
-    if filters.get("amplicon_id"):
-        query += ' AND pa."AmpliconID" = %s'
-        params.append(filters["amplicon_id"])
-
-    if filters.get("chromosome"):
-        query += ' AND c."Chr" = %s'
-        params.append(filters["chromosome"])
-
-    if filters.get("start"):
-        query += ' AND pa."Start19" = %s'
-        params.append(filters["start"])
-
-    if filters.get("stop"):
-        query += ' AND pa."Stop19" = %s'
-        params.append(filters["stop"])
-
-    if filters.get("primer_name"):
-        query += ' AND pa."PrimerName" = %s'
-        params.append(filters["primer_name"])
-
-    if filters.get("manufacturer"):
-        query += ' AND pa."Manufacturer" = %s'
-        params.append(filters["manufacturer"])
-
-    # non-specific filters
-
-    if filters.get("notes"):
-        query += ' AND pa."Notes" ILIKE %s'
-        params.append("%" + filters["notes"] + "%")
-
-    if filters.get("forward_seq"):
-        query += ' AND pa."ForwardSeq" ILIKE %s'
-        params.append("%" + filters["forward_seq"] + "%")
-
-    if filters.get("reverse_seq"):
-        query += ' AND pa."ReverseSeq" ILIKE %s'
-        params.append("%" + filters["reverse_seq"] + "%")
-
-    if filters.get("mix"):
-        query += ' AND pa."Mix" ILIKE %s'
-        params.append("%" + filters["mix"] + "%")
-
-    if filters.get("r_tray"):
-        query += ' AND pa."RTray" ILIKE %s'
-        params.append("%" + filters["r_tray"] + "%")
-
-    if filters.get("r_freezer"):
-        query += ' AND pa."RFreezer" ILIKE %s'
-        params.append("%" + filters["r_freezer"] + "%")
-
-    if filters.get("f_grid"):
-        query += ' AND pa."FGrid" ILIKE %s'
-        params.append("%" + filters["f_grid"] + "%")
-
-    if filters.get("f_tray"):
-        query += ' AND pa."FTray" ILIKE %s'
-        params.append("%" + filters["f_tray"] + "%")
-
-    if filters.get("f_freezer"):
-        query += ' AND pa."FFreezer" ILIKE %s'
-        params.append("%" + filters["f_freezer"] + "%")
-
-    if filters.get("test_result_notes"):
-        query += ' AND pa."TestResultNotes" ILIKE %s'
-        params.append("%" + filters["test_result_notes"] + "%")
-
-    if filters.get("r_grid"):
-        query += ' AND pa."RGrid" ILIKE %s'
-        params.append("%" + filters["r_grid"] + "%")
-
-    if filters.get("reverse_tag"):
-        query += ' AND rtag."Item" ILIKE %s'
-        params.append("%" + filters["reverse_tag"] + "%")
-
-    if filters.get("forward_tag"):
-        query += ' AND ftag."Item" ILIKE %s'
-        params.append("%" + filters["forward_tag"] + "%")
-
-    # date
-    if filters.get("date_ordered"):
-        query += ' AND CAST(pa."DateOrdered" AS TEXT) ILIKE %s'
-        params.append("%" + filters["date_ordered"] + "%")
-
-    with get_postgres_connection(dbname, user, password, host) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
             return cursor.fetchall()
 
 
@@ -803,237 +658,130 @@ def query_moka_all_primers(dbname, user, password,
     Returns:
         Query results if any
     """
-
     filters = filters or {}
-
-    status = str(filters.get("status") or DEFAULT_MOKA_STATUS).strip()
-
-    if status not in ALLOWED_MOKA_STATUSES:
-        raise ValueError("Invalid MOKA status filter")
+    status = str(filters.get('status') or default_moka_status).strip()
+    archive = str(filters.get('archive') or 'No').strip()
+    if status not in allowed_moka_statuses:
+        raise ValueError('Invalid MOKA status filter')
+    if archive not in ('Yes', 'No'):
+        raise ValueError('Invalid Archive filter')
 
     query = '''
-    SELECT
-        pa."PrimerName",
-        c."Chr",
-        pa."Start19",
-        pa."Stop19",
-        pa."ForwardSeq",
-        pa."ReverseSeq",
-        rtag."Item" AS "ReverseTag",
-        ftag."Item" AS "ForwardTag",
-        pa."Mix",
-        pa."Notes",
-        pa."TestResultNotes",
-        pa."FFreezer",
-        pa."FTray",
-        pa."FGrid",
-        pa."RFreezer",
-        pa."RTray",
-        pa."RGrid",
-        pa."DateOrdered",
-        pa."Manufacturer",
-        pa."Status"
-    FROM "moka_legacy"."PrimerAmplicon" pa
-    INNER JOIN "moka_legacy"."Chromosome" c
-        ON pa."ChromosomeID" = c."ChrID"
-    INNER JOIN "moka_legacy"."Item" rtag
-        ON pa."RTagName" = rtag."ItemID"
-    INNER JOIN "moka_legacy"."Item" ftag
-        ON pa."FTagName" = ftag."ItemID"
-    WHERE pa."Status" IN (1202218831, 1202218832)
-      AND pa."Status" = %s
+        SELECT pa."PrimerName", c."Chr", pa."Start19", pa."Stop19",
+               pa."ForwardSeq", pa."ReverseSeq",
+               rtag."Item" AS "ReverseTag", ftag."Item" AS "ForwardTag",
+               pa."Mix", pa."Notes", pa."TestResultNotes",
+               pa."FFreezer", pa."FTray", pa."FGrid",
+               pa."RFreezer", pa."RTray", pa."RGrid",
+               pa."DateOrdered", pa."Manufacturer", pa."Status", pa."Archive"
+        FROM "moka_legacy_prod"."PrimerAmplicon" pa
+        INNER JOIN "moka_legacy_prod"."Chromosome" c
+            ON pa."ChromosomeID" = c."ChrID"
+        INNER JOIN "moka_legacy_prod"."Item" rtag
+            ON pa."RTagName" = rtag."ItemID"
+        INNER JOIN "moka_legacy_prod"."Item" ftag
+            ON pa."FTagName" = ftag."ItemID"
+        WHERE pa."Status" IN (1202218831, 1202218832)
+          AND pa."Status" = %s
+          AND pa."Archive" = %s
     '''
-
-    params = [int(status)]
-
-    # Exact match filters
+    params = [int(status), archive]
     exact_filters = {
-        "chromosome": 'c."Chr"',
-        "primer_name": 'pa."PrimerName"',
-        "manufacturer": 'pa."Manufacturer"',
+        'chromosome': 'c."Chr"',
+        'primer_name': 'pa."PrimerName"',
+        'manufacturer': 'pa."Manufacturer"',
     }
-
     for key, column in exact_filters.items():
-        value = str(filters.get(key) or "").strip()
-
+        value = str(filters.get(key) or '').strip()
         if value:
             query += f' AND {column} = %s'
             params.append(value)
 
-    # Start and Stop range filters
-    start = str(filters.get("start") or "").strip()
-    stop = str(filters.get("stop") or "").strip()
-
-    if start and stop:
-        query += '''
-            AND pa."Start19" >= %s
-            AND pa."Stop19" <= %s
-        '''
-        params.extend([int(start), int(stop)])
-
-    elif start:
+    start = str(filters.get('start') or '').strip()
+    stop = str(filters.get('stop') or '').strip()
+    if start:
         query += ' AND pa."Start19" >= %s'
         params.append(int(start))
-
-    elif stop:
+    if stop:
         query += ' AND pa."Stop19" <= %s'
         params.append(int(stop))
 
-    # Contains / partial match filters
     contains_filters = {
-        "notes": 'pa."Notes"',
-        "forward_seq": 'pa."ForwardSeq"',
-        "reverse_seq": 'pa."ReverseSeq"',
-        "mix": 'pa."Mix"',
-        "r_tray": 'pa."RTray"',
-        "r_freezer": 'pa."RFreezer"',
-        "f_grid": 'pa."FGrid"',
-        "f_tray": 'pa."FTray"',
-        "f_freezer": 'pa."FFreezer"',
-        "test_result_notes": 'pa."TestResultNotes"',
-        "r_grid": 'pa."RGrid"',
-        "reverse_tag": 'rtag."Item"',
-        "forward_tag": 'ftag."Item"',
+        'notes': 'pa."Notes"', 'forward_seq': 'pa."ForwardSeq"',
+        'reverse_seq': 'pa."ReverseSeq"', 'mix': 'pa."Mix"',
+        'r_tray': 'pa."RTray"', 'r_freezer': 'pa."RFreezer"',
+        'f_grid': 'pa."FGrid"', 'f_tray': 'pa."FTray"',
+        'f_freezer': 'pa."FFreezer"',
+        'test_result_notes': 'pa."TestResultNotes"',
+        'r_grid': 'pa."RGrid"', 'reverse_tag': 'rtag."Item"',
+        'forward_tag': 'ftag."Item"',
     }
-
     for key, column in contains_filters.items():
-        value = str(filters.get(key) or "").strip()
-
+        value = str(filters.get(key) or '').strip()
         if value:
             query += f' AND {column} ILIKE %s'
             params.append(f'%{value}%')
-
-    # Date ordered filter
-    date_ordered = str(filters.get("date_ordered") or "").strip()
-
+    date_ordered = str(filters.get('date_ordered') or '').strip()
     if date_ordered:
         query += ' AND CAST(pa."DateOrdered" AS TEXT) ILIKE %s'
         params.append(f'%{date_ordered}%')
-
-    # IMPORTANT: ORDER BY must come AFTER all filters
     query += ' ORDER BY pa."PrimerName" ASC'
-
-    # Execute query
     with get_postgres_connection(dbname, user, password, host) as conn:
         with conn.cursor() as cursor:
             cursor.execute(query, params)
             return cursor.fetchall()
 
 
-def update_moka(
-    dbname, user, password, host,
-    primer_name, new_status, test_result_notes
-) -> dict:
+def update_moka(dbname, user, password, host, primer_name, new_status,
+                test_result_notes, new_archive) -> dict:
     """
     Update MOKA Status and/or TestResultNotes.
 
     Returns:
          a dictionary describing which fields changed.
     """
-
-    allowed_statuses = {1202218831, 1202218832, 1202218833}
-
+    allowed_statuses = {int(x) for x in allowed_moka_statuses}
     try:
         primer_id = int(primer_name)
         status = int(new_status)
     except (ValueError, TypeError) as exc:
-        raise ValueError("Invalid PrimerName or status") from exc
-
+        raise ValueError('Invalid PrimerName or status') from exc
     if status not in allowed_statuses:
-        raise ValueError("Invalid status")
-
+        raise ValueError('Invalid status')
     if not isinstance(test_result_notes, str):
-        raise ValueError("Notes must be text")
+        raise ValueError('Notes must be text')
+    if new_archive not in ('Yes', 'No'):
+        raise ValueError('Archive must be Yes or No')
 
     with get_postgres_connection(dbname, user, password, host) as conn:
         with conn.cursor() as cursor:
-
-            # Read existing values and lock this primer row
-            cursor.execute(
-                '''
-                SELECT "Status", "TestResultNotes"
-                FROM "moka_legacy"."PrimerAmplicon"
+            cursor.execute('''
+                SELECT "Status", "TestResultNotes", "Archive"
+                FROM "moka_legacy_prod"."PrimerAmplicon"
                 WHERE "PrimerName" = %s
                 FOR UPDATE
-                ''',
-                (primer_id,)
-            )
-
-            current_row = cursor.fetchone()
-
-            if current_row is None:
-                raise ValueError(
-                    f"Primer {primer_id} not found"
-                )
-
-            old_status, old_notes = current_row
-
-            # Detect actual changes
-            status_changed = old_status != status
-            notes_changed = old_notes != test_result_notes
-
+            ''', (primer_id,))
+            existing = cursor.fetchone()
+            if existing is None:
+                raise ValueError(f'Primer {primer_id} not found')
+            old_status, old_notes, old_archive = existing
             changes = {}
-
-            if status_changed:
-                changes["Status"] = {
-                    "old": old_status,
-                    "new": status
-                }
-
-            if notes_changed:
-                changes["TestResultNotes"] = {
-                    "old": old_notes,
-                    "new": test_result_notes
-                }
-
-            # No actual changes: skip UPDATE
+            if old_status != status:
+                changes['Status'] = {'old': old_status, 'new': status}
+            if old_notes != test_result_notes:
+                changes['TestResultNotes'] = {'old': old_notes, 'new': test_result_notes}
+            if old_archive != new_archive:
+                changes['Archive'] = {'old': old_archive, 'new': new_archive}
             if not changes:
-                return {
-                    "primer_id": primer_id,
-                    "updated": False,
-                    "changes": {}
-                }
-
-            # Update only the columns that changed
-            if status_changed and notes_changed:
-                cursor.execute(
-                    '''
-                    UPDATE "moka_legacy"."PrimerAmplicon"
-                    SET "Status" = %s,
-                        "TestResultNotes" = %s
-                    WHERE "PrimerName" = %s
-                    ''',
-                    (status, test_result_notes, primer_id)
-                )
-
-            elif status_changed:
-                cursor.execute(
-                    '''
-                    UPDATE "moka_legacy"."PrimerAmplicon"
-                    SET "Status" = %s
-                    WHERE "PrimerName" = %s
-                    ''',
-                    (status, primer_id)
-                )
-
-            elif notes_changed:
-                cursor.execute(
-                    '''
-                    UPDATE "moka_legacy"."PrimerAmplicon"
-                    SET "TestResultNotes" = %s
-                    WHERE "PrimerName" = %s
-                    ''',
-                    (test_result_notes, primer_id)
-                )
-
+                return {'primer_id': primer_id, 'updated': False, 'changes': {}}
+            # Identifiers for changes.
+            assignments = ', '.join(f'"{column}" = %s' for column in changes)
+            values = [item['new'] for item in changes.values()]
+            cursor.execute(
+                f'UPDATE "moka_legacy_prod"."PrimerAmplicon" SET {assignments} '
+                'WHERE "PrimerName" = %s',
+                (*values, primer_id),
+            )
             if cursor.rowcount != 1:
-                raise ValueError(
-                    "Expected exactly one matching primer; "
-                    "update rolled back"
-                )
-
-            return {
-                "primer_id": primer_id,
-                "updated": True,
-                "changes": changes
-            }
+                raise ValueError('Expected exactly one matching primer; update rolled back')
+            return {'primer_id': primer_id, 'updated': True, 'changes': changes}

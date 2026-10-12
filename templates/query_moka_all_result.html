@@ -1,54 +1,277 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>All MOKA Primers that are approved or awaiting for validation</title>
+
 <style>
 * { box-sizing: border-box; }
-body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f9; margin:0; padding:30px; }
-.container { max-width:1800px; margin:auto; }
-h2 { color:#1f4e79; margin-bottom:20px; }
-.message { padding:12px; border-radius:5px; margin-bottom:20px; }
-.error { background:#ffe6e6; color:#b00020; border:1px solid #ffb3b3; }
-.success { background:#eaf7ea; color:#1b5e20; border:1px solid #b9e6b9; }
-.table-container { max-height:750px; overflow:auto; border:1px solid #ccc; border-radius:8px; background:white; box-shadow:0 2px 8px #0002; }
-table { border-collapse:collapse; width:max-content; min-width:100%; }
-th, td { border:1px solid #ddd; padding:8px 12px; white-space:nowrap; }
-thead tr:first-child th { position:sticky; top:0; background:#1f4e79; color:white; z-index:3; }
-.filter-row th { position:sticky; top:42px; background:#dce6f1; z-index:3; padding:5px; }
-.filter-row input { width:110px; padding:6px; border:1px solid #aaa; border-radius:4px; }
-.filter-row select { min-width:120px; }
-tbody tr:nth-child(even) { background:#f8f8f8; }
-tbody tr.selected { background:#fff3cd !important; }
-th:first-child, td:first-child { position:sticky; left:0; background:white; font-weight:bold; z-index:2; }
-thead tr:first-child th:first-child { background:#1f4e79; z-index:5; }
-.filter-row th:first-child { background:#dce6f1; z-index:5; }
-tbody tr.selected td:first-child { background:#fff3cd; }
-.notes-cell { min-width:250px; max-width:400px; white-space:normal; }
-.notes-display { white-space:pre-wrap; overflow-wrap:anywhere; max-height:80px; overflow:hidden; }
-.status-cell { min-width:250px; }
-.status-select, .notes-input { padding:7px; border:1px solid #aaa; border-radius:4px; font:inherit; }
-.notes-input { width:300px; min-height:70px; resize:vertical; white-space:pre-wrap; }
-.status-select { min-width:120px; }
-.edit-button, .update-button, .cancel-button { padding:7px 11px; border:0; border-radius:4px; cursor:pointer; color:white; }
-.edit-button { background:#1f4e79; }
-.update-button { background:#28a745; }
-.cancel-button { background:#777; }
-.edit-actions { display:flex; align-items:center; gap:6px; }
-.filter-bar { margin:20px 0; }
-.filter-button { padding:10px 20px; background:#1f4e79; color:white; border:0; border-radius:5px; cursor:pointer; }
-.clear-button { display:inline-block; padding:10px 20px; margin-left:10px; background:#777; color:white; text-decoration:none; border-radius:5px; }
-.buttons { margin-top:25px; }
-.button { display:inline-block; padding:10px 18px; margin-right:12px; margin-bottom:10px; text-decoration:none; color:white; background:#1f4e79; border-radius:5px; }
-.logout { background:#b22222; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 30px;
+}
+
+.container {
+    max-width: 1800px;
+    margin: auto;
+}
+
+h2 {
+    color: #1f4e79;
+    margin-bottom: 20px;
+}
+
+.message {
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.error {
+    background: #ffe6e6;
+    color: #b00020;
+    border: 1px solid #ffb3b3;
+}
+
+.success {
+    background: #eaf7ea;
+    color: #1b5e20;
+    border: 1px solid #b9e6b9;
+}
+
+/* Information panel */
+.page-info {
+    background: #eaf2f8;
+    border: 1px solid #b8d2e8;
+    border-left: 5px solid #1f4e79;
+    border-radius: 6px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.page-info-title {
+    color: #1f4e79;
+    font-weight: bold;
+    font-size: 17px;
+    margin-bottom: 8px;
+}
+
+.page-info ul {
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+.table-container {
+    max-height: 750px;
+    overflow: auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 8px #0002;
+}
+
+table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+thead tr:first-child th {
+    position: sticky;
+    top: 0;
+    background: #1f4e79;
+    color: white;
+    z-index: 3;
+}
+
+.filter-row th {
+    position: sticky;
+    top: 42px;
+    background: #dce6f1;
+    z-index: 3;
+    padding: 5px;
+}
+
+.filter-row input {
+    width: 110px;
+    padding: 6px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+}
+
+.filter-row select {
+    min-width: 120px;
+}
+
+tbody tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+tbody tr.selected {
+    background: #fff3cd !important;
+}
+
+th:first-child, td:first-child {
+    position: sticky;
+    left: 0;
+    background: white;
+    font-weight: bold;
+    z-index: 2;
+}
+
+thead tr:first-child th:first-child {
+    background: #1f4e79;
+    z-index: 5;
+}
+
+.filter-row th:first-child {
+    background: #dce6f1;
+    z-index: 5;
+}
+
+tbody tr.selected td:first-child {
+    background: #fff3cd;
+}
+
+/* Notes display */
+.notes-cell {
+    min-width: 250px;
+    max-width: none;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.notes-display {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    max-height: none;
+    overflow: visible;
+}
+
+/* Auto-resizing notes textarea */
+.notes-input {
+    width: 300px;
+    min-height: 32px;
+    height: auto;
+    padding: 6px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    font: inherit;
+    line-height: 20px;
+    resize: vertical;
+    white-space: pre-wrap;
+    overflow-y: hidden;
+    box-sizing: border-box;
+    display: block;
+}
+
+.status-cell {
+    min-width: 250px;
+}
+
+.status-select {
+    padding: 7px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    font: inherit;
+    min-width: 120px;
+}
+
+.edit-button,
+.update-button,
+.cancel-button {
+    padding: 7px 11px;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+}
+
+.edit-button {
+    background: #1f4e79;
+}
+
+.update-button {
+    background: #28a745;
+}
+
+.cancel-button {
+    background: #777;
+}
+
+.edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-bar {
+    margin: 20px 0;
+}
+
+.filter-button {
+    padding: 10px 20px;
+    background: #1f4e79;
+    color: white;
+    border: 0;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.clear-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-left: 10px;
+    background: #777;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.buttons {
+    margin-top: 25px;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 18px;
+    margin-right: 12px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: white;
+    background: #1f4e79;
+    border-radius: 5px;
+}
+
+.logout {
+    background: #b22222;
+}
 </style>
 </head>
+
 <body>
+
 <div class="container">
+
 <h2>All MOKA Primers that are approved or awaiting for validation</h2>
+
 <!-- Page information -->
 <div class="page-info">
+
     <div class="page-info-title">
         &#9432; Information & Instructions
     </div>
@@ -58,234 +281,652 @@ tbody tr.selected td:first-child { background:#fff3cd; }
             This table contains MOKA primers that are approved
             or awaiting validation.
         </li>
+
         <li>
-            By default, only <strong>Approved</strong> primers are shown. 
-            To view <strong>Awaiting</strong> primers, choose <strong>Awaiting</strong>
-            in dropdown under <strong>Validation Status</strong> column.
+            By default, only <strong>Approved</strong>
+            and <strong>Non-archive</strong> primers are shown.
         </li>
+
         <li>
-            Editable columns:
+            To view <strong>Awaiting</strong> primers, choose
+            <strong>Awaiting</strong> in the dropdown under
+            <strong>Validation Status</strong>.
+            The same applies to the <strong>Archive</strong> column.
+        </li>
+
+        <li>
+            <strong>Editable columns:</strong>
+
             <ul>
                 <li>
                     <strong>Validation Status:</strong>
                     Choose PASS, FAIL, or AWAITING.
                 </li>
+
+                <li>
+                    <strong>Archive:</strong>
+                    Choose Yes or No.
+                </li>
+
                 <li>
                     <strong>Test Result Notes:</strong>
-                    Enter or update any free text.
+                    Update free text.
                 </li>
+
                 <li>
-                    Click <strong>Edit</strong> to modify the values.
+                    Click <strong>Edit</strong> to modify values.
                 </li>
+
                 <li>
-                    Click <strong>Update</strong> to save your changes.
+                    Click <strong>Update</strong> to save changes.
+                </li>
+
+                <li>
+                    Click <strong>Cancel</strong> to discard changes.
                 </li>
             </ul>
         </li>
     </ul>
 </div>
+
+<!-- Flash messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
-    <div class="message {{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+        <div class="message {{ 'success' if category == 'success' else 'error' }}">
+            {{ message }}
+        </div>
     {% endfor %}
 {% endwith %}
-{% if error %}<div class="message error">{{ error }}</div>{% endif %}
-{% if msg %}<div class="message success">{{ msg }}</div>{% endif %}
 
-<!-- Filter controls remain a separate form. -->
-<form id="filter-form" method="POST" action="{{ url_for('query_moka_all') }}"></form>
+{% if error %}
+<div class="message error">{{ error }}</div>
+{% endif %}
+
+{% if msg %}
+<div class="message success">{{ msg }}</div>
+{% endif %}
+
+<!-- Filter form -->
+<form id="filter-form"
+      method="POST"
+      action="{{ url_for('query_moka_all') }}">
+</form>
 
 <div class="table-container">
+
 <table id="primer-table">
+
 <thead>
+
 <tr>
-    <th>Fragment ID</th><th>Validation Status</th><th>Chromosome</th><th>Start</th><th>Stop</th>
-    <th>Forward Seq</th><th>Reverse Seq</th><th>Reverse Tag</th><th>Forward Tag</th>
-    <th>Mix</th><th>Amplicon Name</th><th>Test Result Notes</th>
-    <th>F Freezer</th><th>F Tray</th><th>F Grid</th>
-    <th>R Freezer</th><th>R Tray</th><th>R Grid</th>
-    <th>Date Ordered</th><th>Manufacturer</th>
+    <th>Fragment ID</th>
+    <th>Validation Status</th>
+    <th>Archive</th>
+    <th>Chromosome</th>
+    <th>Start</th>
+    <th>Stop</th>
+    <th>Forward Seq</th>
+    <th>Reverse Seq</th>
+    <th>Reverse Tag</th>
+    <th>Forward Tag</th>
+    <th>Mix</th>
+    <th>Amplicon Name</th>
+    <th>Test Result Notes</th>
+    <th>F Freezer</th>
+    <th>F Tray</th>
+    <th>F Grid</th>
+    <th>R Freezer</th>
+    <th>R Tray</th>
+    <th>R Grid</th>
+    <th>Date Ordered</th>
+    <th>Manufacturer</th>
 </tr>
+
 <tr class="filter-row">
-<th><input type="text" name="primer_name" form="filter-form" placeholder="ID" value="{{ filters.get('primer_name', '') }}"></th>
+
 <th>
-    <select name="status" form="filter-form" class="status-select">
-        <option value="1202218832" {% if filters.get('status', '1202218832')|string == '1202218832' %}selected{% endif %}>PASS</option>
-        <option value="1202218831" {% if filters.get('status', '1202218832')|string == '1202218831' %}selected{% endif %}>AWAITING</option>
+    <input type="text"
+           name="primer_name"
+           form="filter-form"
+           placeholder="ID"
+           value="{{ filters.get('primer_name', '') }}">
+</th>
+
+<th>
+    <select name="status"
+            form="filter-form"
+            class="status-select">
+
+        <option value="1202218832"
+            {% if filters.get('status', '1202218832')|string == '1202218832' %}selected{% endif %}>
+            PASS
+        </option>
+
+        <option value="1202218831"
+            {% if filters.get('status', '1202218832')|string == '1202218831' %}selected{% endif %}>
+            AWAITING
+        </option>
+
     </select>
 </th>
+
+<th>
+    <select name="archive"
+            form="filter-form"
+            class="status-select">
+
+        <option value="No"
+            {% if filters.get('archive', 'No') == 'No' %}selected{% endif %}>
+            No
+        </option>
+
+        <option value="Yes"
+            {% if filters.get('archive', 'No') == 'Yes' %}selected{% endif %}>
+            Yes
+        </option>
+
+    </select>
+</th>
+
 {% for name, placeholder in [
-    ('chromosome','= 1'), ('start','From'), ('stop','To'),
-    ('forward_seq','Contains...'), ('reverse_seq','Contains...'),
-    ('reverse_tag','Contains...'), ('forward_tag','Contains...'),
-    ('mix','Contains...'), ('notes','Contains...'),
-    ('test_result_notes','Contains...'), ('f_freezer','Contains...'),
-    ('f_tray','Contains...'), ('f_grid','Contains...'),
-    ('r_freezer','Contains...'), ('r_tray','Contains...'),
-    ('r_grid','Contains...'), ('date_ordered','Contains...'),
+    ('chromosome','= 1'),
+    ('start','From'),
+    ('stop','To'),
+    ('forward_seq','Contains...'),
+    ('reverse_seq','Contains...'),
+    ('reverse_tag','Contains...'),
+    ('forward_tag','Contains...'),
+    ('mix','Contains...'),
+    ('notes','Contains...'),
+    ('test_result_notes','Contains...'),
+    ('f_freezer','Contains...'),
+    ('f_tray','Contains...'),
+    ('f_grid','Contains...'),
+    ('r_freezer','Contains...'),
+    ('r_tray','Contains...'),
+    ('r_grid','Contains...'),
+    ('date_ordered','Contains...'),
     ('manufacturer','ID')
 ] %}
-<th><input type="text" name="{{ name }}" form="filter-form" placeholder="{{ placeholder }}" value="{{ filters.get(name, '') }}"></th>
+
+<th>
+    <input type="text"
+           name="{{ name }}"
+           form="filter-form"
+           placeholder="{{ placeholder }}"
+           value="{{ filters.get(name, '') }}">
+</th>
+
 {% endfor %}
 
 </tr>
 </thead>
+
 <tbody>
+
 {% for row in results %}
+
 <tr>
-    <td>{{ row[0] if row[0] is not none else '' }}</td>
-    <td class="status-cell">
-        <span class="status-display">{% if row[19]|string == '1202218831' %}AWAITING{% elif row[19]|string == '1202218832' %}PASS{% elif row[19]|string == '1202218833' %}FAIL{% else %}{{ row[19] }}{% endif %}</span>
-        <button type="button" class="edit-button" data-action="edit">Edit</button>
-        <!-- Values are held as data attributes on the button, not extra form controls. -->
-        <span class="primer-data" data-primer="{{ row[0] }}" data-status="{{ row[19] }}" hidden></span>
-    </td>
-    {% for index in range(1,10) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
-    <td class="notes-cell"><div class="notes-display">{{ row[10] if row[10] is not none else '' }}</div></td>
-    {% for index in range(11,19) %}<td>{{ row[index] if row[index] is not none else '' }}</td>{% endfor %}
+
+<!-- Fragment ID -->
+<td>{{ row[0] if row[0] is not none else '' }}</td>
+
+<!-- Validation Status -->
+<td class="status-cell">
+
+    <span class="status-display">
+
+        {% if row[19]|string == '1202218831' %}
+            AWAITING
+        {% elif row[19]|string == '1202218832' %}
+            PASS
+        {% elif row[19]|string == '1202218833' %}
+            FAIL
+        {% else %}
+            {{ row[19] }}
+        {% endif %}
+
+    </span>
+
+    <button type="button"
+            class="edit-button"
+            data-action="edit">
+        Edit
+    </button>
+
+    <span class="primer-data"
+          data-primer="{{ row[0] }}"
+          data-status="{{ row[19] }}"
+          hidden></span>
+
+</td>
+
+<!-- Archive -->
+<td class="archive-cell">
+    <span class="archive-display">
+        {{ row[20] if row[20] is not none else 'No' }}
+    </span>
+</td>
+
+<!-- Remaining columns -->
+{% for index in range(1,10) %}
+<td>{{ row[index] if row[index] is not none else '' }}</td>
+{% endfor %}
+
+<!-- Test Result Notes -->
+<td class="notes-cell">
+    <div class="notes-display">{{ row[10] if row[10] is not none else '' }}</div>
+</td>
+
+{% for index in range(11,19) %}
+<td>{{ row[index] if row[index] is not none else '' }}</td>
+{% endfor %}
 
 </tr>
+
 {% endfor %}
+
 </tbody>
 </table>
+
 </div>
 
+<!-- Filters -->
 <div class="filter-bar">
-    <button type="submit" form="filter-form" class="filter-button">Apply Filters</button>
-    <a href="{{ url_for('query_moka_all') }}" class="clear-button">Clear Filters</a>
+
+    <button type="submit"
+            form="filter-form"
+            class="filter-button">
+        Apply Filters
+    </button>
+
+    <a href="{{ url_for('query_moka_all') }}"
+       class="clear-button">
+        Clear Filters
+    </a>
+
 </div>
-{% if not results %}<p><strong>No records found.</strong></p>{% endif %}
+
+{% if not results %}
+<p><strong>No records found.</strong></p>
+{% endif %}
+
+<!-- Navigation -->
 <div class="buttons">
-    <a href="{{ url_for('moka_index') }}" class="button">Back to MOKA Search Options</a>
-    {% if results %}<a href="{{ url_for('export_moka_csv') }}" class="button">Export CSV</a>{% endif %}
-    <a href="{{ url_for('logout') }}" class="button logout">Log Out</a>
+
+    <a href="{{ url_for('moka_index') }}"
+       class="button">
+        Back to MOKA Search Options
+    </a>
+
+    {% if results %}
+    <a href="{{ url_for('export_moka_csv') }}"
+       class="button">
+        Export CSV
+    </a>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}"
+       class="button logout">
+        Log Out
+    </a>
+
 </div>
+
 </div>
 
 <script>
-// One delegated listener for the entire table. Only the active row has editable controls.
 (() => {
+
     const tbody = document.querySelector('#primer-table tbody');
+
     if (!tbody) return;
-    const statusLabels = {'1202218831': 'AWAITING', '1202218832': 'PASS', '1202218833': 'FAIL'};
+
+    const statusLabels = {
+        '1202218831': 'AWAITING',
+        '1202218832': 'PASS',
+        '1202218833': 'FAIL'
+    };
+
     const allowed = Object.keys(statusLabels);
+
     const updateUrl = {{ url_for('update_moka_row')|tojson }};
-    const returnStatus = {{ filters.get('status', '1202218832')|string|tojson }};
+
+    const returnStatus =
+        {{ filters.get('status', '1202218832')|string|tojson }};
+
+    const returnArchive =
+        {{ filters.get('archive', 'No')|tojson }};
+
     let activeRow = null;
     let selectedRow = null;
 
+
+    function autoResizeTextarea(textarea) {
+
+        // Reset height so it can shrink as well as grow.
+        textarea.style.height = 'auto';
+
+        // Set height to fit all text.
+        textarea.style.height =
+            Math.max(32, textarea.scrollHeight) + 'px';
+    }
+
+
     function closeEditor(row) {
+
         if (!row) return;
+
         const notesCell = row.querySelector('.notes-cell');
         const statusCell = row.querySelector('.status-cell');
+        const archiveCell = row.querySelector('.archive-cell');
+
         const data = row.querySelector('.primer-data');
+
         const oldNotes = row._originalNotes;
         const oldStatus = row._originalStatus;
+        const oldArchive = row._originalArchive;
+
+        // Restore notes.
         notesCell.replaceChildren();
+
         const display = document.createElement('div');
         display.className = 'notes-display';
         display.textContent = oldNotes;
+
         notesCell.appendChild(display);
+
+        // Restore status.
         statusCell.replaceChildren();
+
         const statusText = document.createElement('span');
         statusText.className = 'status-display';
-        statusText.textContent = statusLabels[oldStatus] || oldStatus;
+        statusText.textContent =
+            statusLabels[oldStatus] || oldStatus;
+
         const editButton = document.createElement('button');
         editButton.type = 'button';
         editButton.className = 'edit-button';
         editButton.dataset.action = 'edit';
         editButton.textContent = 'Edit';
-        statusCell.append(statusText, document.createTextNode(' '), editButton, data);
+
+        statusCell.append(
+            statusText,
+            document.createTextNode(' '),
+            editButton,
+            data
+        );
+
+        // Restore archive.
+        const archiveDisplay = document.createElement('span');
+        archiveDisplay.className = 'archive-display';
+        archiveDisplay.textContent = oldArchive;
+
+        archiveCell.replaceChildren(archiveDisplay);
+
         delete row._originalNotes;
         delete row._originalStatus;
+        delete row._originalArchive;
+
         activeRow = null;
     }
 
+    /*
+     * Open editor for selected primer.
+     */
     function openEditor(row) {
-        if (activeRow && activeRow !== row) closeEditor(activeRow);
+
+        if (activeRow && activeRow !== row) {
+            closeEditor(activeRow);
+        }
+
         if (activeRow === row) return;
+
         const notesCell = row.querySelector('.notes-cell');
         const statusCell = row.querySelector('.status-cell');
+        const archiveCell = row.querySelector('.archive-cell');
+
         const data = row.querySelector('.primer-data');
-        row._originalNotes = notesCell.querySelector('.notes-display').textContent;
+
+        // Save original values.
+        row._originalNotes =
+            notesCell.querySelector('.notes-display').textContent;
+
         row._originalStatus = data.dataset.status;
+
+        row._originalArchive =
+            archiveCell.querySelector('.archive-display')
+                       .textContent.trim();
+
         const primer = data.dataset.primer;
+
+        /*
+         * Create editable notes textarea.
+         */
         notesCell.replaceChildren();
+
         const textarea = document.createElement('textarea');
+
         textarea.className = 'notes-input';
         textarea.name = 'test_result_notes';
+
         textarea.value = row._originalNotes;
-        textarea.setAttribute('aria-label', 'Test result notes for primer ' + primer);
+
+        textarea.rows = 1;
+
+        textarea.setAttribute(
+            'aria-label',
+            'Test result notes for primer ' + primer
+        );
+
         notesCell.appendChild(textarea);
 
+        autoResizeTextarea(textarea);
+
+        /*
+         * Automatically resize when user types,
+         * pastes or deletes text.
+         */
+        textarea.addEventListener('input', () => {
+            autoResizeTextarea(textarea);
+        });
+
+        /*
+         * Create update form.
+         */
         const form = document.createElement('form');
+
         form.method = 'POST';
         form.action = updateUrl;
         form.className = 'edit-actions';
-        for (const [name, value] of [['primer_name', primer], ['return_status', returnStatus]]) {
+        form.id = 'active-primer-edit-form';
+
+        for (const [name, value] of [
+            ['primer_name', primer],
+            ['return_status', returnStatus],
+            ['return_archive', returnArchive]
+        ]) {
+
             const hidden = document.createElement('input');
+
             hidden.type = 'hidden';
             hidden.name = name;
             hidden.value = value;
+
             form.appendChild(hidden);
         }
+
+        /*
+         * Validation Status dropdown.
+         */
         const select = document.createElement('select');
+
         select.name = 'status';
         select.className = 'status-select';
+
         for (const status of allowed) {
-            const option = new Option(statusLabels[status], status, false, status === row._originalStatus);
+
+            const option = new Option(
+                statusLabels[status],
+                status,
+                false,
+                status === row._originalStatus
+            );
+
             select.add(option);
         }
-        // Associate the textarea in the other table cell with this form.
-        form.id = 'active-primer-edit-form';
+
+        /*
+         * Archive dropdown.
+         */
+        const archiveSelect = document.createElement('select');
+
+        archiveSelect.name = 'archive';
+        archiveSelect.className = 'status-select';
+
+        for (const archive of ['No', 'Yes']) {
+
+            archiveSelect.add(
+                new Option(
+                    archive,
+                    archive,
+                    false,
+                    archive === row._originalArchive
+                )
+            );
+        }
+
+        archiveSelect.setAttribute(
+            'aria-label',
+            'Archive primer ' + primer
+        );
+
+        archiveSelect.id = 'active-archive-select';
+
         textarea.setAttribute('form', form.id);
+        archiveSelect.setAttribute('form', form.id);
+
+        /*
+         * Update button.
+         */
         const update = document.createElement('button');
+
         update.type = 'submit';
         update.className = 'update-button';
         update.textContent = 'Update';
+
+        /*
+         * Cancel button.
+         */
         const cancel = document.createElement('button');
+
         cancel.type = 'button';
         cancel.className = 'cancel-button';
         cancel.dataset.action = 'cancel';
         cancel.textContent = 'Cancel';
+
         form.append(select, update, cancel);
+
+        archiveCell.replaceChildren(archiveSelect);
         statusCell.replaceChildren(form, data);
+
         activeRow = row;
-        textarea.focus();
     }
 
+    /*
+     * Handle Edit, Cancel and row selection.
+     */
     tbody.addEventListener('click', event => {
-        const button = event.target.closest('button[data-action]');
+
+        const button = event.target.closest(
+            'button[data-action]'
+        );
+
         if (button && tbody.contains(button)) {
+
             const row = button.closest('tr');
-            if (button.dataset.action === 'edit') openEditor(row);
-            else if (button.dataset.action === 'cancel') closeEditor(row);
+
+            if (button.dataset.action === 'edit') {
+                openEditor(row);
+            }
+            else if (button.dataset.action === 'cancel') {
+                closeEditor(row);
+            }
+
             return;
         }
-        if (event.target.closest('input, textarea, select, button, form')) return;
+
+        if (event.target.closest(
+            'input, textarea, select, button, form'
+        )) {
+            return;
+        }
+
         const row = event.target.closest('tr');
+
         if (!row || !tbody.contains(row)) return;
-        if (selectedRow) selectedRow.classList.remove('selected');
+
+        if (selectedRow) {
+            selectedRow.classList.remove('selected');
+        }
+
         row.classList.add('selected');
         selectedRow = row;
     });
 
+    /*
+     * Validate values before submitting.
+     */
     tbody.addEventListener('submit', event => {
-        const form = event.target.closest('form.edit-actions');
+
+        const form = event.target.closest(
+            'form.edit-actions'
+        );
+
         if (!form) return;
-        const select = form.querySelector('select[name="status"]');
-        const textarea = document.querySelector('textarea[form="active-primer-edit-form"]');
-        const primer = form.querySelector('input[name="primer_name"]').value;
-        if (!select || !textarea || !allowed.includes(select.value)) {
+
+        const select = form.querySelector(
+            'select[name="status"]'
+        );
+
+        const textarea = document.querySelector(
+            'textarea[form="active-primer-edit-form"]'
+        );
+
+        const archiveSelect = document.querySelector(
+            'select[name="archive"][form="active-primer-edit-form"]'
+        );
+
+        const primer = form.querySelector(
+            'input[name="primer_name"]'
+        ).value;
+
+        if (
+            !select ||
+            !textarea ||
+            !archiveSelect ||
+            !allowed.includes(select.value) ||
+            !['Yes', 'No'].includes(archiveSelect.value)
+        ) {
+
             event.preventDefault();
+
             alert('Invalid status or missing notes.');
+
             return;
         }
-        if (!confirm('Save Status and Test Result Notes for primer ' + primer + '?')) {
+
+        if (!confirm(
+            'Save Status, Archive and Test Result Notes for primer ' +
+            primer + '?'
+        )) {
+
             event.preventDefault();
         }
     });
+
 })();
 </script>
+
 </body>
 </html>

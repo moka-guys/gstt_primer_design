@@ -21,3 +21,11 @@ database/__pycache__/
 primer_design/__pycache__/
 moka_status_code
 infotxt
+initdb/check_orphan_train.sql
+initdb/creat_primeramplicon_table_train.sql
+initdb/foreign_key_train.sql
+initdb/insert_allmokaprimres_train.sql
+initdb/migrate_chromosome_train.sql
+initdb/migrate_item_train.sql
+initdb/status_train.sql
+moka_migration_insturction
