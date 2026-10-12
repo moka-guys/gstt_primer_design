@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSTT Primer Database</title>
+<title>GSTT Primer Database - Legacy MOKA</title>
 
 <style>
 
@@ -20,7 +20,6 @@ body {
 }
 
 /* Header */
-
 .header {
     background: linear-gradient(90deg, #1f4e79, #2c7be5);
     color: white;
@@ -38,7 +37,6 @@ body {
 }
 
 /* Main container */
-
 .container {
     width: 700px;
     max-width: 90%;
@@ -50,7 +48,6 @@ body {
 }
 
 /* Main title */
-
 .container h2 {
     text-align: center;
     color: #1f4e79;
@@ -60,10 +57,66 @@ body {
 .subtitle {
     text-align: center;
     color: #666;
-    margin-bottom: 35px;
+    margin-bottom: 25px;
 }
 
-/* Search groups */
+.mode-warning {
+    width: 100%;
+    padding: 8px 12px;
+    margin: 10px 0 15px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1.4;
+    border: 1px solid;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.mode-warning strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 3px;
+}
+
+.mode-warning .warning-description {
+    font-size: 15px;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+/* Production warning - RED */
+.production-warning {
+    background: #fde8e8;
+    color: #991b1b;
+    border-color: #dc2626;
+    animation: none;
+}
+
+/* Training warning - AMBER */
+.training-warning {
+    background: #fff3cd;
+    color: #92400e;
+    border-color: #d97706;
+}
+
+/* Production pulse animation */
+@keyframes productionPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 rgba(220,38,38,0);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(220,38,38,0.4);
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .production-warning {
+        animation: none;
+    }
+}
 
 .search-groups {
     display: flex;
@@ -72,7 +125,6 @@ body {
 }
 
 /* Individual search box */
-
 .search-box {
     background: #f8fafc;
     border: 1px solid #dbe4ef;
@@ -82,7 +134,6 @@ body {
 }
 
 /* Search box headings */
-
 .search-box h3 {
     color: #1f4e79;
     font-size: 21px;
@@ -92,11 +143,11 @@ body {
 }
 
 /* Search box descriptions */
-
 .search-box p {
     color: #666;
     font-size: 14px;
     margin-bottom: 20px;
+    line-height: 1.6;
 }
 
 /* Button menu */
@@ -126,6 +177,13 @@ body {
 .menu a:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 18px rgba(0,0,0,.25);
+}
+
+/* Keyboard accessibility */
+.menu a:focus-visible,
+.index a:focus-visible {
+    outline: 3px solid #ffbf47;
+    outline-offset: 3px;
 }
 
 /* Home button */
@@ -179,6 +237,19 @@ body {
         font-size: 14px;
         padding: 14px;
     }
+
+    .mode-warning {
+        padding: 16px 12px;
+        font-size: 15px;
+    }
+
+    .mode-warning strong {
+        font-size: 20px;
+    }
+
+    .mode-warning .warning-description {
+        font-size: 13px;
+    }
 }
 
 </style>
@@ -202,6 +273,33 @@ body {
         Select one of the search options.
     </p>
 
+    <!-- =====================================
+         PRODUCTION / TRAINING WARNING
+         ===================================== -->
+
+    {% if moka_schema == "moka_legacy_prod" %}
+
+        <div class="mode-warning production-warning"
+             role="alert">
+
+            <strong>Please be aware that you are in production mode</strong>
+        </div>
+
+    {% elif moka_schema == "moka_legacy_train" %}
+
+        <div class="mode-warning training-warning"
+             role="status">
+
+            <strong>Please be aware that you are in the training mode</strong>
+
+        </div>
+
+    {% endif %}
+
+    <!-- =====================================
+         SEARCH GROUPS
+         ===================================== -->
+
     <div class="search-groups">
 
         <!-- QUICK SEARCH -->
@@ -211,16 +309,16 @@ body {
             <h3>🔍 Quick Search</h3>
 
             <p>
-                Find primers using a specific ID or Genomic coordinate.
+                Find primers using a specific ID or genomic coordinate.
             </p>
 
             <div class="menu">
 
-                <a href="{{ url_for('query_moka_id') }}">
+                <a href="{{ url_for('query_moka_id', moka_schema=moka_schema) }}">
                     Search MOKA by Primer ID
                 </a>
 
-                <a href="{{ url_for('query_moka_position') }}">
+                <a href="{{ url_for('query_moka_position', moka_schema=moka_schema) }}">
                     Search MOKA by Coordinate
                 </a>
 
@@ -235,13 +333,13 @@ body {
             <h3>📋 Search All, Filter and Update</h3>
 
             <p>
-                Browse All Approved and Awaiting For Validation primers.
+                Browse all approved primers and primers awaiting validation.
+                Filter records and update validation information.
             </p>
 
             <div class="menu">
 
-
-                <a href="{{ url_for('query_moka_all') }}">
+                <a href="{{ url_for('query_moka_all', moka_schema=moka_schema) }}">
                     Get all awaiting validation primers
                 </a>
 
@@ -251,7 +349,7 @@ body {
 
     </div>
 
-    <!-- Home button -->
+<!-- Home button -->
 
     <div class="index">
 

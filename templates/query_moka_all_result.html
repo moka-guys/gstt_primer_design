@@ -268,7 +268,23 @@ tbody tr.selected td:first-child {
 <div class="container">
 
 <h2>All MOKA Primers that are approved or awaiting for validation</h2>
-
+{% if moka_schema == "moka_legacy_prod" %}
+    <div style="background: #fde8e8; color: #991b1b;
+                border: 3px solid #dc2626; padding: 20px;
+                border-radius: 10px; text-align: center;
+                font-size: 20px; font-weight: bold;
+                margin-bottom: 25px;">
+        ⚠️ This is production mode. Changes will be updated in Prod database ⚠️
+    </div>
+{% elif moka_schema == "moka_legacy_train" %}
+    <div style="background: #fff3cd; color: #92400e;
+                border: 3px solid #d97706; padding: 20px;
+                border-radius: 10px; text-align: center;
+                font-size: 20px; font-weight: bold;
+                margin-bottom: 25px;">
+        🧪 This is training mode.
+    </div>
+{% endif %}
 <!-- Page information -->
 <div class="page-info">
 
@@ -349,7 +365,7 @@ tbody tr.selected td:first-child {
 <!-- Filter form -->
 <form id="filter-form"
       method="POST"
-      action="{{ url_for('query_moka_all') }}">
+      action="{{ url_for('query_moka_all', moka_schema=moka_schema) }}">
 </form>
 
 <div class="table-container">
@@ -540,7 +556,7 @@ tbody tr.selected td:first-child {
         Apply Filters
     </button>
 
-    <a href="{{ url_for('query_moka_all') }}"
+    <a href="{{ url_for('query_moka_all', moka_schema=moka_schema) }}"
        class="clear-button">
         Clear Filters
     </a>
@@ -554,13 +570,13 @@ tbody tr.selected td:first-child {
 <!-- Navigation -->
 <div class="buttons">
 
-    <a href="{{ url_for('moka_index') }}"
+    <a href="{{ url_for('moka_index', moka_schema=moka_schema) }}"
        class="button">
         Back to MOKA Search Options
     </a>
 
     {% if results %}
-    <a href="{{ url_for('export_moka_csv') }}"
+    <a href="{{ url_for('export_moka_csv', moka_schema=moka_schema) }}"
        class="button">
         Export CSV
     </a>
@@ -590,7 +606,7 @@ tbody tr.selected td:first-child {
 
     const allowed = Object.keys(statusLabels);
 
-    const updateUrl = {{ url_for('update_moka_row')|tojson }};
+    const updateUrl = {{ url_for('update_moka_row', moka_schema=moka_schema)|tojson }};
 
     const returnStatus =
         {{ filters.get('status', '1202218832')|string|tojson }};

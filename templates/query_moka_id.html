@@ -103,7 +103,7 @@ button:hover{
 
 <h2>MOKA Search by Primer ID</h2>
 
-<form method="POST" action="{{ url_for('query_moka_id') }}">
+<form method="POST" action="{{ url_for('query_moka_id', moka_schema=moka_schema) }}">
 
     <label for="primer_id">Primer ID</label>
 
@@ -124,7 +124,7 @@ button:hover{
 
 <div class="links">
 
-    <a href="{{ url_for('moka_index') }}" class="button-link">
+    <a href="{{ url_for('moka_index' , moka_schema=moka_schema) }}" class="button-link">
         Go back to MOKA search options
     </a>
 

@@ -1161,30 +1161,25 @@
 
         <!-- Legacy MOKA -->
 
-        <a href="{{ url_for('moka_index') }}"
-           class="menu-card legacy">
-
-            <div class="card-icon">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-            </div>
-
-            <div class="card-content">
-
-                <h3>
-                    Query Legacy MOKA Data
-                </h3>
-
-                <p>
-                    Access and query legacy MOKA primer records.
-                </p>
-
-            </div>
-
-            <div class="card-arrow">
-                <i class="fa-solid fa-arrow-right"></i>
-            </div>
-
-        </a>
+        <a href="{% if db_schema == 'prada_production' %}{{ url_for('moka_index', moka_schema='moka_legacy_prod') }}{% elif db_schema == 'prada_training' %}{{ url_for('moka_index', moka_schema='moka_legacy_train') }}{% else %}{{ url_for('moka_index') }}{% endif %}"
+        class="menu-card legacy">
+     
+         <div class="card-icon">
+             <i class="fa-solid fa-clock-rotate-left"></i>
+         </div>
+     
+         <div class="card-content">
+             <h3>Query Legacy MOKA Data</h3>
+             <p>
+                 Access and query legacy MOKA primer records.
+             </p>
+         </div>
+     
+         <div class="card-arrow">
+             <i class="fa-solid fa-arrow-right"></i>
+         </div>
+     
+     </a>
 
 
     </div>

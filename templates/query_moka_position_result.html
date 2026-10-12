@@ -261,16 +261,16 @@ tbody tr.selected td:first-child{
 
 <div class="buttons">
 
-<a href="{{ url_for('query_moka_position') }}" class="button">
+<a href="{{ url_for('query_moka_position', moka_schema=moka_schema) }}" class="button">
     New Search
 </a>
 
 
-<a href="{{ url_for('moka_index') }}" class="button">
+<a href="{{ url_for('moka_index', moka_schema=moka_schema) }}" class="button">
     Back to MOKA Search Options
 </a>
 {% if results %}
-<a href="{{ url_for('export_moka_csv') }}" class="button">
+<a href="{{ url_for('export_moka_csv', moka_schema=moka_schema) }}" class="button">
     Export CSV
 </a>
 {% endif %}

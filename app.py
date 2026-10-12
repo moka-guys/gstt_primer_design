@@ -180,15 +180,15 @@ def index(db_schema) -> ResponseReturnValue:
     return render_template('index.html', username=g.user, db_schema=db_schema)
 
 
-@app.route('/moka_index')
+@app.route('/moka_index/<moka_schema>')
 @login_required
-def moka_index() -> ResponseReturnValue:
+def moka_index(moka_schema) -> ResponseReturnValue:
     """Render the MOKA query page.
 
     Returns:
         Response: MOKA index template.
     """
-    return render_template('moka_index.html')
+    return render_template('moka_index.html', moka_schema=moka_schema)
 
 
 @app.route('/change_password', methods=['GET', 'POST'])
@@ -539,9 +539,9 @@ def query_data(db_schema) -> ResponseReturnValue:
     return render_template('query.html', db_schema=db_schema)
 
 
-@app.route('/query_moka_id', methods=['GET', 'POST'])
+@app.route('/query_moka_id/<moka_schema>', methods=['GET', 'POST'])
 @login_required
-def query_moka_id() -> ResponseReturnValue:
+def query_moka_id(moka_schema) -> ResponseReturnValue:
     """Search the MOKA database using a primer identifier.
 
     Returns:
@@ -549,7 +549,7 @@ def query_moka_id() -> ResponseReturnValue:
     """
     # Display the search form
     if request.method == 'GET':
-        return render_template('query_moka_id.html')
+        return render_template('query_moka_id.html', moka_schema=moka_schema)
 
     # Get and validate the input
     primer_id = request.form.get('primer_id', '').strip()
@@ -558,6 +558,7 @@ def query_moka_id() -> ResponseReturnValue:
         return render_template(
             'query_moka_id_result.html',
             results=[],
+            moka_schema=moka_schema,
             error='Please enter a Primer ID.'
         )
 
@@ -568,7 +569,8 @@ def query_moka_id() -> ResponseReturnValue:
             DB_USER,
             DB_PASSWORD,
             DB_HOST,
-            primer_id
+            primer_id,
+            moka_schema
         )
 
         # No records found
@@ -576,6 +578,7 @@ def query_moka_id() -> ResponseReturnValue:
             return render_template(
                 'query_moka_id_result.html',
                 results=[],
+                moka_schema=moka_schema,
                 msg='No matching primers found.'
             )
 
@@ -587,6 +590,7 @@ def query_moka_id() -> ResponseReturnValue:
 
         return render_template(
             'query_moka_id_result.html',
+            moka_schema=moka_schema,
             results=result_list
         )
 
@@ -594,14 +598,15 @@ def query_moka_id() -> ResponseReturnValue:
         #app.logger.exception("Error while querying the MOKA database.")
         return render_template(
             'query_moka_id_result.html',
+            moka_schema=moka_schema,
             results=[],
             error='An unexpected error occurred while querying the database. Please try again later.'
         )
 
 
-@app.route('/query_moka_position', methods=['GET', 'POST'])
+@app.route('/query_moka_position/<moka_schema>', methods=['GET', 'POST'])
 @login_required
-def query_moka_position() -> ResponseReturnValue:
+def query_moka_position(moka_schema) -> ResponseReturnValue:
     """Search the MOKA database using a genomic position.
 
     Returns:
@@ -609,7 +614,8 @@ def query_moka_position() -> ResponseReturnValue:
     """
     # Display the search form
     if request.method == 'GET':
-        return render_template('query_moka_position.html')
+        return render_template('query_moka_position.html',
+                               moka_schema=moka_schema)
 
     # Get and validate the input
     chromosome = request.form.get('chromosome', '').strip()
@@ -619,6 +625,7 @@ def query_moka_position() -> ResponseReturnValue:
         return render_template(
             'query_moka_position_result.html',
             results=[],
+            moka_schema=moka_schema,
             error='Please enter both a chromosome and genomic position.'
         )
 
@@ -632,7 +639,8 @@ def query_moka_position() -> ResponseReturnValue:
             DB_PASSWORD,
             DB_HOST,
             chromosome,
-            position
+            position,
+            moka_schema
         )
 
         # No records found
@@ -640,6 +648,7 @@ def query_moka_position() -> ResponseReturnValue:
             return render_template(
                 'query_moka_position_result.html',
                 results=[],
+                moka_schema=moka_schema,
                 msg='No matching primers found.'
             )
         session["moka_export"] = {
@@ -650,13 +659,15 @@ def query_moka_position() -> ResponseReturnValue:
         # Display results
         return render_template(
             'query_moka_position_result.html',
-            results=result_list
+            results=result_list,
+            moka_schema=moka_schema
         )
 
     except ValueError:
         return render_template(
             'query_moka_position_result.html',
             results=[],
+            moka_schema=moka_schema,
             error='Genomic position must be a valid integer.'
         )
 
@@ -665,13 +676,14 @@ def query_moka_position() -> ResponseReturnValue:
         return render_template(
             'query_moka_position_result.html',
             results=[],
+            moka_schema=moka_schema,
             error='An unexpected error occurred while querying the database. Please try again later.'
         )
 
 
-@app.route('/query_moka_all', methods=['GET', 'POST'])
+@app.route('/query_moka_all/<moka_schema>', methods=['GET', 'POST'])
 @login_required
-def query_moka_all() -> ResponseReturnValue:
+def query_moka_all(moka_schema) -> ResponseReturnValue:
     """Return all approved and awaiting primers matching optional filters.
 
     Returns:
@@ -688,18 +700,27 @@ def query_moka_all() -> ResponseReturnValue:
     filters['archive'] = filters.get('archive') or 'No'
     try:
         results = query_moka_all_primers(DB_NAME, DB_USER,
-                                         DB_PASSWORD, DB_HOST, filters)
+                                         DB_PASSWORD, DB_HOST, moka_schema,
+                                         filters,
+                                         )
+        # Save the query used for the current results
+        session["moka_export"] = {
+                                    "type": "all",
+                                    "filters": filters
+                                }
         return render_template('query_moka_all_result.html',
+                               moka_schema=moka_schema,
                                results=results, filters=filters)
     except Exception as exc:
         return render_template('query_moka_all_result.html',
+                               moka_schema=moka_schema,
                                results=[], filters=filters,
                                error=str(exc)), 400
 
 
-@app.route('/update_moka_row', methods=['POST'])
+@app.route('/update_moka_row/<moka_schema>', methods=['POST'])
 @login_required
-def update_moka_row() -> ResponseReturnValue:
+def update_moka_row(moka_schema) -> ResponseReturnValue:
     """Update MOKA Status and/or Test Result Notes and/or Archive.
     Returns:
         Response: MOKA results page.
@@ -720,7 +741,8 @@ def update_moka_row() -> ResponseReturnValue:
         return_archive = 'No'
     try:
         result = update_moka(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
-                             primer_name, new_status, notes, new_archive)
+                             primer_name, new_status, notes, new_archive,
+                             moka_schema)
         if not result['updated']:
             flash('No changes detected.', 'warning')
         else:
@@ -735,19 +757,20 @@ def update_moka_row() -> ResponseReturnValue:
                     new_value = " ".join(str(new_value or "").split())
 
                 app.logger.info(
-                    "User '%s' updated MOKA primer_id %s: %s from %r to %r",
+                    "User '%s' updated MOKA primer_id %s: %s from %r to %r in %s",
                     g.user,
                     result['primer_id'],
                     column,
                     old_value,
-                    new_value
+                    new_value,
+                    moka_schema
                 )
             flash('Updated successfully.', 'success')
     except Exception:
         app.logger.exception('MOKA primer update failed for %s', primer_name)
         flash('Update failed.', 'error')
     return redirect(url_for('query_moka_all', status=return_status,
-                            archive=return_archive))
+                            moka_schema=moka_schema, archive=return_archive))
 
 
 @app.route('/success_primer_design/<db_schema>')
@@ -1049,9 +1072,9 @@ def export_csv() -> ResponseReturnValue:
     )
 
 
-@app.route("/export_moka_csv")
+@app.route("/export_moka_csv/<moka_schema>")
 @login_required
-def export_moka_csv() -> Response | tuple[str, int]:
+def export_moka_csv(moka_schema) -> Response | tuple[str, int]:
     """Export MOKA query results as a CSV file.
 
     Returns:
@@ -1072,7 +1095,8 @@ def export_moka_csv() -> Response | tuple[str, int]:
                 DB_USER,
                 DB_PASSWORD,
                 DB_HOST,
-                primer_id
+                primer_id,
+                moka_schema
             )
 
             filename = "moka_id_results.csv"
@@ -1087,27 +1111,19 @@ def export_moka_csv() -> Response | tuple[str, int]:
                 DB_PASSWORD,
                 DB_HOST,
                 chromosome,
-                position
+                position,
+                moka_schema
             )
 
             filename = "moka_position_results.csv"
 
-        elif export_info["type"] == "approved":
-            rows = query_moka_approved(
+        elif export_info["type"] == "all":
+            rows = query_moka_all_primers(
                 DB_NAME,
                 DB_USER,
                 DB_PASSWORD,
                 DB_HOST,
-                filters=export_info["filters"]
-            )
-
-            filename = "moka_filtered_results.csv"
-        elif export_info["type"] == "awaiting":
-            rows = query_moka_awaiting(
-                DB_NAME,
-                DB_USER,
-                DB_PASSWORD,
-                DB_HOST,
+                moka_schema,
                 filters=export_info["filters"]
             )
 

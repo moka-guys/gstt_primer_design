@@ -104,7 +104,7 @@ button:hover{
 
 <h2>MOKA Search by Coordinate</h2>
 
-<form method="POST" action="{{ url_for('query_moka_position') }}">
+<form method="POST" action="{{ url_for('query_moka_position', moka_schema=moka_schema) }}">
 
     <label for="chromosome">Chromosome</label>
 
@@ -135,7 +135,7 @@ button:hover{
 
 <div class="links">
 
-    <a href="{{ url_for('moka_index') }}" class="button-link">
+    <a href="{{ url_for('moka_index', moka_schema=moka_schema) }}" class="button-link">
         Go back to MOKA search options
     </a>
 
