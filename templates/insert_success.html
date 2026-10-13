@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Success</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            font-family: "Segoe UI", Arial, sans-serif;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 30px 20px;
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(34, 211, 238, 0.14),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 85%,
+                    rgba(139, 92, 246, 0.18),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #071c2b 0%,
+                    #0b3144 45%,
+                    #18234a 100%
+                );
+        }
+
+        .box {
+            width: 100%;
+            max-width: 650px;
+
+            padding: 42px 40px;
+
+            background: rgba(255, 255, 255, 0.96);
+
+            border-radius: 22px;
+
+            border: 1px solid rgba(255, 255, 255, 0.4);
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.28),
+                0 8px 20px rgba(0, 0, 0, 0.12);
+
+            text-align: center;
+        }
+
+        h2 {
+            margin: 0 0 30px 0;
+
+            color: #087f5b;
+
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+
+            margin-top: 10px;
+        }
+
+        .option {
+            padding: 24px 18px;
+
+            background: #f8fafc;
+
+            border: 1px solid #dbe4ea;
+            border-radius: 16px;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        .option:hover {
+            transform: translateY(-3px);
+
+            border-color: #94a3b8;
+
+            box-shadow:
+                0 10px 25px rgba(15, 23, 42, 0.10);
+        }
+
+        .option p {
+            min-height: 72px;
+
+            margin: 0 0 18px 0;
+
+            color: #475569;
+
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        a,
+        button {
+            display: inline-block;
+
+            padding: 12px 22px;
+
+            text-decoration: none;
+
+            border: none;
+            border-radius: 10px;
+
+            color: white;
+
+            font-size: 15px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        a:hover,
+        button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 18px rgba(37, 99, 235, 0.25);
+        }
+
+        .insert-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #0891b2,
+                    #2563eb
+                );
+        }
+
+        .download-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #16a34a,
+                    #059669
+                );
+        }
+
+        .home-container {
+            margin-top: 28px;
+            padding-top: 22px;
+
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .home-btn {
+            background: #64748b;
+        }
+
+        .home-btn:hover {
+            background: #475569;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .box {
+                padding: 32px 20px;
+                border-radius: 18px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            .options {
+                grid-template-columns: 1fr;
+            }
+
+            .option p {
+                min-height: auto;
+            }
+
+            a {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+
+        <h2>✅ Manual Insert Successful!</h2>
+
+        <div class="options">
+
+            <!-- INSERT MORE -->
+            <div class="option">
+
+                <p>
+                    Do you need to insert any more primers?
+                </p>
+
+                <a href="{{ url_for('manual_insert', db_schema=db_schema) }}"
+                   class="insert-btn"
+                   onclick="return confirmLeave();">
+                    Insert More
+                </a>
+            </div>
+
+            <!-- DOWNLOAD -->
+            <div class="option">
+
+                <p>
+                    Have you completed inserting all the primers? If so, you can download them in a single order sheet?
+                </p>
+
+                <a href="{{ url_for('download', source='manual', db_schema=db_schema) }}"
+                   class="download-btn"
+                   onclick="orderDownloaded = true;">
+                    Download Order Sheet
+                </a>
+            </div>
+        </div>
+        <!-- HOME -->
+        <div class="home-container">
+            <a href="{{ url_for('home_page') }}"
+               class="home-btn"
+               onclick="return confirmLeave();">
+                Go to Home
+            </a>
+        </div>
+    </div>
+
+
+    <script>
+
+        let orderDownloaded = false;
+
+        function confirmLeave() {
+
+            // If the user has already clicked Download,
+            // allow them to leave without asking.
+            if (orderDownloaded) {
+                return true;
+            }
+
+            // Otherwise ask for confirmation.
+            return confirm(
+                "⚠️ The current order sheet has not been downloaded yet.\n\n" +
+                "Are you sure you want to leave this page without " +
+                "downloading it?"
+            );
+        }
+
+    </script>
+
+</body>
+</html>

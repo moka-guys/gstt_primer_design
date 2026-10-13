@@ -1,0 +1,17 @@
+<script>
+    const interval = setInterval(() => {
+        fetch('/progress')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('progress-bar').style.width = data.value + '%';
+                document.getElementById('progress-text').innerText = data.value + '%';
+                
+                if (data.value >= 100) {
+                    clearInterval(interval);
+                    // Redirect to success page
+                    window.location.href = "/success_primer_design";
+                }
+            });
+    }, 500);
+</script>
+
