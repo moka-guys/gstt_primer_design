@@ -6,7 +6,7 @@ This is a web application used to design primer(s) and insert into database
 
 1. Clone github repo locally
 2. Set .env file appropriately
-3. Run `docker-compose up`. Docker image used should point to the latest tag (7030c31 as of Sept 2026)
+3. Run `docker-compose up`. Docker image used should point to the latest tag
 4. Load the web app at `http://127.0.0.1:5000/`
 5. To build DB locally, run sql files inside initdb inside postgres docker
 6. Create username and password with 02_insert_default_users.sql
@@ -23,4 +23,4 @@ Primer3 python package is used to design primers using given parameters. The des
 3. Query primers from PRADA
 4. Query primers from MOKA legacy database
 
-PRADA has two modes 1. Production and 2. Training. All features use the same source code but the database schema is different. Therefore, any primers designed/inserted during Training mode wil not affect on the Production database.
+PRADA has two modes 1. Production and 2. Training. All features use the same source code but the database schema is different. Therefore, any primers designed/inserted during Training mode will not affect on the Production database.
