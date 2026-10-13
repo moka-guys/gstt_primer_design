@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS prada_training.primer_batches (
     notes VARCHAR(100),
     passed_validation yes_no_status,
     archive yes_no,
+    research yes_no,
     mix VARCHAR(100),
     arrival_date VARCHAR(100),
     tray VARCHAR(100),

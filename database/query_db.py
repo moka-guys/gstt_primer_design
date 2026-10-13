@@ -81,6 +81,7 @@ def get_base_query(db_schema) -> sql.SQL:
             p.primer_name,
             b.passed_validation,
             b.archive,
+            b.research,
             b.notes,
             b.tag,
             p.left_primer_seq,
@@ -133,8 +134,8 @@ def get_base_query(db_schema) -> sql.SQL:
 
 
 def get_condition_value(chr_val, gene_val, validation_val, archive_val,
-                        notes, primer_name, primer_id, tray, start_date,
-                        end_date) -> tuple[list[sql.SQL], list[Any]]:
+                        research_val, notes, primer_name, primer_id, tray,
+                        start_date, end_date) -> tuple[list[sql.SQL], list[Any]]:
     """
     Get the filter conditions and values for primer query
     Args:
@@ -142,6 +143,7 @@ def get_condition_value(chr_val, gene_val, validation_val, archive_val,
         gene_val: gene
         validation_val: validation status
         archive_val: archiving status
+        research_val: research yes or no
         notes: notes from user
         primer_name: name of primer
         primer_id: primer ID
@@ -169,6 +171,11 @@ def get_condition_value(chr_val, gene_val, validation_val, archive_val,
     if archive_val:
         conditions.append(sql.SQL("b.archive = %s::yes_no"))
         values.append(archive_val)
+
+    if research_val:
+        conditions.append(sql.SQL("b.research = %s::yes_no"))
+        values.append(research_val)
+
     if notes:
         conditions.append(sql.SQL("b.notes ILIKE %s"))
         values.append(f"%{notes}%")
@@ -413,7 +420,7 @@ def append_variant_liftover(use_variant_liftover, conditions, values,
 def search_prada_primer(db_schema, dbname, user, password, host,
                         chr_val, gene_val, primer_name, primer_id,
                         validation_val, grch_val, tray, archive_val,
-                        notes, variant_pos=None, pos_start=None,
+                        research_val, notes, variant_pos=None, pos_start=None,
                         pos_end=None, start_date=None,
                         end_date=None) -> tuple[list[dict[str, Any]],
                                                 str | None]:
@@ -438,6 +445,7 @@ def search_prada_primer(db_schema, dbname, user, password, host,
         grch_val: GRCh
         tray: primer tray
         archive_val: archiving status of primer
+        research_val: research yes or no
         notes: notes from user about primer
         variant_pos: position of variant
     Returns:
@@ -449,9 +457,9 @@ def search_prada_primer(db_schema, dbname, user, password, host,
     base_query = get_base_query(db_schema)
     # get the query conditions provided by user
     conditions, values = get_condition_value(chr_val, gene_val, validation_val,
-                                             archive_val, notes, primer_name,
-                                             primer_id, tray, start_date,
-                                             end_date)
+                                             archive_val, research_val, notes,
+                                             primer_name, primer_id, tray,
+                                             start_date, end_date)
     # initiate params
     msg_to_return = None
     if grch_val == "":

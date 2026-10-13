@@ -4,7 +4,7 @@ from primer_design.helper_function import get_postgres_connection
 
 def insert_primer(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
                   password, db_name, db_host, notes="NA", passval="Not_Done",
-                  archive="No") -> list:
+                  archive="No", research="No") -> list:
     """Insert designed primers into the PRADA database.
     Args:
         db_schema: Database schema name.
@@ -19,6 +19,7 @@ def insert_primer(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
         notes: notes for each primer
         passval: if primer validation is passed or failed
         archive: if primer is archived or not
+        research: if primer is for research purpose or not
 
     Returns:
         List of [upi, primer_id] values returned from the database.
@@ -37,6 +38,7 @@ def insert_primer(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
     df_insert["notes"] = notes
     df_insert["passval"] = passval
     df_insert["archive"] = archive
+    df_insert["research"] = research
 
     # clean empty values and replace with default values
     default_values = {
@@ -45,6 +47,7 @@ def insert_primer(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
                     "tag": "NA",
                     "notes": "NA",
                     "archive": "No",
+                    "research": "No",
                     "passval": "Not_Done",
                     }
 
@@ -79,6 +82,7 @@ def insert_primer(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
         %s::varchar,
         %s::varchar,
         %s::varchar,
+        %s::text,
         %s::text,
         %s::text,
         %s::varchar,
@@ -116,6 +120,7 @@ def insert_primer(db_schema, order_primer, tagged_FW, tagged_RV, tag, username,
                 str(row["notes"]),
                 str(row["passval"]),
                 str(row["archive"]),
+                str(row["research"]),
                 None,  # p_mix
                 None,  # p_dilution_date
                 None,  # p_tray

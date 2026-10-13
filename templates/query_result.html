@@ -509,6 +509,13 @@
                                             <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>
                                             <option value="No" {% if value == "No" %}selected{% endif %}>No</option>
                                         </select>
+
+                                    {% elif key == "research" %}
+
+                                        <select class="form-select form-select-sm editable-select">
+                                            <option value="Yes" {% if value == "Yes" %}selected{% endif %}>Yes</option>
+                                            <option value="No" {% if value == "No" %}selected{% endif %}>No</option>
+                                        </select>
                                     
                                     {% elif key == "passed_validation" %}
 

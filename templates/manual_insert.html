@@ -335,6 +335,13 @@
             <label for="notes">Notes</label>
             <input id="notes" type="text" name="Notes">
 
+            <label for="research">Research</label>
+            <select name="Research" id="research">
+                <option value="">-- Select Yes or No --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+
             <div class="buttons">
                 <input type="submit" value="Insert">
                 <a href="{{ url_for('home_page') }}" class="home-btn">

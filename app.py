@@ -39,7 +39,8 @@ DB_NAME = os.environ["DB_NAME"]
 DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 batch_editable_columns = ['notes', 'passed_validation', 'mix', 'arrival_date',
-                          'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive', 'manufacturer']
+                          'tray', 'freezer', 'grid_fw', 'grid_rv', 'archive',
+                          'research', 'manufacturer']
 primer_table = "primers"
 batch_table = "primer_batches"
 
@@ -463,6 +464,7 @@ def query_data(db_schema) -> ResponseReturnValue:
         primer_id = request.form.get('primer_id')
         passed_validation = request.form.get('passed_validation')
         archive = request.form.get('archive')
+        research = request.form.get('research')
         grch = request.form.get('grch')
         tray = request.form.get('tray')
         start = request.form.get('start')
@@ -506,8 +508,9 @@ def query_data(db_schema) -> ResponseReturnValue:
                 db_schema=db_schema
             )
         # ensure at least one filter exists
-        if not any([chr_val, gene_val, primer_name, primer_id, passed_validation,
-                    grch, tray, start, end, archive, notes, start_date, end_date,
+        if not any([chr_val, gene_val, primer_name, primer_id,
+                    passed_validation, grch, tray, start, end,
+                    archive, research, notes, start_date, end_date,
                     variant_pos]):
             return render_template(
                 "query_result.html",
@@ -519,8 +522,9 @@ def query_data(db_schema) -> ResponseReturnValue:
         try:
             result_list, msg = search_prada_primer(
                 db_schema, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST,
-                chr_val, gene_val, primer_name, primer_id, passed_validation, grch,
-                tray, archive, notes, variant_pos, start, end, start_date, end_date
+                chr_val, gene_val, primer_name, primer_id, passed_validation,
+                grch, tray, archive, research, notes, variant_pos,
+                start, end, start_date, end_date
             )
             session["query_results"] = result_list
             return render_template(
@@ -1199,6 +1203,7 @@ def manual_insert(db_schema) -> ResponseReturnValue:
             grch = request.form.get("GRCh")
             tag = request.form.get("tag")
             notes = request.form.get("Notes")
+            research = request.form.get("Research")
 
             df_insert = pd.DataFrame([{
                 "chr": chr,
@@ -1224,7 +1229,8 @@ def manual_insert(db_schema) -> ResponseReturnValue:
                                          password=DB_PASSWORD,
                                          db_name=DB_NAME,
                                          db_host=DB_HOST,
-                                         notes=notes
+                                         notes=notes,
+                                         research=research
                                          )
             app.logger.info(f"{g.user} inserted primer manually: upi {inserted_ids} in {db_schema}")
             # generate order sheet for manual insert primer

@@ -20,7 +20,8 @@ CREATE OR REPLACE FUNCTION prada_production.insert_primer_with_batch(
     p_tag VARCHAR,
     p_notes VARCHAR,
     p_passed_validation TEXT,
-    p_archive TEXT, 
+    p_archive TEXT,
+    p_research TEXT, 
     p_mix VARCHAR,
     p_arrival_date VARCHAR,
     p_tray VARCHAR,
@@ -41,6 +42,7 @@ DECLARE
     v_primer_id INTEGER;
     v_passed yes_no_status;
     v_archive yes_no;
+    v_research yes_no;
 BEGIN
 
     IF p_passed_validation NOT IN ('Pass', 'Fail', 'Not_Done') THEN
@@ -49,6 +51,8 @@ BEGIN
 
     v_passed := p_passed_validation::yes_no_status;
     v_archive := p_archive::yes_no;
+    v_research := p_research::yes_no;
+    
 
 
     -- Primer info (no duplicate, no update allowed)
@@ -128,6 +132,7 @@ BEGIN
         notes,
         passed_validation,
         archive,
+        research,
         mix,
         arrival_date,
         tray,
@@ -145,6 +150,7 @@ BEGIN
         p_notes,
         v_passed,
         v_archive,
+        v_research,
         p_mix,
         p_arrival_date,
         p_tray,
